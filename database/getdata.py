@@ -3,7 +3,7 @@ import time
 from functools import wraps
 
 from psycopg2 import Error
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 import dotenv
 import pandas as pd
 from termcolor import colored
@@ -37,11 +37,10 @@ def print_query_decorator():
         return wrapper
     return decorator
 
-@print_query_decorator()
 def execute_query(query, parameters=None, verbose=False):
     try:
         with get_connection().connect() as conn:
-            conn.execute(query, parameters)
+            conn.execute(text(query), parameters)
     except Error as e:
         print(colored("ERROR EXECUTE_QUERY: An error occurred while executing the query.\n-- Error: ", "red"))
         print(colored(e, "red"))
@@ -50,7 +49,7 @@ def execute_query(query, parameters=None, verbose=False):
         print(colored("EXECUTE_QUERY: Parameters:\n-- Parameters: ", "red"))
         print(colored(parameters, "red"))
 
-@print_query_decorator()
+# @print_query_decorator()
 def query_data(query, parameters=None, use_cache=True, verbose=False):
     try:
         engine = get_connection()
