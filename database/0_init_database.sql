@@ -17,6 +17,12 @@ CREATE TABLE inegalites_cinema.film (
     genre TEXT,
     bonus_parite BOOLEAN,
     femme_realisatrice BOOLEAN,
+    -- tmdb_id,
+    -- imdb_id,
+    -- tmbd_note_moyenne
+    -- tmdb_total_votes
+    -- tmdb_score
+    -- description
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -32,6 +38,13 @@ CREATE TABLE inegalites_cinema.festival (
     genre text,
     description text,
     url text,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE inegalites_cinema.genres (
+    id SERIAL PRIMARY KEY,
+    genre TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -62,4 +75,12 @@ CREATE TABLE inegalites_cinema.film_cheffes_postes (
     PRIMARY KEY (id_film, id_cheffes_postes),
     FOREIGN KEY (id_film) REFERENCES film(id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (id_cheffes_postes) REFERENCES cheffes_postes(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE inegalites_cinema.film_genres (
+    id_film INTEGER,
+    id_genre INTEGER,
+    PRIMARY KEY (id_film, id_genre),
+    FOREIGN KEY (id_film) REFERENCES film(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (id_genre) REFERENCES genres(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
