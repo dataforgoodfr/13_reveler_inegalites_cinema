@@ -22,7 +22,7 @@ def levenshtein_distance(s1: str, s2: str) -> int:
         return len(s1)
 
     previous_row = np.arange(len(s2) + 1)
-    for i, c1 in enumerate(s1):
+    for _, c1 in enumerate(s1):
         current_row = previous_row + 1
         current_row[1:] = np.minimum(
             current_row[1:], np.add(previous_row[:-1], [c1 != c2 for c2 in s2])
