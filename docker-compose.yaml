@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     build:
@@ -17,3 +15,19 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  backend:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    volumes:
+      - .:/backend
+    ports:
+      - "5001:5001"
+    environment:
+      - PYTHONUNBUFFERED=1  # Ensures unbuffered output (useful for logging)
+    command: bash # poetry run python app.py
+    stdin_open: true    # Open stdin for interactive shell
+    tty: true 
+    depends_on:
+      - db
