@@ -26,8 +26,6 @@ services:
       - "5001:5001"
     environment:
       - PYTHONUNBUFFERED=1  # Ensures unbuffered output (useful for logging)
-    command: bash # poetry run python app.py
-    stdin_open: true    # Open stdin for interactive shell
-    tty: true 
+    command: ["poetry", "run", "uvicorn", "backend.main:backend", "--host", "0.0.0.0", "--port", "5001"]
     depends_on:
       - db
