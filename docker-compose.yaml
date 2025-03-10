@@ -26,6 +26,7 @@ services:
       - "5001:5001"
     environment:
       - PYTHONUNBUFFERED=1  # Ensures unbuffered output (useful for logging)
+      - DATABASE_URL=postgresql+psycopg://postgres:postgres@db:5432/ric_db
     command: ["poetry", "run", "uvicorn", "backend.main:backend", "--host", "0.0.0.0", "--port", "5001"]
     depends_on:
       - db
