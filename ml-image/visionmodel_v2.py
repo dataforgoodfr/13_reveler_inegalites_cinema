@@ -186,7 +186,9 @@ class VisionModel :
         draw_image.show()
 
     def predict_age_gender(self, faces: list) -> tuple[list, list]:
-        """ Predict age, gender and ethnicity for a cropped face """
+        """ 
+        Predict age, gender and ethnicity for a list of cropped faces
+        """
         dict_gender = {
             0 : 'male',
             1 : 'female',
@@ -207,7 +209,9 @@ class VisionModel :
         return (genders, ages)
     
     def predict_ethnicity(self, faces: list) -> list:
-        """ Predict ethnicities from a list of cropped faces """
+        """
+        Predict ethnicities from a list of cropped faces
+        """
         ethnicity_labels = {
             0 : "white", 
             1 : "black", 
