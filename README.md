@@ -1,7 +1,15 @@
-# Template DataForGood
+# Data For Good #13 - Réduire les Inégalités dans le Cinéma (RIC)
 
-This file will become your README and also the index of your
-documentation.
+L'objectif de ce projet est de créer une application web qui informera le grand public et les institutions sur les inégalités de genre et raciales dans le cinéma français.
+
+Techniquement, l'application sera composée de :
+* une application front-end Next.js accessible à tous pour afficher des graphiques sur les inégalités de genre et raciales  
+* un backend FastAPI en Python qui fournira une API permettant au frontend d'accéder aux données à afficher dans les graphiques  
+* une base de données PostgreSQL pour stocker les données pertinentes  
+* plusieurs scripts Python :
+  * Pour scraper des données à partir de différentes sources externes et les ajouter à la base de données  
+  * Pour exécuter des scripts de machine learning sur des sources médiatiques afin de générer des KPI supplémentaires pertinents sur les films  
+
 
 # Contributing
 
