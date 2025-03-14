@@ -46,7 +46,6 @@ class VisionModel :
         self.ethnicity_detection_model.eval()
         #https://github.com/anasserhussien/EthnicityRecognition-UTKFaces/tree/main?tab=readme-ov-file
 
-
     def get_data_from_url(self, url: str, 
                           output_poster: str = 'downloaded_poster', 
                           output_trailer: str = 'downloaded_trailer') -> None:
@@ -161,19 +160,21 @@ class VisionModel :
         setattr(self, f'cropped_{area_type}s_boxes', all_boxes)
 
     def flatten_list_areas_of_interest(
-            self, images: list[Image], area_type:str = 'face'
-    ) -> tuple[list, list]:
+            self, area_type:str = 'face'
+    ) -> tuple[list, list, list]:
         """
         Function to unravel a nested list of extracted areas of interest (e.g. faces, persons) while retaining the id of the image they were extracted from. 
-        Returns the images as a flat list and their corresponding image ids 
+        Returns the cropped images, cropped bounding boxes as flat lists and their corresponding image ids 
         """
         areas_of_interest = getattr(self, f'cropped_{area_type}s')
-        flattened_areas_of_interest, image_ids = [], []
+        bbox_areas_of_interest = getattr(self, f'cropped_{area_type}s_boxes')
+        flattened_areas_of_interest, image_ids, flattened_bbox_areas_of_interest = [], [], []
         for i in range(len(areas_of_interest)) :
             for j in range(len(areas_of_interest[i])) :
                 flattened_areas_of_interest.append(areas_of_interest[i][j])
+                flattened_bbox_areas_of_interest.append(bbox_areas_of_interest[i][j])
                 image_ids.append(i)
-        return (flattened_areas_of_interest, image_ids)
+        return (flattened_areas_of_interest, flattened_bbox_areas_of_interest, image_ids)
 
     def draw_bounding_boxes(self, image: Image, boxes: list, confs: list, names: list, fill:tuple = (255, 0, 0, 255)) -> None:
         draw_image = image.copy()
@@ -186,9 +187,7 @@ class VisionModel :
         draw_image.show()
 
     def predict_age_gender(self, faces: list) -> tuple[list, list]:
-        """ 
-        Predict age, gender and ethnicity for a list of cropped faces
-        """
+        """ Predict age, gender and ethnicity for a cropped face """
         dict_gender = {
             0 : 'male',
             1 : 'female',
@@ -200,7 +199,7 @@ class VisionModel :
             transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
             ])
         
-        transformed_faces = torch.stack([inference_transform(face) for face in faces])
+        transformed_faces = torch.stack([inference_transform(face) for face in faces]).to(self.device)
         with torch.no_grad() :
             genders, ages = self.age_gender_model(transformed_faces)
         genders, ages = np.round(genders), np.round(ages)
@@ -209,9 +208,7 @@ class VisionModel :
         return (genders, ages)
     
     def predict_ethnicity(self, faces: list) -> list:
-        """
-        Predict ethnicities from a list of cropped faces
-        """
+        """ Predict ethnicities from a list of cropped faces """
         ethnicity_labels = {
             0 : "white", 
             1 : "black", 
@@ -226,7 +223,7 @@ class VisionModel :
             transforms.Normalize( [0.5, 0.5, 0.5],[0.5, 0.5, 0.5])
             ])
         
-        transformed_faces = torch.stack([inference_transform(face) for face in faces])
+        transformed_faces = torch.stack([inference_transform(face) for face in faces]).to(self.device)
         with torch.no_grad() :
             outputs = self.ethnicity_detection_model(transformed_faces)
         _, predicted = torch.max(outputs.data, 1)
