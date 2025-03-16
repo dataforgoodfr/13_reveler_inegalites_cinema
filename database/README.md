@@ -2,52 +2,11 @@
 
 ## Installation de Docker Compose
 
-1. Installer Docker Engine en suivant la documentation officielle :
-```bash
-# Ajout du repository Docker
-sudo apt-get update
-sudo apt-get install ca-certificates curl gnupg
-sudo install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-sudo chmod a+r /etc/apt/keyrings/docker.gpg
-
-# Ajout du repository Docker aux sources APT
-echo \
-  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-# Installation de Docker
-sudo apt-get update
-sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-```
-
-2. Vérifier l'installation :
-```bash
-docker compose version
-```
-
-3. (Optionnel) Configurer Docker pour s'exécuter sans sudo :
-```bash
-sudo usermod -aG docker $USER
-newgrp docker
-```
-
-## Prérequis
-- Docker et Docker Compose installés sur votre machine
-- Git pour cloner le projet
 
 ## Installation et Démarrage
 
-1. Lancer la base de données PostgreSQL :
-```bash
-docker compose up db -d
-```
-
-2. Vérifier que le conteneur est bien démarré :
-```bash
-docker compose ps
-```
+1. Lancer la base de données PostgreSQL : `docker compose up db -d`
+2. Vérifier que le conteneur est bien démarré : `docker compose ps`
 
 ## Configuration de la Base de Données
 
