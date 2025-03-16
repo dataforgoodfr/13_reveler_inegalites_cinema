@@ -1,8 +1,5 @@
 # Data For Good #13 - Réduire les Inégalités dans le Cinéma (RIC) - Documentation Backend
 
-## Requis
-* `docker` et `docker-compose`
-
 ## Comment lancer le backend ?
 
 Pour lancer le backend seul
