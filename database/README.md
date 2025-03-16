@@ -1,34 +1,38 @@
-# Guide de Configuration de la Base de Données sur votre Machine
-
-## Installation de Docker Compose
+# Data For Good #13 - Révéler les Inégalités dans le Cinéma (RIC) - base de données
 
 
-## Installation et Démarrage
+## Comment lancer et accéder à la base de données ?
 
-1. Lancer la base de données PostgreSQL : `docker compose up db -d`
-2. Vérifier que le conteneur est bien démarré : `docker compose ps`
+Pour lancer la base de données avec le backend:
+* Builder et lancer les containers: `docker-compose up --build -d`
+* Vérifier qu'au moins le conteneur `db` est bien démarré : `docker compose ps`
+* Accéder au container avec `psql`: `docker-compose exec db psql -U postgres`
 
-## Configuration de la Base de Données
+## Commandes psql utiles
+* `\l` : lister les bases de données
+* `\c ric_db` : se connecter à une base de données
+* `\dt` : lister les tables de la base de donnée en cours
+* `\q` : quitter psql et le container
 
+
+## Comment configurer la base de données ?
+
+### Configuration depuis le backend
+* Lancer le projet: `docker-compose up --build -d`
+* Se connecter au backend: `docker-compose exec backend bash`
+* Lancer les migrations via Alembic: `poetry run alembic -c database/alembic.ini upgrade head`
+
+
+### Configuration manuelle avec des scripts - option dépréciée
 La base de données est automatiquement initialisée au premier démarrage avec les scripts SQL suivants :
 
 1. `0_init_database.sql` : Crée le schéma et les tables de la base de données
 2. `1_insert_festivals.sql` : Insère les données des festivals de cinéma
 3. `2_insert_realisateurs.sql` : Insère les données des réalisateurs
 
-...
-
 Ces scripts sont exécutés automatiquement dans l'ordre alphabétique lors du premier démarrage du conteneur PostgreSQL. Cette exécution est gérée par Docker, qui lance tous les scripts `.sql` présents dans le dossier `/docker-entrypoint-initdb.d/` du conteneur.
 
-Pour vérifier que tout est correctement installé, connectez-vous à la base de données :
-```bash
-docker exec -it 13_reveler_inegalites_cinema-db-1 psql -U postgres -d ric_db
-```
 
-Puis listez les tables :
-```sql
-\dt inegalites_cinema.*
-```
 
 ## Informations de Connexion
 - Host : localhost
@@ -36,6 +40,7 @@ Puis listez les tables :
 - Base de données : ric_db
 - Utilisateur : postgres
 - Mot de passe : postgres
+
 
 ## Utilisation de DBeaver (Interface Graphique)
 

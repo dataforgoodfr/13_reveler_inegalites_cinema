@@ -1,4 +1,4 @@
-# Data For Good #13 - Réduire les Inégalités dans le Cinéma (RIC) - Documentation Backend
+# Data For Good #13 - Révéler les Inégalités dans le Cinéma (RIC) - Documentation Backend
 
 ## Comment lancer le backend ?
 
