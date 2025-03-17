@@ -14,3 +14,4 @@ class CreditHolder(Base):
     birthdate = Column(Date)
 
     film_credits = relationship("FilmCredit", back_populates="credit_holder")
+    award_nominations = relationship("AwardNomination", back_populates="credit_holder")
