@@ -23,3 +23,5 @@ class Film(Base):
     cnc_rank = Column(Integer, nullable=True)
 
     genres = relationship('Genre', secondary='films_genres', back_populates='films')
+    country_budget_allocations = relationship("FilmCountryBudgetAllocation", back_populates="film")
+    countries = relationship('Country', secondary='film_country_budget_allocations', back_populates='films')
