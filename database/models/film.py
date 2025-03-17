@@ -27,3 +27,4 @@ class Film(Base):
     countries = relationship('Country', secondary='film_country_budget_allocations', back_populates='films')
     trailer = relationship("Trailer", back_populates="film")
     poster = relationship("Poster", back_populates="film")
+    film_credits = relationship("FilmCredit", back_populates="film")
