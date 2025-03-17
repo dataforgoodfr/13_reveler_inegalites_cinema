@@ -28,3 +28,5 @@ class Film(Base):
     trailer = relationship("Trailer", back_populates="film")
     poster = relationship("Poster", back_populates="film")
     film_credits = relationship("FilmCredit", back_populates="film")
+    award_nominations = relationship("AwardNomination", back_populates="film")
+    film_festivals = relationship("FilmFestival", back_populates="film")

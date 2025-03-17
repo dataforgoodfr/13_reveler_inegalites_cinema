@@ -10,3 +10,4 @@ class Country(Base):
 
     film_budget_allocations = relationship("FilmCountryBudgetAllocation", back_populates="country")
     films = relationship('Film', secondary='film_country_budget_allocations', back_populates='countries')
+    festivals = relationship("Festival", backref="country")

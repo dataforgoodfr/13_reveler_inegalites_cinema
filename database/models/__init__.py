@@ -8,5 +8,8 @@ from .poster import Poster
 from .role import Role
 from .credit_holder import CreditHolder
 from .film_credit import FilmCredit
+from .festival import Festival
+from .festival_award import FestivalAward
+from .award_nomination import AwardNomination
 
-__all__ = ["Film", "Genre", "FilmGenre", "Country", "FilmCountryBudgetAllocation", "Trailer", "Poster", "Role", "CreditHolder", "FilmCredit"]
+__all__ = ["Film", "Genre", "FilmGenre", "Country", "FilmCountryBudgetAllocation", "Trailer", "Poster", "Role", "CreditHolder", "FilmCredit", "Festival", "FestivalAward", "AwardNomination"]
