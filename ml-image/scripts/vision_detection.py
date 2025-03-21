@@ -25,7 +25,7 @@ class VisionDetection :
         self.yolo_model_person = YOLO('models/yolo11l.pt').to(self.device).eval()
         #https://github.com/ultralytics/ultralytics
     
-        self.yolo_model_face = YOLO('models/yolov11l-face.pt').to(self.device).eval()
+        self.yolo_model_face = YOLO('models/yolov11n-face.pt').to(self.device).eval()
         #https://github.com/akanametov/yolo-face
 
     def get_areas_of_interest(
@@ -64,12 +64,11 @@ class VisionDetection :
         return results
 
     def crop_areas_of_interest(
-            self, images: np.ndarray, H_original: int, W_original: int, area_type:str = 'face'
-            ) -> None:
+            self, images: np.ndarray, H_original: int, W_original: int, area_type:str = 'face', batch_size: int = 64) -> None:
         """
         Create individual subimages for all areas of interest in one image
         """ 
-        areas_of_interest = self.get_areas_of_interest(images, area_type)
+        areas_of_interest = self.get_areas_of_interest(images, area_type, batch_size=batch_size)
 
         # Rescaling factors determination
         scale_x = W_original / self.W_resized

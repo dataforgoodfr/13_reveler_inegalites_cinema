@@ -84,6 +84,7 @@ class Faces_clustering():
         self.apply_clusters(persons_list, faces_list)
         aggregated_persons = []
 
+        final_label = 0
         for label, persons in self.persons.items():
             if len(persons) > min_occurence:
                 match method:
@@ -94,8 +95,10 @@ class Faces_clustering():
                         occurence = len(persons)
                         area_occupied = sum([np.abs(x1 - x2) * np.abs(y1 - y2) for (x1, y1, x2, y2) in [person["bbox"] for person in persons]])
                         persons_id = [person["person_id"] for person in persons]
-                        aggregated_persons.append({"age": aggregated_age, "gender": aggregated_gender, "ethnicity": aggregated_ethnicity, "occurence": occurence, "area occupied": area_occupied, "persons_id": persons_id, "label": label})
+                        aggregated_persons.append({"age": aggregated_age, "gender": aggregated_gender, "ethnicity": aggregated_ethnicity, "occurence": occurence, "area occupied": area_occupied, "persons_id": persons_id, "label": final_label})
                     case _:
                         raise ValueError("Method not supported")
+                
+                final_label += 1
         
         return aggregated_persons

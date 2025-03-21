@@ -44,12 +44,16 @@ def get_data_from_url(url: str,
             data_model = figure_tag['data-model']
             data_model = json.loads(data_model)
             video_sources = data_model['videos'][0]['sources']
-            if "high" in video_sources :
-                link = video_sources["high"]
             if "medium" in video_sources :
                 link = video_sources["medium"]
+                quality = "medium"
+            elif "high" in video_sources :
+                link = video_sources["high"]
+                quality = "high"
             else :
                 link = video_sources["low"]
+                quality = "low"
+            print(f"Downloading trailer in {quality} quality")
             r = requests.get(link, stream = True)
             with open(video_path, 'wb') as f:
                 for chunk in r.iter_content(chunk_size = 1024*1024) :
@@ -65,7 +69,7 @@ def get_data_from_url(url: str,
             for chunk in r :
                 f.write(chunk)
         
-        data = {"url": url, "poster_path": poster_path, "trailer_path": video_path, "image": Image.open(poster_path)}
+        data = {"url": url, "poster_path": poster_path, "trailer_path": video_path, "image": Image.open(poster_path), "quality": quality}
 
         return data
         
