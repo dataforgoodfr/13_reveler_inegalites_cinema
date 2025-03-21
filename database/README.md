@@ -33,6 +33,13 @@ La base de données est automatiquement initialisée au premier démarrage avec 
 
 Ces scripts sont exécutés automatiquement dans l'ordre alphabétique lors du premier démarrage du conteneur PostgreSQL. Cette exécution est gérée par Docker, qui lance tous les scripts `.sql` présents dans le dossier `/docker-entrypoint-initdb.d/` du conteneur.
 
+## Comment expérimenter avec Jupyter ?
+
+* Lancer le projet: `docker-compose up --build -d`
+* Se connecter au backend: `docker-compose exec backend bash`
+* Lancer jupyter: `poetry run jupyter notebook --ip 0.0.0.0 --port 8888 --allow-root --NotebookApp.token='' --NotebookApp.password=''`
+* Se rendre sur l'url suivant: `http://localhost:8888/tree/database/notebooks`
+* Créer ou modifier des fichiers notebook
 
 
 ## Informations de Connexion
