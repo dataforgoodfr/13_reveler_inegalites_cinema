@@ -24,6 +24,7 @@ services:
       - .:/backend
     ports:
       - "5001:5001"
+      - "8888:8888" # Expose Jupyter's port - dev mode only
     environment:
       - PYTHONUNBUFFERED=1  # Ensures unbuffered output (useful for logging)
       - DATABASE_URL=postgresql+psycopg://postgres:postgres@db:5432/ric_db
