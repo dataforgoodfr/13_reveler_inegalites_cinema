@@ -28,6 +28,18 @@ services:
     environment:
       - PYTHONUNBUFFERED=1  # Ensures unbuffered output (useful for logging)
       - DATABASE_URL=postgresql+psycopg://postgres:postgres@db:5432/ric_db
+      - PLAYWRIGHT_WS_ENDPOINT=ws://chromium:3000  # Playwright will connect to this
     command: ["poetry", "run", "uvicorn", "backend.main:backend", "--host", "0.0.0.0", "--port", "5001", "--reload"]
     depends_on:
       - db
+      - chromium
+
+  chromium:
+    image: browserless/chrome  # Pre-built Chromium container
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - PREBOOT_CHROME=true  # Keeps the browser always ready
+      - CONNECTION_TIMEOUT=60000
+      - MAX_CONCURRENT_SESSIONS=5  # Limit number of parallel scrapers
