@@ -42,6 +42,41 @@ Ces scripts sont exécutés automatiquement dans l'ordre alphabétique lors du p
 * Créer ou modifier des fichiers notebook
 
 
+## Comment faire du scraping sur le projet ?
+
+* Pour scraper la resource Mubi, il était nécessaire de valider certains éléments
+   * Scraper depuis un navigateur (type chrome), car les données apparaissent dynamiquement
+   => Voir comment faire plus bas
+   * Associer des informations humaines à ce navigateur
+   => Voir classe associée (AsyncBrowserSession)[database/data/scraping_browser.py]
+   * Mettre des délais de temps de réponse après chargement de la page et des scroll
+   => Voir classe associée (AsyncBrowserSession)[database/data/scraping_browser.py]
+* Comment lancer un navigateur avec notre structure de code
+   * Rajouter un container dans le `docker-compose.yaml`
+   ```
+   backend:
+   ...
+      environment:
+      - ...
+      - PLAYWRIGHT_WS_ENDPOINT=ws://chromium:3000  # Way to connect to Chromium
+      depends_on:
+         - db
+         - chromium
+   
+   chromium:
+      image: browserless/chrome
+      restart: always
+      ports:
+         - "3000:3000"
+      environment:
+         - PREBOOT_CHROME=true
+         - CONNECTION_TIMEOUT=60000
+         - MAX_CONCURRENT_SESSIONS=5
+   ```
+   * Lancer le projet de manière habituelle: `docker-compose up --build`
+   Attention : la création de l'image chromium est longue
+
+
 ## Informations de Connexion
 - Host : localhost
 - Port : 5432
