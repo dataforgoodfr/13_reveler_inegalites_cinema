@@ -1,4 +1,3 @@
-from PIL import Image
 import numpy as np
 from facenet_pytorch import InceptionResnetV1
 from dlib import chinese_whispers_clustering, vector
