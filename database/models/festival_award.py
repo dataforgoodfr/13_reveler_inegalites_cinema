@@ -9,4 +9,5 @@ class FestivalAward(Base):
     name = Column(String, nullable=False)
     festival_id = Column(Integer, ForeignKey("festivals.id"), nullable=False)
 
-    festival = relationship("Festival", backref="awards")
+    festival = relationship("Festival", back_populates="awards")
+    award_nominations = relationship("AwardNomination", back_populates="festival_award")

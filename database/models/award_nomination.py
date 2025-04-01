@@ -12,6 +12,6 @@ class AwardNomination(Base):
     date = Column(Date, nullable=False)
     is_winner = Column(Boolean, default=False, nullable=False)
 
-    film = relationship("Film", backref="award_nominations")
-    credit_holder = relationship("CreditHolder", backref="award_nominations")
-    festival_award = relationship("FestivalAward", backref="award_nominations")
+    film = relationship("Film", back_populates="award_nominations")
+    credit_holder = relationship("CreditHolder", back_populates="award_nominations")
+    festival_award = relationship("FestivalAward", back_populates="award_nominations")
