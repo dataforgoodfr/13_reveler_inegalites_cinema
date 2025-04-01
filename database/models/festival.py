@@ -11,5 +11,5 @@ class Festival(Base):
     image_base64 = Column(String, nullable=False)
     country_id = Column(Integer, ForeignKey("countries.id"), nullable=False)
 
-    country = relationship("Country", backref="festivals")
-    awards = relationship("FestivalAward", backref="festival")
+    country = relationship("Country", back_populates="festivals")
+    awards = relationship("FestivalAward", back_populates="festival")

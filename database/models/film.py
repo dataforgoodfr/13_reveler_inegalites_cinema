@@ -24,9 +24,7 @@ class Film(Base):
 
     genres = relationship('Genre', secondary='films_genres', back_populates='films')
     country_budget_allocations = relationship("FilmCountryBudgetAllocation", back_populates="film")
-    countries = relationship('Country', secondary='film_country_budget_allocations', back_populates='films')
     trailer = relationship("Trailer", back_populates="film")
     poster = relationship("Poster", back_populates="film")
     film_credits = relationship("FilmCredit", back_populates="film")
     award_nominations = relationship("AwardNomination", back_populates="film")
-    film_festivals = relationship("FilmFestival", back_populates="film")

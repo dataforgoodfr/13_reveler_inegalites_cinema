@@ -10,6 +10,6 @@ class FilmCredit(Base):
     role_id = Column(Integer, ForeignKey("roles.id"), nullable=False)
     credit_holder_id = Column(Integer, ForeignKey("credit_holders.id"), nullable=False)
 
-    film = relationship("Film", backref="film_credits")
-    role = relationship("Role", backref="film_credits")
-    credit_holder = relationship("CreditHolder", backref="film_credits")
+    film = relationship("Film", back_populates="film_credits")
+    role = relationship("Role", back_populates="film_credits")
+    credit_holder = relationship("CreditHolder", back_populates="film_credits")
