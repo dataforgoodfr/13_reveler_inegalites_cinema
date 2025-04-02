@@ -22,6 +22,7 @@ Pour lancer la base de données avec le backend:
 * Se connecter au backend: `docker-compose exec backend bash`
 * Lancer les migrations via Alembic: `poetry run alembic -c database/alembic.ini upgrade head`
 * Vérifier que le schéma est à jour: `poetry run alembic -c database/alembic.ini revision --autogenerate -m "Add missing elements"`
+* Seeder la base de données: `poetry run python -m database.seed`
 
 
 ### Configuration manuelle avec des scripts - option dépréciée
