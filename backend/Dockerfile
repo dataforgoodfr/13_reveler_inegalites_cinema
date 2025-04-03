@@ -17,4 +17,4 @@ RUN poetry install
 EXPOSE 5001
 
 # Command to run your backend (adjust with your specific entry point)
-CMD ["poetry", "run", "uvicorn", "backend.main:backend", "--host", "0.0.0.0", "--port", "5001", , "--reload"]
+CMD ["poetry", "run", "uvicorn", "backend.main:backend", "--host", "0.0.0.0", "--port", "5001", "--reload"]

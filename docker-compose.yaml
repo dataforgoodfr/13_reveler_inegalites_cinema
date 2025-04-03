@@ -22,12 +22,29 @@ services:
       dockerfile: ./backend/Dockerfile
     volumes:
       - .:/backend
+      - poetry-cache:/root/.cache/pypoetry
     ports:
       - "5001:5001"
       - "8888:8888" # Expose Jupyter's port - dev mode only
     environment:
-      - PYTHONUNBUFFERED=1  # Ensures unbuffered output (useful for logging)
+      - PYTHONUNBUFFERED=1 # Ensures unbuffered output (useful for logging)
       - DATABASE_URL=postgresql+psycopg://postgres:postgres@db:5432/ric_db
-    command: ["poetry", "run", "uvicorn", "backend.main:backend", "--host", "0.0.0.0", "--port", "5001", "--reload"]
     depends_on:
       - db
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - backend
+
+volumes:
+  poetry-cache:
