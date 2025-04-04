@@ -16,7 +16,7 @@ class ExtractCncDataFromExcel:
             base_dir = os.path.dirname(__file__)
             file_path = os.path.join(
                 base_dir,
-                "Dataset5050_CNC Films Agréés 2003-2024.xlsx"
+                "dataset5050_cnc_films_agrees_2003_2024.xlsx"
             )
         self.file_path = file_path
         self.df = None

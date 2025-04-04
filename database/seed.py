@@ -12,7 +12,7 @@ def seed_cnc_movies():
     """
     Seed the CNC movies into the database.
     """
-    extractor = ExtractCncDataFromExcel(file_path="database/data/cnc/Dataset5050_CNC Films Agréés 2003-2024.xlsx")
+    extractor = ExtractCncDataFromExcel(file_path="database/data/cnc/dataset5050_cnc_films_agrees_2003_2024.xlsx")
     data = extractor.load_data()
     data = extractor.clean_data()
 
