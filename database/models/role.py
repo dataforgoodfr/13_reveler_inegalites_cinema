@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from database.database import Base
 
 class Role(Base):
-    __tablename__ = 'roles'
+    __tablename__ = 'ric_roles'
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)

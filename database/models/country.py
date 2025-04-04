@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from database.database import Base
 
 class Country(Base):
-    __tablename__ = 'countries'
+    __tablename__ = 'ric_countries'
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, unique=True)

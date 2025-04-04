@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from database.database import Base
 
 class CreditHolder(Base):
-    __tablename__ = "credit_holders"
+    __tablename__ = "ric_credit_holders"
 
     id = Column(Integer, primary_key=True)
     type = Column(Enum("Company", "Individual", name="credit_holder_type"), nullable=False)

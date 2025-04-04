@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from database.database import Base
 
 class Film(Base):
-    __tablename__ = "films"
+    __tablename__ = "ric_films"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     original_name = Column(String, nullable=False)
@@ -22,7 +22,7 @@ class Film(Base):
     cnc_rank = Column(Integer, nullable=True)
     allocine_id = Column(Integer, nullable=True)
 
-    genres = relationship('Genre', secondary='films_genres', back_populates='films')
+    genres = relationship('Genre', secondary='ric_films_genres', back_populates='films')
     country_budget_allocations = relationship("FilmCountryBudgetAllocation", back_populates="film")
     trailer = relationship("Trailer", back_populates="film")
     poster = relationship("Poster", back_populates="film")
