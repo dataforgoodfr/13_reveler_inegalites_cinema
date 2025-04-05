@@ -133,6 +133,25 @@ def draw_predictions_on_video(frames: np.ndarray, video_persons: list, frame_per
     
     return frames
 
+def find_video_effective_area(frames: np.ndarray) -> tuple:
+    """
+    Find the effective area of the video frames (i.e., the area where the content is present)
+    """
+    h, w, _ = frames[0].shape
+    mask = np.zeros((h, w), dtype=np.uint8)
+
+    for frame in frames:
+        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        _, thresh = cv2.threshold(gray_frame, 1, 255, cv2.THRESH_BINARY)
+        mask = cv2.bitwise_or(mask, thresh)
+
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if contours:
+        x, y, w, h = cv2.boundingRect(max(contours, key=cv2.contourArea))
+        return (x, y), (w, h)
+    
+    return (0, 0), (w, h)  # Default to full size if no contours found
+
 def store_predictions_on_video(frames: np.ndarray, video_persons: list, frame_persons: list, fps: int = 25, output_name: str = 'predictions_trailer.avi') -> None:
     """
     Draw predictions on video frames and store the result in a new video file

@@ -7,7 +7,7 @@ import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
-from utils import ImageDataset
+from .utils import ImageDataset
 
 class VisionDetection :
     def __init__(self, device:str = None, num_cpu_threads:int = 1, H_resize:int = 640, W_resize:int = 640) -> None:
@@ -38,7 +38,7 @@ class VisionDetection :
             return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         frames_transform = transforms.Compose([
-            transforms.Lambda(lambda img: bgr_to_rgb(img)),
+            #transforms.Lambda(lambda img: bgr_to_rgb(img)),
             transforms.ToTensor(),
             transforms.Resize((self.H_resized, self.W_resized)),  # Resize for YOLO model
         ])
@@ -58,7 +58,7 @@ class VisionDetection :
             else :
                 for batch in dataloader:
                     batch = batch.to(self.device)
-                    detections = self.yolo_model_person(batch, verbose=False, classes=[0]) ### Review: Add class condition here
+                    detections = self.yolo_model_person(batch, verbose=False, classes=[0])
                     results.extend(detections)
 
         return results

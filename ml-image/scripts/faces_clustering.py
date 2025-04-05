@@ -80,19 +80,20 @@ class FacesClustering:
             else:
                 self.persons[label].append(person)
     
-    def aggregate_estimations(self, persons_list: list, faces_list: list, method = "majority", min_occurence = 20):
+    def aggregate_estimations(self, persons_list: list, faces_list: list, method = "majority", min_occurence = 0.03):
         self.apply_clusters(persons_list, faces_list)
         aggregated_persons = []
 
         final_label = 0
+        total_persons = np.sum([len(persons) for persons in self.persons.values()])
         for label, persons in self.persons.items():
-            print(f"Label {label} : {len(persons)} persons")
-            if len(persons) > min_occurence:
+            print(f"Label {label} : {len(persons)} persons, {len(persons) / total_persons * 100:.2f}% of the total")
+            if len(persons) / total_persons >= min_occurence:
                 match method:
                     case "majority":
-                        aggregated_age = statistics.mode([person["age"] for person in persons])
-                        aggregated_gender = statistics.mode([person["gender"] for person in persons])
-                        aggregated_ethnicity = statistics.mode([person["ethnicity"] for person in persons])
+                        aggregated_age = statistics.mode([person["age"] for person in persons if person["age"] != "unknown"]) if len([person["age"] for person in persons if person["age"] != "unknown"]) > 0 else "unknown"
+                        aggregated_gender = statistics.mode([person["gender"] for person in persons if person["gender"] != "unknown"]) if len([person["gender"] for person in persons if person["gender"] != "unknown"]) > 0 else "unknown"
+                        aggregated_ethnicity = statistics.mode([person["ethnicity"] for person in persons if person["ethnicity"] != "unknown"]) if len([person["ethnicity"] for person in persons if person["ethnicity"] != "unknown"]) > 0 else "unknown"
                         occurence = len(persons)
                         area_occupied = sum([np.abs(x1 - x2) * np.abs(y1 - y2) for (x1, y1, x2, y2) in [person["bbox"] for person in persons]])
                         persons_id = [person["person_id"] for person in persons]

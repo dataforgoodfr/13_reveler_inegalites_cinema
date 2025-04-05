@@ -3,6 +3,8 @@ import numpy as np
 from typing import List, Dict, Callable
 import mediapipe as mp
 
+### Review: je verrais bien une classe pr chaque filtre (qui hériteraient d'une meme classe abstraite) mais peut etre pas la priorité du projet :p
+
 class DetectionFilter:
     def __init__(self, simple_filters: List[Callable[[Dict], bool]], complex_filters: List[Callable[[Dict], bool]], area_type : str = 'face', **kwargs) -> None:
         self.simple_filters = simple_filters
@@ -10,10 +12,27 @@ class DetectionFilter:
         self.area_type = area_type # not used for now
         self.kwargs = kwargs
 
-    def apply(self, detections: List[Dict]) -> List[Dict]:
-        filtered_detections = [det for det in detections if all(f(det, **self.kwargs) for f in self.simple_filters)]
+    def apply(self, detections: List[Dict], mode: str = "clustering") -> List[Dict]:
+        match mode:
+            case "clustering":
+                filtered_detections = [det for det in detections if all(f(det, **self.kwargs) for f in self.simple_filters)]
+                return [det for det in filtered_detections if all(f(det, **self.kwargs) for f in self.complex_filters)]
+            
+            case "classification":
+                filtered_detections = []
+                for det in detections:
+                    passes_classification = all(f(det, **self.kwargs) for f in self.simple_filters + self.complex_filters)
 
-        return [det for det in filtered_detections if all(f(det, **self.kwargs) for f in self.complex_filters)]
+                    if passes_classification:
+                        filtered_detections.append(det)  # Keep the detection as is
+                    else:
+                        # If it fails classification, set predictions to "unknown"
+                        det["age"] = "unknown"
+                        det["gender"] = "unknown"
+                        det["ethnicity"] = "unknown"
+                        filtered_detections.append(det)
+
+                return filtered_detections
 
 def validates_area_filter(det: Dict, **kwargs) -> bool:
     min_area = kwargs.get("min_area", 0.01)
@@ -37,7 +56,7 @@ def validates_sharpness_filter(det: Dict, **kwargs) -> bool:
     return sharpness >= min_sharpness
 
 mp_face_mesh = mp.solutions.face_mesh
-face_mesh = mp_face_mesh.FaceMesh(static_image_mode=True, max_num_faces=1, refine_landmarks=True, min_detection_confidence=0.5)
+face_mesh = mp_face_mesh.FaceMesh(static_image_mode=True, max_num_faces=1, refine_landmarks=True, min_detection_confidence=0.6)
 
 def get_face_landmarks(image: np.ndarray) -> tuple:
     rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
