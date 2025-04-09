@@ -34,12 +34,16 @@ class DetectionFilter:
 
                 return filtered_detections
 
+def compute_area(bbox: List[float], total_area: float) -> float:
+    x1, y1, x2, y2 = bbox
+    area = np.abs(x2 - x1) * np.abs(y2 - y1) / total_area
+    return area
+
 def validates_area_filter(det: Dict, **kwargs) -> bool:
     min_area = kwargs.get("min_area", 0.01)
     max_area = kwargs.get("max_area", 0.5)
-    x1, y1, x2, y2 = det["bbox"]
     total_area = kwargs.get("total_area", 1.0)
-    area = np.abs(x2 - x1) * np.abs(y2 - y1) / total_area
+    area = compute_area(det["bbox"], total_area)
     return min_area <= area <= max_area 
 
 def validates_confidence_filter(det: Dict, **kwargs) -> bool:

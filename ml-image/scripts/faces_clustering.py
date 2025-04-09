@@ -87,7 +87,7 @@ class FacesClustering:
         final_label = 0
         total_persons = np.sum([len(persons) for persons in self.persons.values()])
         for label, persons in self.persons.items():
-            print(f"Label {label} : {len(persons)} persons, {len(persons) / total_persons * 100:.2f}% of the total")
+            print(f"Character {label} : {len(persons)} occurences, {len(persons) / total_persons * 100:.2f}% of the total")
             if len(persons) / total_persons >= min_occurence:
                 match method:
                     case "majority":

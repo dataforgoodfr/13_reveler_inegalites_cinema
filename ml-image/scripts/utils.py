@@ -25,7 +25,7 @@ class ImageDataset(Dataset):
 
 def get_data_from_url(url: str, 
                           output_poster: str = 'downloaded_poster', 
-                          output_trailer: str = 'downloaded_trailer') -> None: ### Review: Should be a separate object/function 
+                          output_trailer: str = 'downloaded_trailer') -> None:
         """
         Download poster and trailer from a given Allocine URL (only works for allocine)
         """
@@ -69,7 +69,9 @@ def get_data_from_url(url: str,
             for chunk in r :
                 f.write(chunk)
         
-        data = {"url": url, "poster_path": poster_path, "trailer_path": video_path, "image": Image.open(poster_path), "quality": quality}
+        poster_image = cv2.imread(poster_path)
+        
+        data = {"url": url, "poster_path": poster_path, "trailer_path": video_path, "image": poster_image, "quality": quality}
 
         return data
         
@@ -133,24 +135,24 @@ def draw_predictions_on_video(frames: np.ndarray, video_persons: list, frame_per
     
     return frames
 
-def find_video_effective_area(frames: np.ndarray) -> tuple:
+def draw_predictions_on_poster(poster: np.ndarray, predictions: list, output_name: str = 'predictions_poster.jpg') -> None :
     """
-    Find the effective area of the video frames (i.e., the area where the content is present)
+    Draw predictions on poster (bounding boxes with gender, age, ethnicity...)
     """
-    h, w, _ = frames[0].shape
-    mask = np.zeros((h, w), dtype=np.uint8)
-
-    for frame in frames:
-        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        _, thresh = cv2.threshold(gray_frame, 1, 255, cv2.THRESH_BINARY)
-        mask = cv2.bitwise_or(mask, thresh)
-
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    if contours:
-        x, y, w, h = cv2.boundingRect(max(contours, key=cv2.contourArea))
-        return (x, y), (w, h)
+    for person in predictions:
+        bbox = [int(coord) for coord in person["body_bbox"]]  # Ensure bbox coordinates are integers
+        match person["gender"]:
+            case "Male":
+                color = (0, 0, 255)
+            case "Female":
+                color = (255, 0, 0)
+            case _:
+                color = (0, 255, 0)
+        cv2.rectangle(poster, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, 2)
+        cv2.putText(poster, f"{person['age']}, {person['ethnicity']}", (bbox[0], bbox[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
     
-    return (0, 0), (w, h)  # Default to full size if no contours found
+    output_path = os.path.join('example', output_name)
+    cv2.imwrite(output_path, poster)
 
 def store_predictions_on_video(frames: np.ndarray, video_persons: list, frame_persons: list, fps: int = 25, output_name: str = 'predictions_trailer.avi') -> None:
     """
@@ -169,3 +171,22 @@ def store_predictions_on_video(frames: np.ndarray, video_persons: list, frame_pe
 
     # Release the VideoWriter object
     video.release()         
+
+def find_video_effective_area(frames: np.ndarray) -> tuple:
+    """
+    Find the effective area of the video frames (i.e., the area where the content is present)
+    """
+    h, w, _ = frames[0].shape
+    mask = np.zeros((h, w), dtype=np.uint8)
+
+    for frame in frames:
+        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        _, thresh = cv2.threshold(gray_frame, 1, 255, cv2.THRESH_BINARY)
+        mask = cv2.bitwise_or(mask, thresh)
+
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if contours:
+        x, y, w, h = cv2.boundingRect(max(contours, key=cv2.contourArea))
+        return (x, y), (w, h)
+    
+    return (0, 0), (w, h)  # Default to full size if no contours found

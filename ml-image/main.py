@@ -4,16 +4,44 @@ import torch
 import argparse
 import cv2
 
-def load_data(source):
+def load_data(source: str) -> tuple:
     ### Get data from url or file
 
     if source[:4] == "http":
         print(f"Looking for data at: {source}")
         data = scripts.get_data_from_url(source)
+        source_type = "url"
     else:
         print(f"Looking for data in file: {source}")
         data = scripts.get_data_from_file(source, filetype="trailer")
-    return data
+        source_type = "path"
+    return data, source_type
+
+def compute_constants(frames, mode: str = "trailer", sharpness_factor: float = 42.0, sharpness_factor_cla: float = 7.3, aspect_ratio: float = 2.478) -> tuple:
+    ### Compute constants for whole pipeline
+
+    match mode:
+        case "trailer":
+            overall_sharpness = 0
+            for frame in frames:
+                overall_sharpness += scripts.compute_sharpness(frame)/len(frames)
+            min_sharpness = overall_sharpness / sharpness_factor 
+            min_sharpness_cla = overall_sharpness / sharpness_factor_cla
+
+            H_original, W_original = frames[0].shape[:2] 
+            effective_height = W_original / aspect_ratio # The aspect ratio of the video is the effective area of the video (i.e., the area where the content is present)
+            total_area = effective_height * W_original
+        
+        case "poster":
+            H_original, W_original = frames.shape[:2]
+            total_area = H_original * W_original
+
+            min_sharpness, min_sharpness_cla = 0, 0
+        
+        case _:
+            raise ValueError(f"Invalid mode: {mode}. Choose either 'trailer' or 'poster'.")
+
+    return H_original, W_original, total_area, min_sharpness, min_sharpness_cla
 
 def detect_faces(frames, H_original, W_original, area_type, batch_size, device, num_cpu_threads):
     ### Detect faces in the video
@@ -58,7 +86,7 @@ def filter_detections_classifications(detections, min_conf, min_sharpness, max_z
 
     return filtered_detections
 
-def classify_faces(filtered_detections, batch_size, device, conf_threshold=1.1):
+def classify_faces(filtered_detections, batch_size: int, device: str, gender_conf_threshold: float = 1.2, age_conf_threshold: float = 1.05, ethnicity_conf_threshold: float = 1.1):
     ### Classify all filtered faces
 
     classifier = scripts.VisionClassifier(device = device)
@@ -69,9 +97,9 @@ def classify_faces(filtered_detections, batch_size, device, conf_threshold=1.1):
 
         for i, det in enumerate(filtered_detections):
             #print(gender_confs[i], age_confs[i], ethnicity_confs[i])
-            det["gender"] = genders[i] if gender_confs[i] >= (1.2 / 2) else "unknown"
-            det["age"] = ages[i] if age_confs[i] >= (1.05 / 9) else "unknown"
-            det["ethnicity"] = ethnicities[i] if ethnicity_confs[i] >= (1.1 / 7) else "unknown"
+            det["gender"] = genders[i] if gender_confs[i] >= (gender_conf_threshold / 2) else "unknown"
+            det["age"] = ages[i] if age_confs[i] >= (age_conf_threshold / 9) else "unknown"
+            det["ethnicity"] = ethnicities[i] if ethnicity_confs[i] >= (ethnicity_conf_threshold / 7) else "unknown"
     
     return filtered_detections, flattened_faces
 
@@ -95,7 +123,9 @@ def main(source, num_cpu, batch_size, min_area, max_area, min_conf, min_conf_cla
     start_time = datetime.now()
 
     ### Load data
-    data = load_data(source)
+    data, source_type = load_data(source)
+    if source_type == "url":
+        poster = data["image"]
     print("Data loaded", datetime.now() - start_time)
 
     ### Extract frames from video
@@ -105,23 +135,42 @@ def main(source, num_cpu, batch_size, min_area, max_area, min_conf, min_conf_cla
     ### Initialize constants
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    overall_sharpness = 0
-    for frame in frames:
-        overall_sharpness += scripts.compute_sharpness(frame)/len(frames)
-    min_sharpness = overall_sharpness/42
-    min_sharpness_cla = overall_sharpness/7.3
+    if source_type == "url" :
+        ### Infer on poster
+        print("----- Predicting on poster -----")
 
-    H_original, W_original = frames[0].shape[:2]
-    effective_height = W_original / 2.478 # 2.4 is the aspect ratio of the video
-    effective_area = effective_height * W_original
-    
-    '''effective_top_left, effective_bot_right = scripts.find_video_effective_area(frames)
-    effective_height = effective_bot_right[1] - effective_top_left[1]
-    effective_width = effective_bot_right[0] - effective_top_left[0]
-    effective_area = effective_height * effective_width
-    print("Effective dimensions:", effective_height, effective_width, datetime.now() - start_time)
+        ### Initialize constants
+        H_original, W_original, total_area, _, _= compute_constants(poster, mode = "poster")
+        print("Constants initialized", datetime.now() - start_time)
 
-    frames = frames[:,effective_top_left[1]:effective_bot_right[1], effective_top_left[0]:effective_bot_right[0]]'''
+        ### Detect faces in the poster
+        detections = detect_faces(poster, H_original, W_original, area_type="face", batch_size=1, device=device, num_cpu_threads=num_cpu)
+        print("Faces detected", datetime.now() - start_time)
+
+        ### Classify all faces
+        classified_faces, _= classify_faces(detections, batch_size, device)
+        print("Faces classified", datetime.now() - start_time)
+
+        ### Detect bodies in the poster
+        body_detections = detect_faces(poster, H_original, W_original, area_type="body", batch_size=1, device=device, num_cpu_threads=num_cpu)
+        print("Bodies detected", datetime.now() - start_time)
+
+        linked_detections = scripts.link_faces_to_bodies(classified_faces, body_detections)
+
+        for id, face in enumerate(linked_detections):
+            occupied_area = scripts.compute_area(face["body_bbox"], total_area)
+            print(f"Character {id} with predicted gender: {face['gender']}, age: {face['age']}, ethnicity: {face['ethnicity']} representing {occupied_area:.2%} of the image")
+
+        ### Draw predictions on poster
+        scripts.draw_predictions_on_poster(poster, linked_detections)
+        print("Poster with predictions saved", datetime.now() - start_time)
+
+    ### Infer on trailer
+    print("----- Predicting on trailer -----")
+
+    ### Initialize constants
+    H_original, W_original, effective_area, min_sharpness, min_sharpness_cla = compute_constants(frames, mode = "trailer")
+    print("Constants initialized", datetime.now() - start_time)
 
     ### Detect faces in the video
     detections = detect_faces(frames, H_original, W_original, area_type="face", batch_size=batch_size, device=device, num_cpu_threads=num_cpu)
