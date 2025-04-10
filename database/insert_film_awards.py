@@ -28,37 +28,35 @@ def import_csv(filename):
     try:
         with open(filename, newline='', encoding='utf-8') as csvfile:
             reader = csv.DictReader(csvfile)
-            for row in reader:
+            for i, row in enumerate(reader):
                 film_title = row['title']
-                director_name = row['director']
                 country_name = row['country']
-                link = row['link']
                 festival_name = row['festival']
                 year = int(row['year'])
                 distinction = row['distinction']
                 reward = row['reward']
 
-                # to check if "film award" CSV column exist, get festival award by name and join with festival name
-                f = festival_award_repository.get_festival_award_by_name(session, festival_name, reward)
-                print(f)
-                if not f:
-                    country = country_repository.find_or_create_country(session, country_name)
+                country = country_repository.find_or_create_country(session, country_name)
+
+                film = film_repository.find_or_create_film(session, film_title)
+
+                allocation_null = float(0)
+                film_country_budget_allocation_repository.find_or_create_budget_allocation(session, film.id, country.id, allocation_null)
                     
-                    film = film_repository.find_or_create_film(session, film_title)
+                festival = festival_repository.find_or_create_festival(session, country.id, festival_name, "", "")
                     
-                    allocation_null = float(0)
-                    film_country_budget_allocation_repository.find_or_create_budget_allocation(session, film.id, country.id, allocation_null)
-                    
-                    festival = festival_repository.find_or_create_festival(session, country.id, film_title, "", "")
-                    
-                    festival_award = festival_award_repository.insert_festival_award(session, reward, festival.id)
-                    
-                    # Determine whether the award is a winner
-                    is_winner = True if distinction == "Lauréat" else False 
-                    award_nomination_repository.find_or_create_award_nomination(session, film.id, festival_award.id, is_winner, datetime.date(year, 1, 1))
-            session.commit()            
+                festival_award = festival_award_repository.insert_festival_award(session, reward, festival.id)
+
+                # Determine whether the award is a winner
+                is_winner = distinction == "Lauréat" 
+                award_nomination_repository.find_or_create_award_nomination(session, film.id, festival_award.id, is_winner, datetime.date(year, 1, 1))
+                if i % 1000 == 0:
+                    print(f"Processed {i} rows...")
+
+            session.commit()
+            print("Import completed successfully!")
     except Exception as e:
-        logging.error(f"An error occurred during CSV import: {e}")
+        logging.error(f"An error occurred: {e}")
         session.rollback()  # Rollback the transaction if an error occurs
 # Run the script
 if __name__ == "__main__":
