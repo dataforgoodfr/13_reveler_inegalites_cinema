@@ -1,8 +1,5 @@
-# from pathlib import Path
-# from database import SessionLocal
 import datetime
 import logging
-from database.models import Country
 import csv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -58,6 +55,7 @@ def import_csv(filename):
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         session.rollback()  # Rollback the transaction if an error occurs
+
 # Run the script
 if __name__ == "__main__":
     file_path = "./database/data/mubi/films_all_awards.csv"
