@@ -1,3 +1,4 @@
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from database.models import Film
 
@@ -12,4 +13,10 @@ def find_or_create_film(session: Session, original_name: str) -> Film:
     if not film:
         data = { "original_name": original_name }
         film = create_film(session, data)
+    return film
+
+def find_film(session: Session, visa_number: str | int) -> Film | None:
+    film = session.execute(
+        select(Film).where(Film.visa_number == str(visa_number))
+    ).first()
     return film

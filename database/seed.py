@@ -1,7 +1,7 @@
 from tqdm import tqdm # Progress bar for long-running tasks
 from database.database import SessionLocal
 from database.data.cnc.extract_cnc_data_from_excel import ExtractCncDataFromExcel
-from backend.repositories.film_repository import create_film
+from backend.repositories.film_repository import create_film, find_film
 from backend.repositories.country_repository import find_or_create_country
 from backend.repositories.film_country_budget_allocation_repository import create_budget_allocation
 from backend.repositories.film_credit_repository import create_film_credit
@@ -20,6 +20,10 @@ def seed_cnc_movies():
     try:
         with session.begin():  # starts a transaction, will rollback on error
             for _, row in tqdm(data.iterrows(), total=len(data), desc="Seeding CNC films"):
+                visa_number = row["visa_number"]
+                if find_film(session, visa_number) is not None:
+                    continue  # Skip if already seeded
+
                 film_data = {
                     "visa_number": row["visa_number"],
                     "original_name": row["original_name"],
