@@ -76,3 +76,20 @@ Voici une liste non exhaustive de commandes simples à exécuter sur la tables `
         session.delete(film)
         session.commit()
     ```
+
+## 📦 `routers/`
+
+Tous les points d'entrée HTTP (routes) sont définis dans le dossier `routers/`.  
+Chaque fichier regroupe les routes selon une logique métier, par exemple :
+
+- `routers/films.py` → toutes les routes liées aux films
+
+Les routes sont définies à l’aide du `APIRouter` de FastAPI et sont ensuite incluses dans l’application principale via `main.py`.
+
+## ⚙️ `use_cases/`
+
+La logique métier est isolée dans des classes dédiées appelées "use cases", situées dans le dossier `use_cases/`.  
+Chaque use case encapsule une opération spécifique, ce qui permet de garder les handlers de routes simples et lisibles.
+
+Par exemple :
+- `GetFilmDetails` dans `use_cases/get_film_details.py` contient toute la logique nécessaire pour récupérer les informations détaillées d’un film.
