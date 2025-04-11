@@ -1,0 +1,32 @@
+{
+    "films": [
+        {
+            "id": 1,
+            "title": "L'amour ouf",
+            "image": "/l_amour_ouf.jpg",
+            "year": "2024",
+            "director": "Gilles Lelouche"
+        },
+        {
+            "id": 2,
+            "title": "Amour",
+            "image": "/amour.png",
+            "year": "2012",
+            "director": "Michael Haneke"
+        },
+        {
+            "id": 3,
+            "title": "L'amour et les forêts",
+            "image": "/l_amour_et_les_forets.png",
+            "year": "2023",
+            "director": "Valérie Donzelli"
+        },
+        {
+            "id": 4,
+            "title": "L'amour c'est surcôté",
+            "image": "/l_amour_c_est_surcote.png",
+            "year": "2024",
+            "director": "Mourad Winter"
+        }
+    ]
+}
