@@ -1,0 +1,174 @@
+{
+  "title": "L'amour ouf",
+  "image": "/l_amour_ouf.jpg",
+  "year": "2024",
+  "director": "Gilles Lelouche",
+  "country": "Film français",
+  "airing_date": "16 octobre 2024",
+  "duration": "2h40min",
+  "tags": ["Comédie", "Romance", "Thriller"],
+  "parity": false,
+  "statistics": {
+    "chiefs": 0.6,
+    "main_casting": 0.37
+  },
+  "distribution": {
+    "distributor": "StudioCanal",
+    "production": [
+      "Trésor Films",
+      "Chi-Fou-Mi Productions",
+      "StudioCanal",
+      "Cool Industrie",
+      "France 2 Cinéma",
+      "Artémis Productions",
+      "Proximus",
+      "VOO & Be tv"
+    ],
+    "budget": "35,7 M$"
+  },
+  "film_crew": [
+    {
+      "role": "Réalisateur.rice",
+      "members": [
+        {
+          "name": "Gilles Lelouche",
+          "isMale": true
+        }
+      ]
+    },
+    {
+      "role": "Producteur.ice délégué.e",
+      "members": [
+        {
+          "name": "Gilles Lelouche",
+          "isMale": true
+        }
+      ]
+    },
+    {
+      "role": "Script",
+      "members": [
+        {
+          "name": "Julie Darfeuil",
+          "isMale": false
+        }
+      ]
+    },
+    {
+      "role": "Co-scénariste",
+      "members": [
+        {
+          "name": "Gilles Lelouche",
+          "isMale": true
+        },
+        {
+          "name": "Ahmed Hamidi",
+          "isMale": true
+        },
+        {
+          "name": "Audrey Diwan",
+          "isMale": false
+        }
+      ]
+    },
+    {
+      "role": "Chef opérateur",
+      "members": [
+        {
+          "name": "Laurent Tanguy",
+          "isMale": true
+        }
+      ]
+    },
+    {
+      "role": "Assistant.e à la réalisation",
+      "members": [
+        {
+          "name": "Laurent Tanguy",
+          "isMale": true
+        }
+      ]
+    },
+    {
+      "role": "Effets spéciaux",
+      "members": [
+        {
+          "name": "Laurent Tanguy",
+          "isMale": true
+        }
+      ]
+    },
+    {
+      "role": "Ingénieur du son",
+      "members": [
+        {
+          "name": "Julie Darfeuil",
+          "isMale": false
+        },
+        {
+          "name": "Cédric Deloche",
+          "isMale": false
+        }
+      ]
+    }
+  ],
+  "casting": [
+    {
+      "name": "Adèle Exarchopoulos",
+      "isMale": false
+    },
+    {
+      "name": "François Civil",
+      "isMale": true
+    },
+    {
+      "name": "Mallory Wanecque",
+      "isMale": true
+    },
+    {
+      "name": "Malik Frikah",
+      "isMale": true
+    },
+    {
+      "name": "Alain Chabat",
+      "isMale": true
+    },
+    {
+      "name": "Benoît Poelvoorde",
+      "isMale": true
+    },
+    {
+      "name": "Vincent Lacoste",
+      "isMale": true
+    },
+    {
+      "name": "Jean-Pascal Zadi",
+      "isMale": true
+    }
+  ],
+  "ranking": {
+    "awards": ["César de la meilleure actrice"],
+    "selections": [
+      {
+        "name": "Cérémonie des Césars (50ème édition)",
+        "nominations": [
+          "Meilleure actrice",
+          "Meilleure acteur",
+          "Meilleure réalisation"
+        ]
+      },
+      {
+        "name": "Festival de Cannes 2025",
+        "nominations": [
+          "Meilleure actrice"
+        ]
+      },
+      {
+        "name": "Lumières de la presse étrangère 2025",
+        "nominations": [
+          "Meilleure actrice"
+        ]
+      }
+    ]
+  }
+}
