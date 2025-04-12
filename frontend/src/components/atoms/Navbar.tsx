@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Button } from "../ui/button";
-import filmsData from "@/app/films/films.json"; // Importer les données JSON
 import { Input } from "../ui/input";
 import { usePathname } from 'next/navigation'
 
@@ -18,16 +17,24 @@ const Navbar = () => {
     setIsOpen(!isOpen);
   };
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value.toLowerCase();
-    setSearchQuery(query);
-
-    // Filtrer les films en fonction de l'input
+    
     if (query) {
-      const results = filmsData.films.filter((film) =>
-        film.title.toLowerCase().includes(query)
-      );
-      setFilteredFilms(results);
+      setSearchQuery(query);
+      try {
+        const url = `http://localhost:5001/search?q=${query}`;
+        const response = await fetch(url); // Default mode (CORS enabled on backend)
+        
+        if (!response.ok) {
+          throw new Error(`Erreur HTTP ! statut : ${response.status}`);
+        }
+
+        const data = await response.json();
+        setFilteredFilms(data);
+      } catch (error) {
+        console.error("Erreur lors de la recherche :", error);
+      }
     } else {
       setFilteredFilms([]);
     }
