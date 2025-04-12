@@ -44,7 +44,7 @@ def sample_frames(indices:list, trailer_path:str) -> tuple[list, list]:
     return subframes
 
 
-def get_faces(subframes:np.ndarray, vision_detector:vision_detection.VisionDetection) -> list:
+def get_faces(subframes: np.ndarray, vision_detector: vision_detection.VisionDetection) -> list:
     detections = vision_detector.crop_areas_of_interest(
         images=subframes, H_original=subframes.shape[1], W_original=subframes.shape[2])
     return detections
@@ -69,9 +69,9 @@ def annotate_results(detections:list, subframes:list, subframe_indices:list, are
         face_centroid = ((x2 + x1) / 2, (y2 + y1) / 2)
         imgdraw.show()
 
-        annotation = input(
-            f'Do you want to annotate this {area_type} ? Answer with Yes or No.\n')
-        match annotation.lower():
+        label = input(
+            'Do you want to label this face ? Answer with Yes or No.\n')
+        match label.lower():
             case 'yes':
                 gender = input(
                     'Provide the perceived gender of the detected character (Male or Female).\n')
@@ -98,18 +98,12 @@ def annotate_results(detections:list, subframes:list, subframe_indices:list, are
     return d_annotated_results
 
 
-def annotate_trailer(trailer_directory:str) -> None:
-    """ 
-    Given a trailer with '.mp4' extension, guides the user through the annotation procedure.
-    
-    Parameters :
-    ----------
-    trailer_directory : str
-        Name of the directory where the trailer is saved, *NOT* path to the trailer itself. The trailer without extension and directory name should be identical (e.g. for the movie 'The Shining', file 'The Shining.mp4' should be in a directory named 'The Shining'. This directory should be a subdirectory of directory 'evaluation_trailers'.
-    """
-
+def main(trailer_directory: str) -> None:
     trailer_path = os.path.join('evaluation_trailers', trailer_directory, trailer_directory)
     print(
+        f'Outputting frame-numbered trailer to {trailer_path}_with_frames.avi')
+    if os.path.isfile(f'{trailer_path}_with_frames.avi'):
+        print(f'{trailer_path}_with_frames.avi already exists, moving on')
         f'Outputting frame-numbered trailer to {trailer_path}_with_frames.avi')
     if os.path.isfile(f'{trailer_path}_with_frames.avi'):
         print(f'{trailer_path}_with_frames.avi already exists, moving on')
@@ -121,9 +115,9 @@ def annotate_trailer(trailer_directory:str) -> None:
     vision_detector, _ = get_vision_modules()
     subframes = sample_frames(indices, f'{trailer_path}.mp4')
     detections = get_faces(subframes, vision_detector)
-    d_annotated_results = annotate_results(detections, subframes, indices)
+    d_labeled_results = label_results(detections, subframes, indices)
     with open(f'{trailer_path}_annotated.pkl', 'wb') as outfile:
-        pkl.dump(d_annotated_results, outfile)
+        pkl.dump(d_labeled_results, outfile)
     outfile.close()
 
 
@@ -154,45 +148,25 @@ def evaluate_trailer(trailer_directory:str, evaluation_type:str = 'binary') -> f
             else :
                 mask.append(0)
         frame_detections = [frame_detections[k]['cropped_face'] for k in range(len(frame_detections)) if mask[k] == 1]
-        ages, genders, ethnicities, age_confs, gender_confs, ethnicity_confs = vision_classifier.predict_age_gender_ethnicity(frame_detections, expose_confs=True)
-        
+        ages, genders, ethnicities, age_confs, gender_confs, ethnicity_confs = vision_classifier.predict_age_gender_ethnicity(frame_detections)
         for j in range(len(matches)):
             frame_annotations[matches[j]]['predicted_age'] = ages[j]
-            frame_annotations[matches[j]]['predicted_age_confs'] = age_confs[j]        
+            frame_annotations[matches[j]]['predicted_age_conf'] = age_confs[j]        
             frame_annotations[matches[j]]['predicted_gender'] = genders[j]
-            frame_annotations[matches[j]]['predicted_gender_confs'] = gender_confs[j]        
+            frame_annotations[matches[j]]['predicted_gender_conf'] = gender_confs[j]        
             frame_annotations[matches[j]]['predicted_ethnicity'] = ethnicities[j]
-            frame_annotations[matches[j]]['predicted_ethnicity_confs'] = ethnicity_confs[j]        
-
+            frame_annotations[matches[j]]['predicted_ethnicity_conf'] = ethnicity_confs[j]        
+        
         frame_scores.extend(score_evaluation(frame_annotations, evaluation_type))
-    return np.mean(frame_scores)
+    return frame_scores
 
 
 def score_evaluation(frame_annotations:dict, evaluation_type:str = 'binary') -> list:
-    age_labels = {
-        0 : '0-2', 1 : '3-9', 2 : '10-19', 3 : '20-29', 4 : '30-39',
-        5 : '40-49', 6 : '50-59', 7 : '60-69', 8 : '70+',
-        }
-
-    gender_labels = {
-        0 : 'Male', 1 : 'Female',
-        }
-
-    ethnicity_labels = {
-        0 : 'White', 1 : 'Black', 2 : 'Latino_Hispanic', 3 : 'East Asian',
-        4 : 'Southeast Asian', 5 : 'Indian', 6 : 'Middle Eastern',
-        }
-    
-    rev_age_labels = {age_labels[key] : key for key in sorted(age_labels)}
-    rev_gender_labels = {gender_labels[key] : key for key in sorted(gender_labels)}
-    rev_ethnicity_labels = {ethnicity_labels[key] : key for key in sorted(ethnicity_labels)}
-                      
     annotation_scores = []
     keys = ['age', 'gender', 'ethnicity']
-    feat_dicts = [rev_age_labels, rev_gender_labels, rev_ethnicity_labels]
     for annotation in frame_annotations.values():
         score = 0
-        for key, feat_dict in zip(keys, feat_dicts, strict=False) :
+        for key in keys :
             if annotation[key] == annotation[f'predicted_{key}'] :
                 score += 0
             else :
@@ -200,14 +174,12 @@ def score_evaluation(frame_annotations:dict, evaluation_type:str = 'binary') -> 
                     case 'binary' :
                         score += 1
                     case _ :
-                        annot_idx = feat_dict[annotation[key]]
-                        score += 1 - annotation[f'predicted_{key}_confs'][annot_idx]
-                        
+                        score += 1 - annotation[f'predicted_{key}_conf']
         annotation_scores.append(score / len(keys))
     return annotation_scores
 
 
-def save_displayed_annotations(trailer_directory:str) -> None:
+def save_annotations(trailer_directory:str) -> None:
     trailer_path = os.path.join('evaluation_trailers', trailer_directory, trailer_directory)
     os.makedirs(os.path.join('evaluation_trailers', trailer_directory, 'annotated_frames'), exist_ok=True)
     with open(f'{trailer_path}_annotated.pkl', 'rb') as infile :
@@ -232,6 +204,8 @@ def save_displayed_annotations(trailer_directory:str) -> None:
                     color = (255, 0, 0)
             
             draw.rectangle((x1, y1, x2, y2), outline=color, width=2)
+#            draw.text((box[0], box[1] - 1), txt, anchor="lb", fill=fill, font=font)
             draw.text((x1, y1 - 1), f"{frame_annotations[i]['age']}, {frame_annotations[i]['ethnicity']}", 
                       anchor='lb', fill=color, font=font)
+        #imgdraw.show()
         imgdraw.save(os.path.join('evaluation_trailers', trailer_directory, 'annotated_frames', f'annotated_frame_{index}.png'))
