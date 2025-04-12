@@ -155,7 +155,7 @@ def evaluate_trailer(trailer_directory:str, evaluation_type:str = 'binary') -> f
             frame_annotations[matches[j]]['predicted_ethnicity_conf'] = ethnicity_confs[j]        
         
         frame_scores.extend(score_evaluation(frame_annotations, evaluation_type))
-    return frame_scores
+    return np.mean(frame_scores)
 
 
 def score_evaluation(frame_annotations:dict, evaluation_type:str = 'binary') -> list:
