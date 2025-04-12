@@ -88,9 +88,9 @@ def annotate_results(detections: list, subframes: list, subframe_indices: list, 
         face_centroid = ((x2 + x1) / 2, (y2 + y1) / 2)
         imgdraw.show()
 
-        annotation = input(
-            f'Do you want to annotate this {area_type} ? Answer with Yes or No.\n')
-        match annotation.lower():
+        label = input(
+            'Do you want to label this face ? Answer with Yes or No.\n')
+        match label.lower():
             case 'yes':
                 gender = get_valid_input(
                     'Provide the perceived gender of the detected character.',
@@ -136,6 +136,9 @@ def annotate_trailer(trailer_directory: str) -> None:
         f'Outputting frame-numbered trailer to {trailer_path}_with_frames.avi')
     if os.path.isfile(f'{trailer_path}_with_frames.avi'):
         print(f'{trailer_path}_with_frames.avi already exists, moving on')
+        f'Outputting frame-numbered trailer to {trailer_path}_with_frames.avi')
+    if os.path.isfile(f'{trailer_path}_with_frames.avi'):
+        print(f'{trailer_path}_with_frames.avi already exists, moving on')
     else:
         get_frames(f'{trailer_path}.mp4')
     indices = list(
@@ -144,9 +147,9 @@ def annotate_trailer(trailer_directory: str) -> None:
     vision_detector, _ = get_vision_modules()
     subframes = sample_frames(indices, f'{trailer_path}.mp4')
     detections = get_faces(subframes, vision_detector)
-    d_annotated_results = annotate_results(detections, subframes, indices)
+    d_labeled_results = label_results(detections, subframes, indices)
     with open(f'{trailer_path}_annotated.pkl', 'wb') as outfile:
-        pkl.dump(d_annotated_results, outfile)
+        pkl.dump(d_labeled_results, outfile)
     outfile.close()
 
 
@@ -222,7 +225,6 @@ def score_evaluation(frame_annotations: dict, evaluation_type: str = 'binary') -
 
     annotation_scores = []
     keys = ['age', 'gender', 'ethnicity']
-    feat_dicts = [rev_age_labels, rev_gender_labels, rev_ethnicity_labels]
     for annotation in frame_annotations.values():
         score = 0
         for key, feat_dict in zip(keys, feat_dicts, strict=False):
