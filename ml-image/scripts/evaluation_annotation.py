@@ -145,25 +145,45 @@ def evaluate_trailer(trailer_directory:str, evaluation_type:str = 'binary') -> f
             else :
                 mask.append(0)
         frame_detections = [frame_detections[k]['cropped_face'] for k in range(len(frame_detections)) if mask[k] == 1]
-        ages, genders, ethnicities, age_confs, gender_confs, ethnicity_confs = vision_classifier.predict_age_gender_ethnicity(frame_detections)
+        ages, genders, ethnicities, age_confs, gender_confs, ethnicity_confs = vision_classifier.predict_age_gender_ethnicity(frame_detections, expose_confs=True)
+        
         for j in range(len(matches)):
             frame_annotations[matches[j]]['predicted_age'] = ages[j]
-            frame_annotations[matches[j]]['predicted_age_conf'] = age_confs[j]        
+            frame_annotations[matches[j]]['predicted_age_confs'] = age_confs[j]        
             frame_annotations[matches[j]]['predicted_gender'] = genders[j]
-            frame_annotations[matches[j]]['predicted_gender_conf'] = gender_confs[j]        
+            frame_annotations[matches[j]]['predicted_gender_confs'] = gender_confs[j]        
             frame_annotations[matches[j]]['predicted_ethnicity'] = ethnicities[j]
-            frame_annotations[matches[j]]['predicted_ethnicity_conf'] = ethnicity_confs[j]        
-        
+            frame_annotations[matches[j]]['predicted_ethnicity_confs'] = ethnicity_confs[j]        
+
         frame_scores.extend(score_evaluation(frame_annotations, evaluation_type))
-    return frame_scores
+    return np.mean(frame_scores)
 
 
 def score_evaluation(frame_annotations:dict, evaluation_type:str = 'binary') -> list:
+    age_labels = {
+        0 : '0-2', 1 : '3-9', 2 : '10-19', 3 : '20-29', 4 : '30-39',
+        5 : '40-49', 6 : '50-59', 7 : '60-69', 8 : '70+',
+        }
+
+    gender_labels = {
+        0 : 'Male', 1 : 'Female',
+        }
+
+    ethnicity_labels = {
+        0 : 'White', 1 : 'Black', 2 : 'Latino_Hispanic', 3 : 'East Asian',
+        4 : 'Southeast Asian', 5 : 'Indian', 6 : 'Middle Eastern',
+        }
+    
+    rev_age_labels = {age_labels[key] : key for key in sorted(age_labels)}
+    rev_gender_labels = {gender_labels[key] : key for key in sorted(gender_labels)}
+    rev_ethnicity_labels = {ethnicity_labels[key] : key for key in sorted(ethnicity_labels)}
+                      
     annotation_scores = []
     keys = ['age', 'gender', 'ethnicity']
+    feat_dicts = [rev_age_labels, rev_gender_labels, rev_ethnicity_labels]
     for annotation in frame_annotations.values():
         score = 0
-        for key in keys :
+        for key, feat_dict in zip(keys, feat_dicts) :
             if annotation[key] == annotation[f'predicted_{key}'] :
                 score += 0
             else :
@@ -171,7 +191,8 @@ def score_evaluation(frame_annotations:dict, evaluation_type:str = 'binary') -> 
                     case 'binary' :
                         score += 1
                     case _ :
-                        score += 1 - annotation[f'predicted_{key}_conf']
+                        annot_idx = feat_dict[annotation[key]]
+                        score += 1 - annotation[f'predicted_{key}_confs'][annot_idx]
         annotation_scores.append(score / len(keys))
     return annotation_scores
 
