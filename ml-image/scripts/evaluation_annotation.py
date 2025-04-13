@@ -225,6 +225,7 @@ def score_evaluation(frame_annotations: dict, evaluation_type: str = 'binary') -
 
     annotation_scores = []
     keys = ['age', 'gender', 'ethnicity']
+    feat_dicts = [rev_age_labels, rev_gender_labels, rev_ethnicity_labels]
     for annotation in frame_annotations.values():
         score = 0
         for key, feat_dict in zip(keys, feat_dicts, strict=False):
