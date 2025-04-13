@@ -30,7 +30,9 @@ class VisionClassifier :
         # weights available @ https://drive.google.com/file/d/113QMzQzkBDmYMs9LwzvD-jxEZdBQ5J4X/view?usp=drive_link
 
 
-    def predict_age_gender_ethnicity(self, faces: list, batch_size: int = 64) -> tuple[list, list, list, list, list, list]:
+    def predict_age_gender_ethnicity(
+            self, faces: list, batch_size: int = 64, expose_confs:bool = False
+            ) -> tuple[list, list, list, list, list, list]:
         ethnicity_labels = {
             0 : 'White', 1 : 'Black', 2 : 'Latino_Hispanic', 3 : 'East Asian',
             4 : 'Southeast Asian', 5 : 'Indian', 6 : 'Middle Eastern',
@@ -74,11 +76,19 @@ class VisionClassifier :
                 ages.extend(age_results.indices.tolist())
                 genders.extend(gender_results.indices.tolist())
                 ethnicities.extend(ethnicity_results.indices.tolist())
-
-                age_confidences.extend(age_results.values.tolist())
-                gender_confidences.extend(gender_results.values.tolist())
-                ethnicity_confidences.extend(ethnicity_results.values.tolist())
-
+                
+                if expose_confs :
+                    age_confs = torch.softmax(age_outputs, dim = 1).tolist()
+                    gender_confs = torch.softmax(gender_outputs, dim = 1).tolist()
+                    ethnicity_confs = torch.softmax(ethnicity_outputs, dim = 1).tolist()
+                    age_confidences.extend(age_confs)
+                    gender_confidences.extend(gender_confs)
+                    ethnicity_confidences.extend(ethnicity_confs)
+                else :
+                    age_confidences.extend(age_results.values.tolist())
+                    gender_confidences.extend(gender_results.values.tolist())
+                    ethnicity_confidences.extend(ethnicity_results.values.tolist())
+                
         ages = [age_labels[age] for age in ages]
         genders = [gender_labels[gender] for gender in genders]
         ethnicities = [ethnicity_labels[ethnicity] for ethnicity in ethnicities]
