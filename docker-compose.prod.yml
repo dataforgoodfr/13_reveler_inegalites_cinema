@@ -1,0 +1,59 @@
+services:
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-ric_db}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - web
+
+  backend:
+    image: ${DOCKERHUB_USERNAME}/ric-backend:latest
+    expose:
+      - 5001
+    environment:
+      - DATABASE_URL=postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-ric_db}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - web
+
+  frontend:
+    image: ${DOCKERHUB_USERNAME}/ric-frontend:latest
+    expose:
+      - 80
+    depends_on:
+      - backend
+    networks:
+      - web
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - web
+
+volumes:
+  db-data:
+
+networks:
+  web:
+    driver: bridge
