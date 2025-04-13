@@ -4,6 +4,9 @@ FROM python:3.10
 # Install Poetry
 RUN pip install poetry
 
+# Disable venvs for Docker
+ENV POETRY_VIRTUALENVS_CREATE=false
+
 # Set the working directory in the container
 WORKDIR /backend
 
