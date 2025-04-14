@@ -1,11 +1,12 @@
 from PIL import Image, ImageDraw
 import cv2
-import vision_detection
 import numpy as np
-from utils import frame_capture
 from copy import deepcopy
 import psutil
 import pickle as pkl
+
+from utils import frame_capture
+import vision_detection
 
 
 def get_frames(trailer_path: str) -> None:
