@@ -1,14 +1,11 @@
 import cv2
 import numpy as np
-import os
-import pickle as pkl
-import psutil
-import vision_classifiers
-import vision_detection
-
 from copy import deepcopy
-from PIL import Image, ImageDraw, ImageFont
+import psutil
+import pickle as pkl
+
 from utils import frame_capture
+import vision_detection
 
 
 def get_frames(trailer_path:str) -> None:
