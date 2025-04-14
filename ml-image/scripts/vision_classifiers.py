@@ -1,4 +1,3 @@
-
 import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms, models
@@ -34,7 +33,6 @@ class VisionClassifier:
     def predict_age_gender_ethnicity(
             self, faces: list, batch_size: int = 64, expose_confs: bool = False
     ) -> tuple[list, list, list, list, list, list]:
-
         ethnicity_labels = {
             0: 'White', 1: 'Black', 2: 'Latino_Hispanic', 3: 'East Asian',
             4: 'Southeast Asian', 5: 'Indian', 6: 'Middle Eastern',
