@@ -51,6 +51,21 @@ def detect_faces(frames, H_original, W_original, area_type, batch_size, device, 
 
     return detections
 
+def filter_detections_poster(detections, total_area, min_area, min_conf):
+    ### Filter detections
+
+    filters = scripts.DetectionFilter(
+        simple_filters=[scripts.validates_confidence_filter],
+        complex_filters=[],
+        area_type='face',
+        total_area=total_area,
+        min_area=min_area,
+        min_conf=min_conf
+    )    
+    filtered_detections = filters.apply(detections)
+
+    return filtered_detections
+
 def filter_detections_clustering(detections, effective_area, min_area, max_area, min_conf, min_sharpness, max_z, min_mouth_opening):
     ### Filter detections
 
@@ -86,7 +101,7 @@ def filter_detections_classifications(detections, min_conf, min_sharpness, max_z
 
     return filtered_detections
 
-def classify_faces(filtered_detections, batch_size: int, device: str, gender_conf_threshold: float = 1.2, age_conf_threshold: float = 1.05, ethnicity_conf_threshold: float = 1.1):
+def classify_faces(filtered_detections, batch_size: int, device: str, mode: str = "trailer", gender_conf_threshold: float = 1.2, age_conf_threshold: float = 1.05, ethnicity_conf_threshold: float = 1.1):
     ### Classify all filtered faces
 
     classifier = scripts.VisionClassifier(device = device)
@@ -95,11 +110,21 @@ def classify_faces(filtered_detections, batch_size: int, device: str, gender_con
     if len(flattened_faces) > 0:
         ages, genders, ethnicities, age_confs, gender_confs, ethnicity_confs = classifier.predict_age_gender_ethnicity(flattened_faces, batch_size = batch_size)
 
-        for i, det in enumerate(filtered_detections):
-            #print(gender_confs[i], age_confs[i], ethnicity_confs[i])
-            det["gender"] = genders[i] if gender_confs[i] >= (gender_conf_threshold / 2) else "unknown"
-            det["age"] = ages[i] if age_confs[i] >= (age_conf_threshold / 9) else "unknown"
-            det["ethnicity"] = ethnicities[i] if ethnicity_confs[i] >= (ethnicity_conf_threshold / 7) else "unknown"
+        match mode:
+            case "trailer":
+                for i, det in enumerate(filtered_detections):
+                    det["gender"] = genders[i] if gender_confs[i] >= (gender_conf_threshold / 2) else "unknown"
+                    det["age"] = ages[i] if age_confs[i] >= (age_conf_threshold / 9) else "unknown"
+                    det["ethnicity"] = ethnicities[i] if ethnicity_confs[i] >= (ethnicity_conf_threshold / 7) else "unknown"
+            
+            case "poster":
+                for i, det in enumerate(filtered_detections):
+                    det["gender"] = genders[i]
+                    det["age"] = ages[i]
+                    det["ethnicity"] = ethnicities[i]
+
+            case _:
+                raise ValueError(f"Invalid mode: {mode}. Choose either 'trailer' or 'poster'.")
     
     return filtered_detections, flattened_faces
 
@@ -147,13 +172,23 @@ def main(source, num_cpu, batch_size, min_area, max_area, min_conf, min_conf_cla
         detections = detect_faces(poster, H_original, W_original, area_type="face", batch_size=1, device=device, num_cpu_threads=num_cpu)
         print("Faces detected", datetime.now() - start_time)
 
+        ### Filter detections
+        filtered_detections = filter_detections_poster(detections, total_area, min_area, min_conf)
+        print("Faces filtered", datetime.now() - start_time)
+
+        for i, face in enumerate(filtered_detections):
+            cv2.imwrite(f"example/detections/face_{i}.jpg", face["cropped_face"])
+
         ### Classify all faces
-        classified_faces, _= classify_faces(detections, batch_size, device)
+        classified_faces, _= classify_faces(filtered_detections, batch_size, device, mode = "poster")
         print("Faces classified", datetime.now() - start_time)
 
         ### Detect bodies in the poster
         body_detections = detect_faces(poster, H_original, W_original, area_type="body", batch_size=1, device=device, num_cpu_threads=num_cpu)
         print("Bodies detected", datetime.now() - start_time)
+
+        for i, body in enumerate(body_detections):
+            cv2.imwrite(f"example/detections/body_{i}.jpg", body["cropped_body"])
 
         linked_detections = scripts.link_faces_to_bodies(classified_faces, body_detections)
 

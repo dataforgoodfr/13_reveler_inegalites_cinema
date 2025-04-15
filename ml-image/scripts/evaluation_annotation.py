@@ -6,6 +6,7 @@ from utils import frame_capture
 from copy import deepcopy 
 import psutil
 import pickle as pkl
+import os
 
 def get_frames(trailer_path:str) -> None:
     frames = frame_capture(trailer_path)

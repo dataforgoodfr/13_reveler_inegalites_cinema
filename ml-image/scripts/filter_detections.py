@@ -41,7 +41,7 @@ def compute_area(bbox: List[float], total_area: float) -> float:
 
 def validates_area_filter(det: Dict, **kwargs) -> bool:
     min_area = kwargs.get("min_area", 0.01)
-    max_area = kwargs.get("max_area", 0.5)
+    max_area = kwargs.get("max_area", 1.0)
     total_area = kwargs.get("total_area", 1.0)
     area = compute_area(det["bbox"], total_area)
     return min_area <= area <= max_area 

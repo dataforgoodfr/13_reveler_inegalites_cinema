@@ -61,11 +61,13 @@ class VisionDetection :
             if area_type == "face" :
                 for batch in dataloader:
                     batch = batch.to(self.device)
+                    batch = torch.clamp(batch, 0, 1)  # Ensure values are in [0, 1] range
                     detections = self.yolo_model_face(batch, verbose=False) 
                     results.extend(detections)
             else :
                 for batch in dataloader:
                     batch = batch.to(self.device)
+                    batch = torch.clamp(batch, 0, 1)  # Ensure values are in [0, 1] range
                     detections = self.yolo_model_person(batch, verbose=False, classes=[0])
                     results.extend(detections)
 
@@ -102,17 +104,15 @@ class VisionDetection :
 def link_faces_to_bodies(detections, body_detections):
     """
     Link faces to bodies based on bounding box overlap.
-    
-    ToDo: add a multiple faces management for one body.
     """
     linked_detections = []
 
-    for body in body_detections:
-        body_bbox = body["bbox"]  # Body bounding box 
-        body_faces = []
+    for face in detections:
+        face_bbox = face["bbox"]  # Face bounding box 
+        body_faces_candidates = []
 
-        for face in detections:
-            face_bbox = face["bbox"]  # Face bounding box 
+        for id, body in enumerate(body_detections):
+            body_bbox = body["bbox"]  # Body bounding box 
 
             # Check if the face is inside the body bounding box
             if (
@@ -121,16 +121,65 @@ def link_faces_to_bodies(detections, body_detections):
                 face_bbox[2] <= body_bbox[2] and  
                 face_bbox[3] <= body_bbox[3]    
             ):
-                body_faces.append(face)
-
-        for body_face in body_faces:
-            # Add the body and its associated faces to the linked detections
-            linked_detections.append({
-                "body_bbox": body["bbox"],
-                "bbox": body_face["bbox"],
-                "gender": body_face["gender"],
-                "age": body_face["age"],
-                "ethnicity": body_face["ethnicity"]
+                # Compute IoU
+                iou = compute_I_o_U(face_bbox, body_bbox)
+                body_faces_candidates.append((body, id, iou))
+        
+        match len(body_faces_candidates):
+            case 0:
+                # No body found for this face, add the face only
+                linked_detections.append({
+                    "body_bbox": face["bbox"],
+                    "bbox": face["bbox"],
+                    "gender": face["gender"],
+                    "age": face["age"],
+                    "ethnicity": face["ethnicity"]
+                })
+            
+            case _:
+                # Sort candidates by IoU and take the one with the highest IoU
+                body_faces_candidates.sort(key=lambda x: x[2], reverse=True)
+                body, id, _= body_faces_candidates[0]  # Take the body with the highest IoU
+                body_detections.pop(id)  # Remove the body from the list to avoid duplicates
+                # Add the linked face and body to the list
+                linked_detections.append({
+                    "body_bbox": body["bbox"],
+                    "bbox": face["bbox"],
+                    "gender": face["gender"],
+                    "age": face["age"],
+                    "ethnicity": face["ethnicity"]
                 })
 
     return linked_detections
+
+def compute_I_o_U(face_bbox, body_bbox):
+    """
+    Compute the Intersection over Union (IoU) between two bounding boxes.
+    
+    Parameters:
+        face_bbox (list): Bounding box of the face [x1, y1, x2, y2].
+        body_bbox (list): Bounding box of the body [x1, y1, x2, y2].
+
+    Returns:
+        float: IoU value.
+    """
+    # Calculate the coordinates of the intersection rectangle
+    x1_inter = max(face_bbox[0], body_bbox[0])
+    y1_inter = max(face_bbox[1], body_bbox[1])
+    x2_inter = min(face_bbox[2], body_bbox[2])
+    y2_inter = min(face_bbox[3], body_bbox[3])
+
+    # Calculate the area of intersection rectangle
+    inter_area = max(0, x2_inter - x1_inter) * max(0, y2_inter - y1_inter)
+
+    # Calculate the area of both bounding boxes
+    face_area = (face_bbox[2] - face_bbox[0]) * (face_bbox[3] - face_bbox[1])
+    body_area = (body_bbox[2] - body_bbox[0]) * (body_bbox[3] - body_bbox[1])
+
+    # Calculate the area of union
+    union_area = face_area + body_area - inter_area
+
+    # Calculate IoU
+    iou = inter_area / union_area if union_area > 0 else 0
+
+    return iou

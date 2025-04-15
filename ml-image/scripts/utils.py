@@ -44,12 +44,12 @@ def get_data_from_url(url: str,
             data_model = figure_tag['data-model']
             data_model = json.loads(data_model)
             video_sources = data_model['videos'][0]['sources']
-            if "medium" in video_sources :
-                link = video_sources["medium"]
-                quality = "medium"
-            elif "high" in video_sources :
+            if "high" in video_sources :
                 link = video_sources["high"]
                 quality = "high"
+            elif "medium" in video_sources :
+                link = video_sources["medium"]
+                quality = "medium"
             else :
                 link = video_sources["low"]
                 quality = "low"
