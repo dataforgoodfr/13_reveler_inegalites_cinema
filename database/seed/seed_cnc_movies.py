@@ -69,4 +69,5 @@ def seed_cnc_movies():
         session.close()
 
 if __name__ == "__main__":
+    from database.seed.seed_cnc_movies import seed_cnc_movies
     seed_cnc_movies()

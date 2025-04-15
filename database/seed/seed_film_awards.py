@@ -21,7 +21,7 @@ engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
 session = Session()
 
-def import_csv(filename):
+def seed_film_awards(filename):
     try:
         with open(filename, newline='', encoding='utf-8') as csvfile:
             reader = csv.DictReader(csvfile)
@@ -33,9 +33,9 @@ def import_csv(filename):
                 distinction = row['distinction']
                 reward = row['reward']
 
-                country = country_repository.find_or_create_country(session, country_name)
+                # country = country_repository.find_or_create_country(session, country_name)
 
-                film = film_repository.find_or_create_film(session, film_title)
+                film = film_repository.get_or_create_film_by_similarity_pg_trgm(session, "THE DAM KéEPER")
 
                 # Contribution of a country to a film (100% by default)
                 allocation_null = float(100)
@@ -56,8 +56,12 @@ def import_csv(filename):
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         session.rollback()  # Rollback the transaction if an error occurs
+    finally:
+        session.close()
 
 # Run the script
 if __name__ == "__main__":
+    from database.seed.seed_film_awards import seed_film_awards
+
     file_path = "./database/data/mubi/films_all_awards.csv"
-    import_csv(file_path)
+    seed_film_awards(file_path)
