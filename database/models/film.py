@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, Float, Boolean
+from sqlalchemy import Column, Integer, String, Date, Float, Boolean, Index
 from sqlalchemy.orm import relationship
 from database.database import Base
 
@@ -28,3 +28,13 @@ class Film(Base):
     poster = relationship("Poster", back_populates="film")
     film_credits = relationship("FilmCredit", back_populates="film")
     award_nominations = relationship("AwardNomination", back_populates="film")
+
+    # Add index on original_name
+    __table_args__ = (
+        Index(
+            "film_original_name_trgm_idx",
+            original_name,
+            postgresql_using="gin",
+            postgresql_ops={"original_name": "gin_trgm_ops"},
+        ),
+    )

@@ -123,23 +123,24 @@ class ExtractCncDataFromExcel:
         if not isinstance(title, str):
             return title
 
-        # Supprimer les articles en fin de titre entre parenthèses
-        match = re.search(r'\s*\((L\'|Le|La|Les|LE|LA|LES)\)$', title)
+        was_upper = title.isupper()
+        if was_upper:
+            title = title.lower()
+    
+        # Search for article in parentheses anywhere
+        match = re.search(r'\((L\'|Le|La|Les)\)', title, re.IGNORECASE)
         if match:
             article = match.group(1)
-            title = re.sub(r'\s*\((L\'|Le|La|Les|LE|LA|LES)\)$', '', title)
-            if article == "L'":
-                title = f"{article}{title[0].lower() + title[1:]}"  
+            title = re.sub(r'\s*\(' + re.escape(article) + r'\)', '', title).strip()
+            if article.lower() == "l'":
+                title = f"{article.capitalize()}{title[0].lower() + title[1:]}" if title else article.capitalize()
             else:
-                title = f"{article} {title[0].lower() + title[1:]}" if title else article
-
-        # Supprimer toute parenthèse fermante isolée à la fin
-        title = re.sub(r'\s*\)+$', '', title)
-
-        # Convert full uppercase titles to proper case
-        if title.isupper():
-            title = title.capitalize()
-
+                title = f"{article.capitalize()} {title[0].lower() + title[1:]}" if title else article.capitalize()
+        else:
+            # Capitalize the first letter of the title if it was in all caps
+            if was_upper:
+                title = title.capitalize()
+    
         return title.strip()
 
 
