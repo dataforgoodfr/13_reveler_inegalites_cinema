@@ -25,7 +25,12 @@ Pour lancer la base de données avec le backend:
 
 # Seeder la base de données
 * OPTION 1 - seeding de toutes les données - WORK IN PROGRESS
-   * Seeder les données CNC: `poetry run python -m database.seed`
+   - Seeder les films CNC :  
+   `poetry run python -m database.seed.seed_cnc_movies`
+
+   - Seeder les récompenses de films :  
+   `poetry run python -m database.seed.seed_film_awards`
+
 * OPTION 2 - seeder un sample de données pour 5 films
    * ATTENTION: ce script supprime toutes les données existantes sur la base actuelle
    * Depuis le container backend: `poetry run python database/data/sample/seed_sample.py`
