@@ -10,6 +10,7 @@ class GetFilmDetails:
         if not film:
             return None
 
+        # TODO: after demo, remove first_language, it will be replaced by list of countries_sorted_by_budget
         film_attributes_displayed = [
             "id", "original_name", "release_date", "duration",
             "first_language", "parity_bonus", "cnc_agrement_year", "budget"
@@ -29,17 +30,13 @@ class GetFilmDetails:
         film_data["poster_image_base64"] = film.poster[0].image_base64 if film.poster else None
         film_data["trailer_url"] = film.trailer[0].url if film.trailer else None
 
-        # Get the film country
-        max_allocation = None
-        top_country = None
-
-        for alloc in film.country_budget_allocations:
-            if alloc.budget_allocation is not None:
-                if max_allocation is None or alloc.budget_allocation > max_allocation:
-                    max_allocation = alloc.budget_allocation
-                    top_country = alloc.country  # assuming a .country relationship
-
-        film_data["top_budget_country"] = top_country.name if top_country else None
+        # Get the film countries by order of budget invested
+        allocations = [
+            alloc for alloc in film.country_budget_allocations
+            if alloc.budget_allocation is not None and alloc.country is not None
+        ]
+        sorted_allocations = sorted(allocations, key=lambda a: a.budget_allocation, reverse=True)
+        film_data["countries_sorted_by_budget"] = [alloc.country.name for alloc in sorted_allocations]
 
         # Get the film credits
         film_data["credits"] = []
