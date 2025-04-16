@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/atoms/Navbar";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -27,9 +28,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geist.variable} antialiased`}>
-        <Navbar />
-        {children}
+      <body className={`${geistSans.variable} ${geist.variable} antialiased bg-black`} suppressHydrationWarning>
+        <Navbar>
+          {children}
+        </Navbar>
+        <Toaster />
       </body>
     </html>
   );

@@ -1,0 +1,11 @@
+{
+  "country_adjective": {
+    "France": "Film français"
+  },
+  "roles": {
+    "actor": "Acteur",
+    "director": "Réalisateur",
+    "screenwriter": "Scénariste",
+    "producer": "Producteur"
+  }
+}
