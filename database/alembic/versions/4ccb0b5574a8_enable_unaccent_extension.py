@@ -17,10 +17,6 @@ down_revision: Union[str, None] = '3010b8ee91ab'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
-
-from alembic import op
-from sqlalchemy import text
-
 def upgrade():
     # Enable unaccent extension (safe if already enabled)
     op.execute(sa.text("CREATE EXTENSION IF NOT EXISTS unaccent;"))
