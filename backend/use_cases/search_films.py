@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func
 from database.models import Film
+from backend.repositories import film_repository
 
 class SearchFilms:
     def __init__(self, db: Session):
@@ -21,7 +22,8 @@ class SearchFilms:
                 "id": film.id,
                 "title": film.original_name,
                 "image": film.poster[0].image_base64 if film.poster else None,
-                "year": film.cnc_agrement_year
+                "year": film.cnc_agrement_year,
+                "directors": film_repository.get_individual_directors_for_film(self.db, film.id)
             }
             for film in films
         ]
