@@ -1,10 +1,8 @@
+from tqdm import tqdm
 import datetime
 import logging
 import csv
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-import dotenv
-import os
+from database.database import SessionLocal
 from backend.repositories import (
     festival_award_repository,
     country_repository,
@@ -14,17 +12,13 @@ from backend.repositories import (
     festival_repository,
 )
 
-dotenv.load_dotenv()
-DATABASE_URL = os.getenv("DATABASE_URL")
-engine = create_engine(DATABASE_URL)
-Session = sessionmaker(bind=engine)
-session = Session()
-
 def seed_film_awards(filename):
+    session = SessionLocal()
+
     try:
         with open(filename, newline='', encoding='utf-8') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for i, row in enumerate(reader):
+            rows = list(csv.DictReader(csvfile))
+            for row in tqdm(rows, total=len(rows), desc="Processing"):
                 film_title = row['title']
                 country_name = row['country']
                 festival_name = row['festival']
@@ -47,8 +41,6 @@ def seed_film_awards(filename):
                 # Determine whether the award is a winner
                 is_winner = distinction == "Lauréat" 
                 award_nomination_repository.find_or_create_award_nomination(session, film.id, festival_award.id, is_winner, datetime.date(year, 1, 1))
-                if i % 1000 == 0:
-                    print(f"Processed {i} rows...")
 
             session.commit()
             print("Import completed successfully!")
@@ -60,7 +52,5 @@ def seed_film_awards(filename):
 
 # Run the script
 if __name__ == "__main__":
-    from database.seed.seed_film_awards import seed_film_awards
-
     file_path = "./database/data/mubi/films_all_awards.csv"
     seed_film_awards(file_path)

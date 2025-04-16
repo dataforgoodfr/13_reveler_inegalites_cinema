@@ -1,12 +1,14 @@
 from tqdm import tqdm # Progress bar for long-running tasks
 from database.database import SessionLocal
 from database.data.cnc.extract_cnc_data_from_excel import ExtractCncDataFromExcel
-from backend.repositories.film_repository import create_film, find_film
-from backend.repositories.country_repository import find_or_create_country
-from backend.repositories.film_country_budget_allocation_repository import create_budget_allocation
-from backend.repositories.film_credit_repository import create_film_credit
-from backend.repositories.credit_holder_repository import find_or_create_credit_holder
-from backend.repositories.role_repository import find_or_create_role
+from backend.repositories import (
+    film_repository,
+    country_repository,
+    film_country_budget_allocation_repository,
+    film_credit_repository,
+    credit_holder_repository,
+    role_repository
+)
 
 def seed_cnc_movies():
     """
@@ -21,7 +23,7 @@ def seed_cnc_movies():
         with session.begin():  # starts a transaction, will rollback on error
             for _, row in tqdm(data.iterrows(), total=len(data), desc="Seeding CNC films"):
                 visa_number = row["visa_number"]
-                if find_film(session, visa_number) is not None:
+                if film_repository.find_film(session, visa_number) is not None:
                     continue  # Skip if already seeded
 
                 film_data = {
@@ -38,12 +40,12 @@ def seed_cnc_movies():
                     "budget": row["budget"],
                 }
 
-                film = create_film(session, film_data)
+                film = film_repository.create_film(session, film_data)
 
                 # Creating budget allocation for each country
                 for country_name, allocation in row.get("film_country_budget_allocation_rates", {}).items():
-                    country = find_or_create_country(session, country_name)
-                    create_budget_allocation(session, film.id, country.id, allocation)
+                    country = country_repository.find_or_create_country(session, country_name)
+                    film_country_budget_allocation_repository.create_budget_allocation(session, film.id, country.id, allocation)
 
                 # Adding the distributors to the film credits
                 for distributor_type, role_name in [
@@ -51,17 +53,17 @@ def seed_cnc_movies():
                     ("free_distributors", "free_distributor")
                 ]:
                     distributors = row.get(distributor_type) or []
-                    role = find_or_create_role(session, role_name)
+                    role = role_repository.find_or_create_role(session, role_name)
 
                     for distributor_name in distributors:
                         credit_holder_data = {
                             "legal_name": distributor_name,
                             "type": "Company"
                         }
-                        holder = find_or_create_credit_holder(session, credit_holder_data)
-                        create_film_credit(session, film.id, role.id, holder.id)
-
-        print(f"Seeded {len(data)} films.")
+                        holder = credit_holder_repository.find_or_create_credit_holder(session, credit_holder_data)
+                        film_credit_repository.create_film_credit(session, film.id, role.id, holder.id)
+            session.commit()
+            print(f"Seeded {len(data)} films.")
     except Exception as e:
         session.rollback()
         print("Error while seeding CNC movies:", e)
@@ -69,5 +71,4 @@ def seed_cnc_movies():
         session.close()
 
 if __name__ == "__main__":
-    from database.seed.seed_cnc_movies import seed_cnc_movies
     seed_cnc_movies()
