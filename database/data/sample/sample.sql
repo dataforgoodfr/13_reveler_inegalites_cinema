@@ -197,69 +197,69 @@ INSERT INTO ric_award_nominations (
   id, film_id, award_id, date, is_winner
 ) VALUES
 -- Le Comte de Monte-Cristo (film_id = 1)
-(1, 1, 20, '2025-02-28', TRUE),
-(2, 1, 19, '2025-02-28', TRUE),
-(3, 1, 15, '2025-02-28', FALSE),
-(4, 1, 25, '2025-02-28', FALSE),
-(5, 1, 28, '2025-02-28', FALSE),
-(6, 1, 16, '2025-02-28', FALSE),
-(7, 1, 27, '2025-02-28', FALSE),
-(8, 1, 26, '2025-02-28', FALSE),
-(9, 1, 21, '2025-02-28', FALSE),
-(10, 1, 17, '2025-02-28', FALSE),
-(11, 1, 11, '2025-02-28', FALSE),
-(12, 1, 13, '2025-02-28', FALSE),
-(13, 1, 14, '2025-02-28', FALSE),
-(14, 1, 34, '2025-01-22', TRUE),
-(15, 1, 37, '2025-01-22', FALSE),
-(16, 1, 31, '2025-01-22', FALSE),
-(17, 1, 41, '2024-05-14', FALSE),
+(1, 1, 20, '2025-02-28', true),
+(2, 1, 19, '2025-02-28', true),
+(3, 1, 15, '2025-02-28', false),
+(4, 1, 25, '2025-02-28', false),
+(5, 1, 28, '2025-02-28', false),
+(6, 1, 16, '2025-02-28', false),
+(7, 1, 27, '2025-02-28', false),
+(8, 1, 26, '2025-02-28', false),
+(9, 1, 21, '2025-02-28', false),
+(10, 1, 17, '2025-02-28', false),
+(11, 1, 11, '2025-02-28', false),
+(12, 1, 13, '2025-02-28', false),
+(13, 1, 14, '2025-02-28', false),
+(14, 1, 34, '2025-01-22', true),
+(15, 1, 37, '2025-01-22', false),
+(16, 1, 31, '2025-01-22', false),
+(17, 1, 41, '2024-05-14', false),
 -- Emilia Pérez (film_id = 2)
-(18, 2, 40, '2024-05-25', TRUE),
-(19, 2, 39, '2024-05-25', TRUE),
-(20, 2, 30, '2025-01-22', TRUE),
-(21, 2, 32, '2025-01-22', FALSE),
-(22, 2, 33, '2025-01-22', FALSE),
-(23, 2, 29, '2025-01-22', FALSE),
-(24, 2, 18, '2025-02-23', FALSE),
-(25, 2, 28, '2025-02-23', TRUE),
-(26, 2, 12, '2025-02-23', FALSE),
-(27, 2, 15, '2025-02-23', FALSE),
-(28, 2, 14, '2025-02-23', FALSE),
-(29, 2, 18, '2025-02-23', FALSE),
+(18, 2, 40, '2024-05-25', true),
+(19, 2, 39, '2024-05-25', true),
+(20, 2, 30, '2025-01-22', true),
+(21, 2, 32, '2025-01-22', false),
+(22, 2, 33, '2025-01-22', false),
+(23, 2, 29, '2025-01-22', false),
+(24, 2, 18, '2025-02-23', false),
+(25, 2, 28, '2025-02-23', true),
+(26, 2, 12, '2025-02-23', false),
+(27, 2, 15, '2025-02-23', false),
+(28, 2, 14, '2025-02-23', false),
+(29, 2, 18, '2025-02-23', false),
 -- Saint Omer (film_id = 3)
-(30, 3, 22, '2023-02-24', TRUE),
-(31, 3, 24, '2023-02-24', TRUE),
-(32, 3, 30, '2023-01-16', TRUE),
-(33, 3, 32, '2023-01-16', TRUE),
-(34, 3, 36, '2023-01-16', TRUE),
-(35, 3, 53, '2023-03-12', FALSE),
-(36, 3, 66, '2023-01-10', FALSE),
+(30, 3, 22, '2023-02-24', true),
+(31, 3, 24, '2023-02-24', true),
+(32, 3, 30, '2023-01-16', true),
+(33, 3, 32, '2023-01-16', true),
+(34, 3, 36, '2023-01-16', true),
+(35, 3, 53, '2023-03-12', false),
+(36, 3, 66, '2023-01-10', false),
 -- L'Événement (film_id = 4)
-(37, 4, 73, '2021-09-11', TRUE),
-(38, 4, 22, '2022-02-25', TRUE),
-(39, 4, 24, '2022-02-25', TRUE),
-(40, 4, 23, '2022-02-25', TRUE),
-(41, 4, 27, '2022-02-25', FALSE),
-(42, 4, 14, '2022-02-25', FALSE),
-(43, 4, 53, '2022-03-27', FALSE),
+(37, 4, 73, '2021-09-11', true),
+(38, 4, 22, '2022-02-25', true),
+(39, 4, 24, '2022-02-25', true),
+(40, 4, 23, '2022-02-25', true),
+(41, 4, 27, '2022-02-25', false),
+(42, 4, 14, '2022-02-25', false),
+(43, 4, 53, '2022-03-27', false),
 -- Titane (film_id = 5)
-(44, 5, 40, '2021-07-17', TRUE),
-(45, 5, 15, '2022-02-25', TRUE),
-(46, 5, 14, '2022-02-25', TRUE),
-(47, 5, 13, '2022-02-25', FALSE),
-(48, 5, 16, '2022-02-25', FALSE),
-(49, 5, 28, '2022-02-25', FALSE),
-(50, 5, 12, '2022-02-25', FALSE),
-(51, 5, 17, '2022-02-25', FALSE),
-(52, 5, 19, '2022-02-25', FALSE),
-(53, 5, 20, '2022-02-25', FALSE),
-(54, 5, 21, '2022-02-25', FALSE),
-(55, 5, 30, '2022-01-17', TRUE),
-(56, 5, 32, '2022-01-17', TRUE),
-(57, 5, 29, '2022-01-17', FALSE),
-(58, 5, 46, '2022-03-27', FALSE),
-(59, 5, 59, '2022-03-13', FALSE);
+(44, 5, 40, '2021-07-17', true),
+(45, 5, 15, '2022-02-25', true),
+(46, 5, 14, '2022-02-25', true),
+(47, 5, 13, '2022-02-25', false),
+(48, 5, 16, '2022-02-25', false),
+(49, 5, 28, '2022-02-25', false),
+(50, 5, 12, '2022-02-25', false),
+(51, 5, 17, '2022-02-25', false),
+(52, 5, 19, '2022-02-25', false),
+(53, 5, 20, '2022-02-25', false),
+(54, 5, 21, '2022-02-25', false),
+(55, 5, 30, '2022-01-17', true),
+(56, 5, 32, '2022-01-17', true),
+(57, 5, 29, '2022-01-17', false),
+(58, 5, 46, '2022-03-27', false),
+(59, 5, 59, '2022-03-13', false);
 
 -- Trailers
 INSERT INTO ric_trailers (
@@ -293,31 +293,699 @@ id, image_base64, film_id
 
 
 -- Credit holders
--- TODO: add missing credit holders
-INSERT INTO ric_credit_holders (id, first_name, last_name, gender, type)
-VALUES 
-    (1, 'Alice', 'Lemoine', 'female', 'Individual'),
-    (2, 'Jean', 'Durand', 'male', 'Individual'),
-    (3, 'Sophie', 'Moreau', 'female', 'Individual'),
-    (4, 'Paul', 'Bernard', 'male', 'Individual'),
-    (5, 'Luc', 'Martin', 'male', 'Individual');
+INSERT INTO ric_credit_holders (
+  id, type, first_name, last_name, legal_name, gender, birthdate
+) VALUES
+  -- Le comte de monte cristo (film id 1)
+  -- Réalisateurs (role id 1)
+  (101, 'Individual', 'Matthieu', 'Delaporte', NULL, 'male', NULL),
+  (102, 'Individual', 'Alexandre', 'De La Patellière', NULL, 'male', NULL),
+  -- Scénaristes (role id 2)
+  (103, 'Individual', 'Alexandre', 'De La Patellière', NULL, 'male', NULL),
+  (104, 'Individual', 'Matthieu', 'Delaporte', NULL, 'male', NULL),
+  -- Auteur (role id 3)
+  (105, 'Individual', 'Alexandre', 'Dumas', NULL, 'male', NULL),
+  -- Acteurs et actrices (role id 4)
+  (106, 'Individual', 'Pierre', 'Niney', NULL, 'male', NULL),
+  (107, 'Individual', 'Bastien', 'Bouillon', NULL, 'male', NULL),
+  (108, 'Individual', 'Anaïs', 'Demoustier', NULL, 'female', NULL),
+  (109, 'Individual', 'Anamaria', 'Vartolomei', NULL, 'female', NULL),
+  (110, 'Individual', 'Laurent', 'Lafitte', NULL, 'male', NULL),
+  (111, 'Individual', 'Pierfrancesco', 'Favino', NULL, 'male', NULL),
+  (112, 'Individual', 'Patrick', 'Mille', NULL, 'male', NULL),
+  (113, 'Individual', 'Vassili', 'Schneider', NULL, 'male', NULL),
+  -- Compositeur (role id 5)
+  (114, 'Individual', 'Jérôme', 'Rebotier', NULL, 'male', NULL),
+  -- Producteur (role id 8)
+  (115, 'Individual', 'Dimitri', 'Rassam', NULL, 'male', NULL),
+  -- Directeur de la photographie (role id 10)
+  (116, 'Individual', 'Nicolas', 'Bolduc', NULL, 'male', NULL),
+  -- 1er assistant réalisateur (role id 11)
+  (117, 'Individual', 'Daniel', 'Noah Dittmann', NULL, 'male', NULL),
+  -- 2ème assistant réalisateur (role id 12)
+  (118, 'Individual', 'Amandine', 'Petit-Brisson', NULL, 'female', NULL),
+  -- Directeur artistique (role id 14)
+  (119, 'Individual', 'Patrick', 'Schmitt', NULL, 'male', NULL),
+  -- Etalonneur (role id 17)
+  (120, 'Individual', 'Richard', 'Deusy', NULL, 'male', NULL),
+  -- Monteur dialogue (role id 32)
+  (121, 'Individual', 'Laure-Anne', 'Darras', NULL, 'female', NULL),
+  -- Chef monteur (role id 19)
+  (122, 'Individual', 'Célia', 'Lafitedupont', NULL, 'female', NULL),
+  -- Chef coiffeur (role id 20)
+  (123, 'Individual', 'Lucas', 'Coulon', NULL, 'male', NULL),
+  (124, 'Individual', 'Cécile', 'Gentilin', NULL, 'female', NULL),
+  (125, 'Individual', 'Agathe', 'Dupuis', NULL, 'female', NULL),
+  -- Chef costumier (role id 21)
+  (126, 'Individual', 'Thierry', 'Delettre', NULL, 'male', NULL),
+  -- Chef maquilleur (role id 22)
+  (127, 'Individual', 'Stéphane', 'Robert', NULL, 'male', NULL),
+  (128, 'Individual', 'Chloé', 'Van Lierde', NULL, 'female', NULL),
+  -- Effets spéciaux maquillage (role id 23)
+  (129, 'Individual', 'Pierre-Olivier', 'Persin', NULL, 'male', NULL),
+  (130, 'Individual', 'Frédéric', 'Balmer', NULL, 'male', NULL),
+  -- Coordinateur Post-Production (role id non spécifié)
+  (131, 'Individual', 'Chloé', 'Bianchi', NULL, 'female', NULL),
+  -- Superviseur post-production (role id 24)
+  (132, 'Individual', 'Abraham', 'Goldblat', NULL, 'male', NULL),
+  -- Coordinateur de production (role id 35)
+  (133, 'Individual', 'Loraine', 'Roche-Tanguy', NULL, 'female', NULL),
+  -- Chef décorateur (role id 25)
+  (134, 'Individual', 'Stéphane', 'Taillasson', NULL, 'male', NULL),
+  -- Régisseur général (role id 34)
+  (135, 'Individual', 'Robin', 'Welch', NULL, 'male', NULL),
+  (136, 'Individual', 'Alexandre', 'Houllier', NULL, 'male', NULL),
+  -- Scripte (role id 26)
+  (137, 'Individual', 'Marie', 'Gennesseaux', NULL, 'female', NULL),
+  -- Ingénieur du son (role id 27)
+  (138, 'Individual', 'David', 'Rit', NULL, 'male', NULL),
+  -- Monteur son (role id 33)
+  (139, 'Individual', 'Marion', 'Papinot', NULL, 'female', NULL),
+  (140, 'Individual', 'Olivier', 'Touche', NULL, 'male', NULL),
+  (141, 'Individual', 'Gwennolé', 'Le Borgne', NULL, 'male', NULL),
+  -- Effets spéciaux (role id non spécifié)
+  (142, 'Individual', 'Olivier', 'Nguyen', NULL, 'male', NULL),
+  (143, 'Individual', 'Jean-Christophe', 'Magnaud', NULL, 'male', NULL),
+  (144, 'Individual', 'Kenneth', 'Cassar', NULL, 'male', NULL),
+  -- Coordinateurs effets visuels (role id 37)
+  (145, 'Individual', 'Clémentine', 'Molinié', NULL, 'female', NULL),
+  -- Producteur des effets visuels (role id 29)
+  (146, 'Individual', 'Olivier', 'Cauwet', NULL, 'male', NULL),
+  -- Attaché de presse (role id 36)
+  (147, 'Individual', 'Kelly', 'Riffaud-Laneurit', NULL, 'female', NULL),
+  (148, 'Individual', 'Dominique', 'Segall', NULL, 'female', NULL),
+  -- Sociétés de production (role id 30)
+  (149, 'Company', NULL, NULL, 'Pathé Films', NULL, NULL),
+  (150, 'Company', NULL, NULL, 'M6 Films', NULL, NULL),
+  (151, 'Company', NULL, NULL, 'Chapter 2', NULL, NULL),
+  (152, 'Company', NULL, NULL, 'Fargo Films', NULL, NULL),
+  -- Sociétés de distribution (role id 31)
+  (153, 'Company', NULL, NULL, 'Pathé Films', NULL, NULL),
+  (154, 'Company', NULL, NULL, 'Pathé International', NULL, NULL),
+
+  -- Emilia Pérez (film id 2)
+  -- Réalisateur (role id 1)
+  (201, 'Individual', 'Jacques', 'Audiard', NULL, 'male', NULL),
+  -- Scénariste (role id 2)
+  (202, 'Individual', 'Jacques', 'Audiard', NULL, 'male', NULL),
+  -- Auteur (role id 3)
+  (203, 'Individual', 'Boris', 'Razon', NULL, 'male', NULL),
+  -- Acteur (role id 4)
+  (204, 'Individual', 'Zoe', 'Saldana', NULL, 'female', NULL),
+  (205, 'Individual', 'Karla Sofía', 'Gascón', NULL, 'female', NULL),
+  (206, 'Individual', 'Selena', 'Gomez', NULL, 'female', NULL),
+  (207, 'Individual', 'Adriana', 'Paz', NULL, 'female', NULL),
+  (208, 'Individual', 'Édgar', 'Ramírez', NULL, 'male', NULL),
+  (209, 'Individual', 'Mark', 'Ivanir', NULL, 'male', NULL),
+  (210, 'Individual', 'Eduardo', 'Aladro', NULL, 'male', NULL),
+  (211, 'Individual', 'Emiliano Hasan', 'Jalil', NULL, 'male', NULL),
+  -- Compositeur (role id 5)
+  (212, 'Individual', 'Camille', NULL, NULL, 'female', NULL),
+  (213, 'Individual', 'Clément', 'Ducol', NULL, 'male', NULL),
+  (214, 'Individual', 'Maxence', 'Dussère', NULL, 'male', NULL),
+  -- Producteur musical (role id 6)
+  (215, 'Individual', 'Pierre-Marie', 'Dru', NULL, 'male', NULL),
+  -- Superviseur musical (role id 7)
+  (216, 'Individual', 'Pierre-Marie', 'Dru', NULL, 'male', NULL),
+  -- Producteur (role id 8)
+  (217, 'Individual', 'Jacques', 'Audiard', NULL, 'male', NULL),
+  (218, 'Individual', 'Pascal', 'Caucheteux', NULL, 'male', NULL),
+  (219, 'Individual', 'Anthony', 'Vaccarello', NULL, 'male', NULL),
+  (220, 'Individual', 'Valérie', 'Schermann', NULL, 'female', NULL),
+  -- Producteur délégué (role id 9)
+  (221, 'Individual', 'Pauline', 'Lamy', NULL, 'female', NULL),
+  -- Directeur de la photographie (role id 10)
+  (222, 'Individual', 'Paul', 'Guilhaume', NULL, 'male', NULL),
+  -- 1er assistant réalisateur (role id 11)
+  (223, 'Individual', 'Mikaël', 'Gaudin', NULL, 'male', NULL),
+  -- 2ème assistant réalisateur (role id 12)
+  (224, 'Individual', 'Juliette', 'Picollot', NULL, 'female', NULL),
+  -- Réalisateur de 2nd équipe (role id 13)
+  (225, 'Individual', 'Jean-Baptiste', 'Pouilloux', NULL, 'male', NULL),
+  -- Directeur artistique (role id 14)
+  (226, 'Individual', 'Virginie', 'Montel', NULL, 'female', NULL),
+  -- Directeur du casting (role id 15)
+  (227, 'Individual', 'Christel', 'Baras', NULL, 'female', NULL),
+  (228, 'Individual', 'Carla', 'Hool', NULL, 'female', NULL),
+  -- Chorégraphe et Etalonneur (role id 16)
+  (229, 'Individual', 'Damien', 'Jalet', NULL, 'male', NULL),
+  -- Superviseur des costumes (role id 18)
+  (230, 'Individual', 'Anthony', 'Vaccarello', NULL, 'male', NULL),
+  -- Chef monteur (role id 19)
+  (231, 'Individual', 'Juliette', 'Welfling', NULL, 'female', NULL),
+  -- Chef coiffeur (role id 20)
+  (232, 'Individual', 'Jane', 'Brizard', NULL, 'female', NULL),
+  (233, 'Individual', 'Emmanuel', 'Janvier', NULL, 'male', NULL),
+  -- Chef costumier (role id 21)
+  (234, 'Individual', 'Virginie', 'Montel', NULL, 'female', NULL),
+  -- Chef maquilleur (role id 22)
+  (235, 'Individual', 'Julia', 'Floch Carbonel', NULL, 'female', NULL),
+  -- Effets spéciaux maquillage (role id 23)
+  (236, 'Individual', 'Jean-Christophe', 'Spadaccini', NULL, 'male', NULL),
+  -- Superviseur post-production (role id 24)
+  (237, 'Individual', 'Eugénie', 'Deplus', NULL, 'female', NULL),
+  -- Chef décorateur (role id 25)
+  (238, 'Individual', 'Emmanuelle', 'Duplay', NULL, 'female', NULL),
+  (239, 'Individual', 'Cécile', 'Deleu', NULL, 'female', NULL),
+  (240, 'Individual', 'Sandrine', 'Jarron', NULL, 'female', NULL),
+  (241, 'Individual', 'Sandra', 'Castello', NULL, 'female', NULL),
+  -- Scripte (role id 26)
+  (242, 'Individual', 'Christelle', 'Meaux', NULL, 'female', NULL),
+  -- Ingénieur du son (role id 27)
+  (243, 'Individual', 'Cyril', 'Holtz', NULL, 'male', NULL),
+  -- Chef Cascadeur (role id 28)
+  (244, 'Individual', 'Yves', ' Girard', NULL, 'male', NULL),
+  -- Producteur des effets visuels (role id 29)
+  (245, 'Individual', 'Cédric', 'Fayolle', NULL, 'male', NULL),
+  -- Société de production (role id 30)
+  (246, 'Company', NULL, NULL, 'Page 114', NULL, NULL),
+  (247, 'Company', NULL, NULL, 'Why Not Productions', NULL, NULL),
+  (248, 'Company', NULL, NULL, 'Saint Laurent by Anthony Vaccarello & Martin Katz', NULL, NULL),
+  (249, 'Company', NULL, NULL, 'Pimienta Films', NULL, NULL),
+  (250, 'Company', NULL, NULL, 'Pathé Films', NULL, NULL),
+  (251, 'Company', NULL, NULL, 'France 2 Cinéma', NULL, NULL),
+  (252, 'Company', NULL, NULL, 'LPI Media', NULL, NULL),
+  -- Société de distribution (role id 31)
+  (253, 'Company', NULL, NULL, 'Pathé Films', NULL, NULL),
+  (254, 'Company', NULL, NULL, 'The Veterans', NULL, NULL),
+
+  -- Saint Omer (film id 3)
+  -- Réalisateurs (role id 1)
+  (301, 'Individual', 'Alice', 'Diop', NULL, 'female', NULL),
+  -- Scénaristes (role id 2)
+  (302, 'Individual', 'Alice', 'Diop', NULL, 'female', NULL),
+  (303, 'Individual', 'Amrita', 'David', NULL, 'female', NULL),
+  (304, 'Individual', 'Marie', 'Ndiaye', NULL, 'female', NULL),
+  -- Acteurs et actrices (role id 4)
+  (305, 'Individual', 'Kayije', 'Kagame', NULL, 'female', NULL),
+  (306, 'Individual', 'Guslagie', 'Malanda', NULL, 'female', NULL),
+  (307, 'Individual', 'Valérie', 'Dréville', NULL, 'female', NULL),
+  (308, 'Individual', 'Aurélia', 'Petit', NULL, 'female', NULL),
+  (309, 'Individual', 'Xavier', 'Maly', NULL, 'male', NULL),
+  (310, 'Individual', 'Robert', 'Cantarella', NULL, 'male', NULL),
+  (311, 'Individual', 'Salimata', 'Kamate', NULL, 'female', NULL),
+  (312, 'Individual', 'Thomas', 'De Pourquery', NULL, 'male', NULL),
+  -- Producteurs délégués (role id 9)
+  (313, 'Individual', 'Toufik', 'Ayadi', NULL, 'male', NULL),
+  (314, 'Individual', 'Christophe', 'Barral', NULL, 'male', NULL),
+  -- Directeur de la photographie (role id 10)
+  (315, 'Individual', 'Claire', 'Mathon', NULL, 'female', NULL),
+  -- 1er assistant réalisateur (role id 11)
+  (316, 'Individual', 'Barbara', 'Canale', NULL, 'female', NULL),
+  -- Directeur du casting (role id 15)
+  (317, 'Individual', 'Stéphane', 'Batut', NULL, 'male', NULL),
+  -- Chef monteur (role id 19)
+  (318, 'Individual', 'Amrita', 'David', NULL, 'female', NULL),
+  -- Chef coiffeur (role id 20)
+  (319, 'Individual', 'Élodie Namani Cyrille', NULL, NULL, 'female', NULL),
+  (320, 'Individual', 'Marie', 'Goetgheluck', NULL, 'female', NULL),
+  -- Chef costumier (role id 21)
+  (321, 'Individual', 'Annie Melza Tiburce', NULL, NULL, 'female', NULL),
+  -- Chef maquilleur (role id 22)
+  (322, 'Individual', 'Élodie Namani Cyrille', NULL, NULL, 'female', NULL),
+  (323, 'Individual', 'Marie', 'Goetgheluck', NULL, 'female', NULL),
+  -- Superviseur post-production (role id 24)
+  (324, 'Individual', 'Bénédicte', 'Pollet-Baronian', NULL, 'female', NULL),
+  -- Directeur de production (role id 35)
+  (325, 'Individual', 'Rym', 'Hachimi', NULL, 'female', NULL),
+  (326, 'Individual', 'Paul', 'Sergent', NULL, 'male', NULL),
+  -- Régisseur général (role id 34)
+  (327, 'Individual', 'Emma', 'Lebot', NULL, 'female', NULL),
+  -- Scripte (role id 26)
+  (328, 'Individual', 'Mathilde', 'Profit', NULL, 'female', NULL),
+  -- Chef décorateur (role id 25)
+  (329, 'Individual', 'Anna', 'Le Mouël', NULL, 'female', NULL),
+  -- Ingénieur du son (role id 27)
+  (330, 'Individual', 'Dana', 'Farzanehpour', NULL, 'female', NULL),
+  (331, 'Individual', 'Josefina', 'Rodriguez', NULL, 'female', NULL),
+  (332, 'Individual', 'Lucile', 'Demarquet', NULL, 'female', NULL),
+  (333, 'Individual', 'Emmanuel', 'Croset', NULL, 'male', NULL),
+  -- Attaché de presse (role id 36)
+  (334, 'Individual', 'Viviana', 'Andriani', NULL, 'female', NULL),
+  (335, 'Individual', 'Aurélie', 'Dard', NULL, 'female', NULL),
+  -- Sociétés de production (role id 30)
+  (336, 'Company', NULL, NULL, 'Pictanovo Région Hauts de France', NULL, NULL),
+  (337, 'Company', NULL, NULL, 'Arte France Cinéma', NULL, NULL),
+  (338, 'Company', NULL, NULL, 'SRAB Films', NULL, NULL),
+  (339, 'Company', NULL, NULL, 'Ciclic-Région Centre', NULL, NULL),
+  -- Sociétés de distribution (role id 31)
+  (340, 'Company', NULL, NULL, 'Les Films du Losange', NULL, NULL),
+  (341, 'Company', NULL, NULL, 'Goodfellas', NULL, NULL),
+
+  -- L'Evénement (film id 4)
+  -- Réalisateurs (role id 1)
+  (401, 'Individual', 'Audrey', 'Diwan', NULL, 'female', NULL),
+  -- Scénaristes (role id 2)
+  (402, 'Individual', 'Audrey', 'Diwan', NULL, 'female', NULL),
+  (403, 'Individual', 'Marcia', 'Romano', NULL, 'female', NULL),
+  -- Auteur (role id 3)
+  (404, 'Individual', 'Annie', 'Ernaux', NULL, 'female', NULL),
+  -- Acteurs et actrices (role id 4)
+  (405, 'Individual', 'Anamaria', 'Vartolomei', NULL, 'female', NULL),
+  (406, 'Individual', 'Kacey', 'Mottet Klein', NULL, 'male', NULL),
+  (407, 'Individual', 'Luàna', 'Bajrami', NULL, 'female', NULL),
+  (408, 'Individual', 'Louise', 'Orry-Diquéro', NULL, 'female', NULL),
+  (409, 'Individual', 'Louise', 'Chevillotte', NULL, 'female', NULL),
+  (410, 'Individual', 'Pio', 'Marmaï', NULL, 'male', NULL),
+  (411, 'Individual', 'Sandrine', 'Bonnaire', NULL, 'female', NULL),
+  (412, 'Individual', 'Leonor', 'Oberson', NULL, 'female', NULL),
+  -- Compositeur (role id 5)
+  (413, 'Individual', 'Evgueni', 'Galperine', NULL, 'male', NULL),
+  (414, 'Individual', 'Sacha', 'Galperine', NULL, 'male', NULL),
+  -- Producteur (role id 8)
+  (415, 'Individual', 'Edouard', 'Weil', NULL, 'male', NULL),
+  (416, 'Individual', 'Alice', 'Girard', NULL, 'female', NULL),
+  -- Directeur de la photographie (role id 10)
+  (417, 'Individual', 'Laurent', 'Tangy', NULL, 'male', NULL),
+  -- 1er assistant réalisateur (role id 11)
+  (418, 'Individual', 'Anaïs', 'Couette', NULL, 'female', NULL),
+  -- Assistant réalisateur (role id non spécifié)
+  (419, 'Individual', 'Anaïs', 'Couette', NULL, 'female', NULL),
+  -- Directeur du casting (role id 15)
+  (420, 'Individual', 'Elodie', 'Demey', NULL, 'female', NULL),
+  -- Chef monteur (role id 19)
+  (421, 'Individual', 'Géraldine', 'Mangenot', NULL, 'female', NULL),
+  -- Chef électricien (role id 38)
+  (422, 'Individual', 'Olivier', 'Mandrin', NULL, 'male', NULL),
+  -- Chef coiffeur (role id 20)
+  (423, 'Individual', 'Sarah', 'Mescoff', NULL, 'female', NULL),
+  -- Chef costumier (role id 21)
+  (424, 'Individual', 'Isabelle', 'Pannetier', NULL, 'female', NULL),
+  -- Chef maquilleur (role id 22)
+  (425, 'Individual', 'Amélie', 'Bouilly', NULL, 'female', NULL),
+  -- Superviseur post-production (role id 24)
+  (426, 'Individual', 'Mélanie', 'Karlin', NULL, 'female', NULL),
+  -- Coordinateur de production (role id 35)
+  (427, 'Individual', 'Gary', 'Spinelli', NULL, 'male', NULL),
+  -- Directeur de production (role id 35)
+  (428, 'Individual', 'Monica', 'Taverna', NULL, 'female', NULL),
+  -- Scripte (role id 26)
+  (429, 'Individual', 'Diane', 'Brasseur', NULL, 'female', NULL),
+  -- Chef décorateur (role id 25)
+  (430, 'Individual', 'Diéné', 'Berete', NULL, 'female', NULL),
+  -- Ingénieur du son (role id 27)
+  (431, 'Individual', 'Philippe', 'Welsh', NULL, 'male', NULL),
+  (432, 'Individual', 'Antoine', 'Mercier', NULL, 'male', NULL),
+  -- Monteur son (role id 33)
+  (433, 'Individual', 'Thomas', 'Desjonqueres', NULL, 'male', NULL),
+  -- Mixage (role id 39)
+  (434, 'Individual', 'Marc', 'Doisne', NULL, 'male', NULL),
+  -- Attaché de presse (role id 36)
+  (435, 'Individual', 'Hassan', 'Guerrar', NULL, 'male', NULL),
+  (436, 'Individual', 'Julie', 'Braun', NULL, 'female', NULL),
+  -- Sociétés de production (role id 30)
+  (437, 'Company', NULL, NULL, 'Rectangle Productions', NULL, NULL),
+  (438, 'Company', NULL, NULL, 'France 3 Cinéma', NULL, NULL),
+  (439, 'Company', NULL, NULL, 'SRAB Films', NULL, NULL),
+  -- Sociétés de distribution (role id 31)
+  (440, 'Company', NULL, NULL, 'Wild Bunch', NULL, NULL),
+  (441, 'Company', NULL, NULL, 'Goodfellas', NULL, NULL),
+
+  -- Titane (film id 5)
+  -- Réalisateurs (role id 1)
+  (501, 'Individual', 'Julia', 'Ducournau', NULL, 'female', NULL),
+  -- Scénaristes (role id 2)
+  (502, 'Individual', 'Julia', 'Ducournau', NULL, 'female', NULL),
+  -- Acteurs et actrices (role id 4)
+  (503, 'Individual', 'Vincent', 'Lindon', NULL, 'male', NULL),
+  (504, 'Individual', 'Agathe', 'Rousselle', NULL, 'female', NULL),
+  (505, 'Individual', 'Garance', 'Marillier', NULL, 'female', NULL),
+  (506, 'Individual', 'Laïs', 'Salameh', NULL, 'female', NULL),
+  (507, 'Individual', 'Myriem', 'Akheddiou', NULL, 'female', NULL),
+  (508, 'Individual', 'Bertrand', 'Bonello', NULL, 'male', NULL),
+  (509, 'Individual', 'Dominique', 'Frot', NULL, 'female', NULL),
+  -- Compositeur (role id 5)
+  (510, 'Individual', 'Jim', 'Williams', NULL, 'male', NULL),
+  -- Producteur (role id 8)
+  (511, 'Individual', 'Jean-Christophe', 'Reymond', NULL, 'male', NULL),
+  -- Producteur délégué (role id 9)
+  (512, 'Individual', 'Christophe', 'Hollebeke', NULL, 'male', NULL),
+  -- Coproducteur (role id 41)
+  (513, 'Individual', 'Olivier', 'Père', NULL, 'male', NULL),
+  (514, 'Individual', 'Jean-Yves', 'Roubin', NULL, 'male', NULL),
+  (515, 'Individual', 'Cassandre', 'Warnauts', NULL, 'female', NULL),
+  -- Directeur de la photographie (role id 10)
+  (516, 'Individual', 'Ruben', 'Impens', NULL, 'male', NULL),
+  -- 1er assistant réalisateur (role id 11)
+  (517, 'Individual', 'Claire', 'Corbetta', NULL, 'female', NULL),
+  -- Superviseur des effets visuels (role id 40)
+  (518, 'Individual', 'Martial', 'Vallanchon', NULL, 'male', NULL),
+  -- Directeur du casting (role id 15)
+  (519, 'Individual', 'Constance', 'Demontoy', NULL, 'female', NULL),
+  (520, 'Individual', 'Christel', 'Baras', NULL, 'female', NULL),
+  -- Chef monteur (role id 19)
+  (521, 'Individual', 'Jean-Christophe', 'Bouzy', NULL, 'male', NULL),
+  -- Chef costumier (role id 21)
+  (522, 'Individual', 'Anne-Sophie', 'Gledhill', NULL, 'female', NULL),
+  -- Chef maquilleur (role id 22)
+  (523, 'Individual', 'Flore', 'Masson', NULL, 'female', NULL),
+  -- Superviseur post-production (role id 24)
+  (524, 'Individual', 'Christina', 'Crassaris', NULL, 'female', NULL),
+  (525, 'Individual', 'Sidonie', 'Waserman', NULL, 'female', NULL),
+  -- Directeur de production (role id 35)
+  (526, 'Individual', 'Tatiana', 'Bouchain', NULL, 'female', NULL),
+  -- Chef décorateur (role id 25)
+  (527, 'Individual', 'Laurie', 'Colson', NULL, 'female', NULL),
+  (528, 'Individual', 'Lise', 'Péault', NULL, 'female', NULL),
+  -- Ingénieur du son (role id 27)
+  (529, 'Individual', 'Fabrice', 'Osinski', NULL, 'male', NULL),
+  (530, 'Individual', 'Séverin', 'Favriau', NULL, 'male', NULL),
+  (531, 'Individual', 'Stéphane', 'Thiébaut', NULL, 'male', NULL),
+  -- Attaché de presse (role id 36)
+  (532, 'Individual', 'Matilde', 'Incerti', NULL, 'female', NULL),
+  (533, 'Individual', 'Thomas', 'Chanu Lambert', NULL, 'male', NULL),
+  -- Sociétés de production (role id 30)
+  (534, 'Company', NULL, NULL, 'Frakas Productions', NULL, NULL),
+  (535, 'Company', NULL, NULL, 'Voo-BE TV', NULL, NULL),
+  (536, 'Company', NULL, NULL, 'Arte France Cinéma', NULL, NULL),
+  (537, 'Company', NULL, NULL, 'Kazak Productions', NULL, NULL),
+  -- Sociétés de distribution (role id 31)
+  (538, 'Company', NULL, NULL, 'Diaphana', NULL, NULL),
+  (539, 'Company', NULL, NULL, 'Goodfellas', NULL, NULL);
+
+
 
 -- Roles
--- TODO: add missing roles
-INSERT INTO ric_roles (id, name, is_key_role)
-VALUES
-    (1, 'actor', TRUE),
-    (2, 'director', TRUE),
-    (3, 'screenwriter', TRUE),
-    (4, 'producer', TRUE);
+INSERT INTO ric_roles (
+  id, name, is_key_role
+) VALUES
+  (1, 'Réalisateur', true),
+  (2, 'Scénariste', true),
+  (3, 'Auteur', true),
+  (4, 'Acteur', true),
+  (5, 'Compositeur', true),
+  (6, 'Producteur musical', true),
+  (7, 'Superviseur musical', false),
+  (8, 'Producteur', true),
+  (9, 'Producteur délégué', true),
+  (10, 'Directeur de la photographie', true),
+  (11, '1er assistant réalisateur', false),
+  (12, '2ème assistant réalisateur', false),
+  (13, 'Réalisateur de 2nd équipe', true),
+  (14, 'Directeur artistique', true),
+  (15, 'Directeur du casting', false),
+  (16, 'Chorégraphe', false),
+  (17, 'Etalonneur', false),
+  (18, 'Superviseur des costumes', false),
+  (19, 'Chef monteur', true),
+  (20, 'Chef coiffeur', false),
+  (21, 'Chef costumier', true),
+  (22, 'Chef maquilleur', false),
+  (23, 'Effets spéciaux maquillage', false),
+  (24, 'Superviseur post-production', false),
+  (25, 'Chef décorateur', false),
+  (26, 'Scripte', false),
+  (27, 'Ingénieur du son', true),
+  (28, 'Chef Cascadeur', false),
+  (29, 'Producteur des effets visuels', false),
+  (30, 'Société de production', false),
+  (31, 'Société de distribution', false),
+  (32, 'Monteur dialogue', false),
+  (33, 'Monteur son', false),
+  (34, 'Régisseur général', false),
+  (35, 'Coordinateur de production', false),
+  (36, 'Attaché de presse', false),
+  (37, 'Coordinateur effets visuels', false),
+  (38, 'Chef électricien', false),
+  (39, 'Mixage', false),
+  (40, 'Superviseur des effets visuels', false),
+  (41, 'Coproducteur', false);
+
 
 -- Film credits
-INSERT INTO ric_film_credits (id, film_id, credit_holder_id, role_id)
-VALUES
-    (1, 1, 1, 1),  -- Alice Lemoine - actor
-    (2, 1, 2, 1),  -- Jean Durand - actor
-    (3, 1, 3, 2),  -- Sophie Moreau - director
-    (4, 1, 4, 3),  -- Paul Bernard - screenwriter
-    (5, 1, 5, 4),  -- Luc Martin - producer
-    (6, 2, 5, 4),  -- Luc Martin - producer
-    (7, 2, 1, 1);  -- Alice Lemoine - actor
+INSERT INTO ric_film_credits (
+  film_id, role_id, credit_holder_id
+) VALUES
+  -- Réalisateur (role id 1)
+  (1, 1, 101),
+  (1, 1, 102),
+  (2, 1, 201),
+  (3, 1, 301),
+  (4, 1, 401),
+  (5, 1, 501),
+  -- Scénariste (role id 2)
+  (1, 2, 103),
+  (1, 2, 104),
+  (2, 2, 202),
+  (3, 2, 302),
+  (3, 2, 303),
+  (3, 2, 304),
+  (4, 2, 402),
+  (4, 2, 403),
+  (5, 2, 502),
+  -- Auteur (role id 3)
+  (1, 3, 105),
+  (2, 3, 203),
+  (4, 3, 404),
+  -- Acteur (role id 4)
+  (1, 4, 106),
+  (1, 4, 107),
+  (1, 4, 108),
+  (1, 4, 109),
+  (1, 4, 110),
+  (1, 4, 111),
+  (1, 4, 112),
+  (1, 4, 113),
+  (2, 4, 204),
+  (2, 4, 205),
+  (2, 4, 206),
+  (2, 4, 207),
+  (2, 4, 208),
+  (2, 4, 209),
+  (2, 4, 210),
+  (2, 4, 211),
+  (3, 4, 305),
+  (3, 4, 306),
+  (3, 4, 307),
+  (3, 4, 308),
+  (3, 4, 309),
+  (3, 4, 310),
+  (3, 4, 311),
+  (3, 4, 312),
+  (4, 4, 405),
+  (4, 4, 406),
+  (4, 4, 407),
+  (4, 4, 408),
+  (4, 4, 409),
+  (4, 4, 410),
+  (4, 4, 411),
+  (4, 4, 412),
+  (5, 4, 503),
+  (5, 4, 504),
+  (5, 4, 505),
+  (5, 4, 506),
+  (5, 4, 507),
+  (5, 4, 508),
+  (5, 4, 509),
+  -- Compositeur (role id 5)
+  (1, 5, 114),
+  (2, 5, 212),
+  (2, 5, 213),
+  (2, 5, 214),
+  (4, 5, 413),
+  (4, 5, 414),
+  (5, 5, 510),
+  -- Producteur musical (role id 6)
+  (2, 6, 215),
+  -- Superviseur musical (role id 7)
+  (2, 7, 216),
+  -- Producteur (role id 8)
+  (1, 8, 115),
+  (2, 8, 217),
+  (2, 8, 218),
+  (2, 8, 219),
+  (2, 8, 220),
+  (4, 8, 415),
+  (4, 8, 416),
+  (5, 8, 511),
+  -- Producteur délégué (role id 9)
+  (2, 9, 221),
+  (3, 9, 313),
+  (3, 9, 314),
+  (5, 9, 512),
+  -- Coproducteur (role id 41)
+  (5, 41, 513),
+  (5, 41, 514),
+  (5, 41, 515),
+  -- Directeur de la photographie (role id 10)
+  (1, 10, 116),
+  (2, 10, 222),
+  (3, 10, 315),
+  (4, 10, 417),
+  (5, 10, 516),
+  -- 1er assistant réalisateur (role id 11)
+  (1, 11, 117),
+  (2, 11, 223),
+  (3, 11, 316),
+  (4, 11, 418),
+  (5, 11, 517),
+  -- Assistant réalisateur (role id non spécifié)
+  (4, 11, 419),
+  -- 2ème assistant réalisateur (role id 12)
+  (1, 12, 118),
+  (2, 12, 224),
+  -- Réalisateur de 2nd équipe (role id 13)
+  (2, 13, 225),
+  -- Directeur artistique (role id 14)
+  (1, 14, 119),
+  (2, 14, 226),
+  -- Directeur du casting (role id 15)
+  (2, 15, 227),
+  (2, 15, 228),
+  (3, 15, 317),
+  (4, 15, 420),
+  (5, 15, 519),
+  (5, 15, 520),
+  -- Chorégraphe (role id 16)
+  (2, 16, 229),
+  -- Etalonneur (role id 17)
+  (1, 17, 120),
+  (2, 17, 229),
+  -- Superviseur des costumes (role id 18)
+  (2, 18, 230),
+  -- Chef monteur (role id 19)
+  (1, 19, 122),
+  (2, 19, 231),
+  (3, 19, 318),
+  (4, 19, 421),
+  (5, 19, 521),
+  -- Chef électricien (role id 38)
+  (4, 38, 422),
+  -- Chef coiffeur (role id 20)
+  (1, 20, 123),
+  (1, 20, 124),
+  (1, 20, 125),
+  (2, 20, 232),
+  (2, 20, 233),
+  (3, 20, 319),
+  (3, 20, 320),
+  (4, 20, 423),
+  -- Chef costumier (role id 21)
+  (1, 21, 126),
+  (2, 21, 234),
+  (3, 21, 321),
+  (4, 21, 424),
+  (5, 21, 522),
+  -- Chef maquilleur (role id 22)
+  (1, 22, 127),
+  (1, 22, 128),
+  (2, 22, 235),
+  (3, 22, 322),
+  (3, 22, 323),
+  (4, 22, 425),
+  (5, 22, 523),
+  -- Superviseur post-production (role id 24)
+  (1, 24, 132),
+  (2, 24, 237),
+  (3, 24, 324),
+  (4, 24, 426),
+  (5, 24, 524),
+  (5, 24, 525),
+  -- Directeur de production (role id 35)
+  (3, 35, 325),
+  (3, 35, 326),
+  (4, 35, 428),
+  (5, 35, 526),
+  -- Coordinateur de production (role id 35)
+  (4, 35, 427),
+  -- Régisseur général (role id 34)
+  (1, 34, 135),
+  (1, 34, 136),
+  (3, 34, 327),
+  -- Scripte (role id 26)
+  (1, 26, 137),
+  (2, 26, 242),
+  (3, 26, 328),
+  (4, 26, 429),
+  -- Chef décorateur (role id 25)
+  (1, 25, 134),
+  (2, 25, 238),
+  (2, 25, 239),
+  (2, 25, 240),
+  (2, 25, 241),
+  (3, 25, 329),
+  (4, 25, 430),
+  (5, 25, 527),
+  (5, 25, 528),
+  -- Ingénieur du son (role id 27)
+  (1, 27, 138),
+  (2, 27, 243),
+  (3, 27, 330),
+  (3, 27, 331),
+  (3, 27, 332),
+  (3, 27, 333),
+  (4, 27, 431),
+  (4, 27, 432),
+  (5, 27, 529),
+  (5, 27, 530),
+  (5, 27, 531),
+  -- Monteur son (role id 33)
+  (1, 33, 139),
+  (1, 33, 140),
+  (1, 33, 141),
+  (4, 33, 433),
+  -- Mixage (role id 39)
+  (4, 39, 434),
+  -- Superviseur des effets visuels (role id 40)
+  (5, 40, 518),
+  -- Attaché de presse (role id 36)
+  (1, 36, 147),
+  (1, 36, 148),
+  (3, 36, 334),
+  (3, 36, 335),
+  (4, 36, 435),
+  (4, 36, 436),
+  (5, 36, 532),
+  (5, 36, 533),
+  -- Sociétés de production (role id 30)
+  (1, 30, 149),
+  (1, 30, 150),
+  (1, 30, 151),
+  (1, 30, 152),
+  (2, 30, 246),
+  (2, 30, 247),
+  (2, 30, 248),
+  (2, 30, 249),
+  (2, 30, 250),
+  (2, 30, 251),
+  (2, 30, 252),
+  (3, 30, 336),
+  (3, 30, 337),
+  (3, 30, 338),
+  (3, 30, 339),
+  (4, 30, 437),
+  (4, 30, 438),
+  (4, 30, 439),
+  (5, 30, 534),
+  (5, 30, 535),
+  (5, 30, 536),
+  (5, 30, 537),
+  -- Sociétés de distribution (role id 31)
+  (1, 31, 153),
+  (1, 31, 154),
+  (2, 31, 253),
+  (2, 31, 254),
+  (3, 31, 340),
+  (3, 31, 341),
+  (4, 31, 440),
+  (4, 31, 441),
+  (5, 31, 538),
+  (5, 31, 539),
+  -- Monteur dialogue (role id 32)
+  (1, 32, 121),
+  -- Monteur son (role id 33)
+  (1, 33, 139),
+  (1, 33, 140),
+  (1, 33, 141),
+  (4, 33, 433),
+  -- Régisseur général (role id 34)
+  (1, 34, 135),
+  (1, 34, 136),
+  (3, 34, 327),
+  -- Coordinateur de production (role id 35)
+  (1, 35, 133),
+  (4, 35, 427),
+  -- Coordinateur effets visuels (role id 37)
+  (1, 37, 145);
+
+
