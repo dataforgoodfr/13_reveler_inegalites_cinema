@@ -13,7 +13,7 @@ class GetFilmDetails:
 
         # TODO: after demo, remove first_language, it will be replaced by list of countries_sorted_by_budget
         film_attributes_displayed = [
-            "id", "original_name", "release_date", "duration",
+            "id", "original_name", "release_date",
             "first_language", "parity_bonus", "cnc_agrement_year", "budget"
         ]
 
@@ -23,6 +23,14 @@ class GetFilmDetails:
             for attr in film_attributes_displayed
             if hasattr(film, attr)
         }
+
+        # Get the film duration in correct format
+        if film.duration_minutes is not None:
+            hours = film.duration_minutes // 60
+            minutes = film.duration_minutes % 60
+            film_data["duration"] = f"{hours}h{minutes}"
+        else:
+            film_data["duration"] = None
 
         # Get the film genres
         film_data["genres"] = [genre.name for genre in film.genres]
