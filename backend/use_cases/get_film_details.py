@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from database.models import Film
+from backend.services.film_metrics_calculator import FilmMetricsCalculator
 
 class GetFilmDetails:
     def __init__(self, db: Session):
@@ -64,49 +65,9 @@ class GetFilmDetails:
                 "is_winner": nomination.is_winner,
             })
 
-        # Get the film female reprsentation key metrics
-        film_data["female_representation_in_key_roles"] = self.calculate_female_representation_in_key_roles(film)
-        film_data["female_representation_in_casting"] = self.calculate_female_representation_in_casting(film)
+        # Get the film female representation key metrics
+        metrics = FilmMetricsCalculator(film)
+        film_data["female_representation_in_key_roles"] = metrics.calculate_female_representation_in_key_roles()
+        film_data["female_representation_in_casting"] = metrics.calculate_female_representation_in_casting()
 
         return film_data
-    
-
-    def calculate_female_representation_in_key_roles(self, film) -> float | None:
-        key_roles = [
-            credit for credit in film.film_credits
-            if credit.role and credit.role.is_key_role and credit.credit_holder.type == 'Individual'
-        ]
-
-        female_key_roles = [
-            credit for credit in key_roles
-            if credit.credit_holder and credit.credit_holder.gender == "female"
-        ]
-
-        total_key_roles = len(key_roles)
-        female_count = len(female_key_roles)
-
-        if total_key_roles == 0:
-            return None
-
-        return round((female_count / total_key_roles) * 100, 2)
-
-
-    def calculate_female_representation_in_casting(self, film) -> float | None:
-        actor_credits = [
-            credit for credit in film.film_credits
-            if credit.role and credit.role.name.lower() == "actor" and credit.credit_holder.type == 'Individual'
-        ]
-
-        female_actors = [
-            credit for credit in actor_credits
-            if credit.credit_holder and credit.credit_holder.gender == "female"
-        ]
-
-        total_actors = len(actor_credits)
-        female_count = len(female_actors)
-
-        if total_actors == 0:
-            return None
-
-        return round((female_count / total_actors) * 100, 2)
-
