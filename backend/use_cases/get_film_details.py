@@ -65,9 +65,18 @@ class GetFilmDetails:
                 "is_winner": nomination.is_winner,
             })
 
-        # Get the film female representation key metrics
+        # Get the film key metrics
         metrics = FilmMetricsCalculator(film)
-        film_data["female_representation_in_key_roles"] = metrics.calculate_female_representation_in_key_roles()
-        film_data["female_representation_in_casting"] = metrics.calculate_female_representation_in_casting()
+        film_data["metrics"] = {
+            # Get the film main metrics
+            "female_representation_in_key_roles": metrics.calculate_female_representation_in_key_roles(),
+            "female_representation_in_casting": metrics.calculate_female_representation_in_casting(),
+            # Get the film trailer metrics
+            "female_screen_time_in_trailer": metrics.calculate_female_screen_time_in_trailer(),
+            "non_white_screen_time_in_trailer": metrics.calculate_non_white_screen_time_in_trailer(),
+            # Get the film poster metrics
+            "female_visible_ratio_on_poster": metrics.calculate_female_visible_ratio_on_poster(),
+            "non_white_visible_ratio_on_poster": metrics.calculate_non_white_visible_ratio_on_poster()
+        }
 
         return film_data
