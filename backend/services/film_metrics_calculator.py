@@ -19,7 +19,7 @@ class FilmMetricsCalculator:
     def calculate_female_representation_in_casting(self) -> float | None:
         actor_credits = [
             credit for credit in self.film.film_credits
-            if credit.role and credit.role.name.lower() == "actor" and credit.credit_holder.type == "Individual"
+            if credit.role and credit.role.name.lower() == "acteur" and credit.credit_holder.type == "Individual"
         ]
         female_actors = [
             credit for credit in actor_credits
