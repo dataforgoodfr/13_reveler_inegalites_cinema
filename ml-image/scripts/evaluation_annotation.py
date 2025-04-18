@@ -79,7 +79,7 @@ def annotate_results(detections:list, subframes:list, subframe_indices:list, are
                             '30-39, 40-49, 50-59, 60-69, 70+).\n')
                 ethnicity = input('Provide the perceived ethnicity of the detected character (White, Black, Latino_Hispanic, East Asian,\n'
                                   'Southeast Asian, Indian, Middle Eastern).\n')
-                annotation_idx = len(d_annotated_results[frame_annotations])
+                annotation_idx = len(d_annotated_results[frame_annotation])
                 d_annotated_results[frame_annotation][annotation_idx] = {'face_centroid': face_centroid,
                                                              'bbox': (x1, y1, x2, y2),
                                                              'gender': gender,
@@ -192,7 +192,7 @@ def score_evaluation(frame_annotations:dict, evaluation_type:str = 'binary') -> 
     feat_dicts = [rev_age_labels, rev_gender_labels, rev_ethnicity_labels]
     for annotation in frame_annotations.values():
         score = 0
-        for key, feat_dict in zip(keys, feat_dicts) :
+        for key, feat_dict in zip(keys, feat_dicts, strict=False) :
             if annotation[key] == annotation[f'predicted_{key}'] :
                 score += 0
             else :
