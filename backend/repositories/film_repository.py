@@ -1,6 +1,7 @@
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 from database.models import Film, FilmCredit, Role, CreditHolder
+from backend.entities.credit_holder_entity import CreditHolderEntity
 
 def create_film(session: Session, film_data: dict) -> Film:
     film = Film(**film_data)
@@ -67,4 +68,4 @@ def get_individual_directors_for_film(session: Session, film_id: int) -> list[st
 
     results = session.scalars(stmt).all()
 
-    return [f"{holder.first_name} {holder.last_name}".strip() for holder in results]
+    return [CreditHolderEntity(holder).full_name() for holder in results]
