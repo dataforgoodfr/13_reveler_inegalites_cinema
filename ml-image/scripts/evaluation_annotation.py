@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw, ImageFont
 from utils import frame_capture
 
 
-def get_frames(trailer_path: str) -> None:
+def get_frames(trailer_path:str) -> None:
     frames = frame_capture(trailer_path)
     height, width, _ = frames[0].shape
     for i in range(len(frames)):
@@ -38,29 +38,29 @@ def get_vision_modules() -> tuple[vision_detection.VisionDetection, vision_class
     return visiondetector, visionclassifier
 
 
-def sample_frames(indices: list, trailer_path: str) -> tuple[list, list]:
+def sample_frames(indices:list, trailer_path:str) -> tuple[list, list]:
     frames = frame_capture(trailer_path)
     subframes = frames[indices, :, :, :]
     return subframes
 
 
-def get_faces(subframes: np.ndarray, vision_detector: vision_detection.VisionDetection) -> list:
+def get_faces(subframes:np.ndarray, vision_detector:vision_detection.VisionDetection) -> list:
     detections = vision_detector.crop_areas_of_interest(
         images=subframes, H_original=subframes.shape[1], W_original=subframes.shape[2])
     return detections
 
 
-def label_results(detections: list, subframes: list, subframe_indices: list) -> dict:
-    d_labeled_results = {}
+def annotate_results(detections:list, subframes:list, subframe_indices:list, area_type:str = 'face') -> dict:
+    d_annotated_results = {}
     for i in range(len(detections)):
         detection = detections[i]
         frame_id = detection['frame_id']
 
         subframe = subframes[frame_id]
         subframe_index = subframe_indices[frame_id]
-        frame_label = f'frame_{subframe_index}'
-        if frame_label not in d_labeled_results:
-            d_labeled_results[frame_label] = {}
+        frame_annotation = f'frame_{subframe_index}'
+        if frame_annotation not in d_annotated_results:
+            d_annotated_results[frame_annotation] = {}
         x1, y1, x2, y2 = detection['bbox']
         img_subframe = Image.fromarray(subframe)
         imgdraw = deepcopy(img_subframe)
@@ -69,9 +69,9 @@ def label_results(detections: list, subframes: list, subframe_indices: list) -> 
         face_centroid = ((x2 + x1) / 2, (y2 + y1) / 2)
         imgdraw.show()
 
-        label = input(
-            'Do you want to label this face ? Answer with Yes or No.\n')
-        match label.lower():
+        annotation = input(
+            f'Do you want to annotate this {area_type} ? Answer with Yes or No.\n')
+        match annotation.lower():
             case 'yes':
                 gender = input(
                     'Provide the perceived gender of the detected character (Male or Female).\n')
@@ -79,8 +79,8 @@ def label_results(detections: list, subframes: list, subframe_indices: list) -> 
                             '30-39, 40-49, 50-59, 60-69, 70+).\n')
                 ethnicity = input('Provide the perceived ethnicity of the detected character (White, Black, Latino_Hispanic, East Asian,\n'
                                   'Southeast Asian, Indian, Middle Eastern).\n')
-                label_idx = len(d_labeled_results[frame_label])
-                d_labeled_results[frame_label][label_idx] = {'face_centroid': face_centroid,
+                annotation_idx = len(d_annotated_results[frame_annotations])
+                d_annotated_results[frame_annotation][annotation_idx] = {'face_centroid': face_centroid,
                                                              'bbox': (x1, y1, x2, y2),
                                                              'gender': gender,
                                                              'age': age,
@@ -95,10 +95,19 @@ def label_results(detections: list, subframes: list, subframe_indices: list) -> 
             if proc.name() == 'eog':
                 proc.kill()
 
-    return d_labeled_results
+    return d_annotated_results
 
 
-def main(trailer_directory: str) -> None:
+def annotate_trailer(trailer_directory:str) -> None:
+    """ 
+    Given a trailer with '.mp4' extension, guides the user through the annotation procedure.
+    
+    Parameters :
+    ----------
+    trailer_directory : str
+        Name of the directory where the trailer is saved, *NOT* path to the trailer itself. The trailer without extension and directory name should be identical (e.g. for the movie 'The Shining', file 'The Shining.mp4' should be in a directory named 'The Shining'. This directory should be a subdirectory of directory 'evaluation_trailers'.
+    """
+
     trailer_path = os.path.join('evaluation_trailers', trailer_directory, trailer_directory)
     print(
         f'Outputting frame-numbered trailer to {trailer_path}_with_frames.avi')
@@ -112,9 +121,9 @@ def main(trailer_directory: str) -> None:
     vision_detector, _ = get_vision_modules()
     subframes = sample_frames(indices, f'{trailer_path}.mp4')
     detections = get_faces(subframes, vision_detector)
-    d_labeled_results = label_results(detections, subframes, indices)
+    d_annotated_results = annotate_results(detections, subframes, indices)
     with open(f'{trailer_path}_annotated.pkl', 'wb') as outfile:
-        pkl.dump(d_labeled_results, outfile)
+        pkl.dump(d_annotated_results, outfile)
     outfile.close()
 
 
@@ -193,11 +202,12 @@ def score_evaluation(frame_annotations:dict, evaluation_type:str = 'binary') -> 
                     case _ :
                         annot_idx = feat_dict[annotation[key]]
                         score += 1 - annotation[f'predicted_{key}_confs'][annot_idx]
+                        
         annotation_scores.append(score / len(keys))
     return annotation_scores
 
 
-def save_annotations(trailer_directory:str) -> None:
+def save_displayed_annotations(trailer_directory:str) -> None:
     trailer_path = os.path.join('evaluation_trailers', trailer_directory, trailer_directory)
     os.makedirs(os.path.join('evaluation_trailers', trailer_directory, 'annotated_frames'), exist_ok=True)
     with open(f'{trailer_path}_annotated.pkl', 'rb') as infile :
@@ -222,8 +232,6 @@ def save_annotations(trailer_directory:str) -> None:
                     color = (255, 0, 0)
             
             draw.rectangle((x1, y1, x2, y2), outline=color, width=2)
-#            draw.text((box[0], box[1] - 1), txt, anchor="lb", fill=fill, font=font)
             draw.text((x1, y1 - 1), f"{frame_annotations[i]['age']}, {frame_annotations[i]['ethnicity']}", 
                       anchor='lb', fill=color, font=font)
-        #imgdraw.show()
         imgdraw.save(os.path.join('evaluation_trailers', trailer_directory, 'annotated_frames', f'annotated_frame_{index}.png'))
