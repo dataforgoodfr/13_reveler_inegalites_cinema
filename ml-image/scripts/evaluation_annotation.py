@@ -44,7 +44,7 @@ def sample_frames(indices: list, trailer_path: str) -> tuple[list, list]:
     return subframes
 
 
-def get_faces(subframes: np.ndarray, vision_detector: vision_detection.VisionDetection) -> list:
+def get_faces(subframes:np.ndarray, vision_detector:vision_detection.VisionDetection) -> list:
     detections = vision_detector.crop_areas_of_interest(
         images=subframes, H_original=subframes.shape[1], W_original=subframes.shape[2])
     return detections
@@ -88,9 +88,9 @@ def annotate_results(detections: list, subframes: list, subframe_indices: list, 
         face_centroid = ((x2 + x1) / 2, (y2 + y1) / 2)
         imgdraw.show()
 
-        label = input(
-            'Do you want to label this face ? Answer with Yes or No.\n')
-        match label.lower():
+        annotation = input(
+            f'Do you want to annotate this {area_type} ? Answer with Yes or No.\n')
+        match annotation.lower():
             case 'yes':
                 gender = get_valid_input(
                     'Provide the perceived gender of the detected character.',
@@ -147,9 +147,9 @@ def annotate_trailer(trailer_directory: str) -> None:
     vision_detector, _ = get_vision_modules()
     subframes = sample_frames(indices, f'{trailer_path}.mp4')
     detections = get_faces(subframes, vision_detector)
-    d_labeled_results = label_results(detections, subframes, indices)
+    d_annotated_results = annotate_results(detections, subframes, indices)
     with open(f'{trailer_path}_annotated.pkl', 'wb') as outfile:
-        pkl.dump(d_labeled_results, outfile)
+        pkl.dump(d_annotated_results, outfile)
     outfile.close()
 
 
