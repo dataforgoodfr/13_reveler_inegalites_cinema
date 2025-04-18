@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 from database.models import Film
 from backend.services.film_metrics_calculator import FilmMetricsCalculator
+from backend.entities.credit_holder_entity import CreditHolderEntity
+
 
 class GetFilmDetails:
     def __init__(self, db: Session):
@@ -48,18 +50,35 @@ class GetFilmDetails:
         film_data["countries_sorted_by_budget"] = [alloc.country.name for alloc in sorted_allocations]
 
         # Get the film credits
-        film_data["credits"] = []
+        film_data["credits"] = {
+            "casting": [],
+            "key_roles": [],
+            "distribution": [],
+        }
+
         for credit in film.film_credits:
-            holder = credit.credit_holder
+            holder = CreditHolderEntity(credit.credit_holder)
             role = credit.role
-            film_data["credits"].append({
+
+            credit_info = {
                 "role": role.name if role else None,
                 "is_key_role": role.is_key_role if role else None,
-                "type": holder.type,
-                "name": f"{holder.first_name} {holder.last_name}" if holder else None,
-                "legal_name": holder.legal_name,
-                "gender": holder.gender,
-            })
+                "is_company": holder.is_company() if holder else None,
+                "name": holder.full_name() if holder else None,
+                "gender": credit.credit_holder.gender,
+            }
+
+            # Casting: role == 'actor'
+            if role and role.name == "actor":
+                film_data["credits"]["casting"].append(credit_info)
+
+            # Key roles: is_key_role == True
+            if role and role.is_key_role:
+                film_data["credits"]["key_roles"].append(credit_info)
+
+            # Distribution: role in ['production_company', 'distribution_company']
+            if role and role.name in ["production_company", "distribution_company"]:
+                film_data["credits"]["distribution"].append(credit_info)
 
         # Get the film awards
         film_data["awards"] = []
