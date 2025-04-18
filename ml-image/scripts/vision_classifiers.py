@@ -9,51 +9,58 @@ from utils import ImageDataset
 # Face emotion detection ?
 
 
-class VisionClassifier :
-    def __init__(self, device:str = None, num_cpu_threads:int = 1) -> None:
+
+class VisionClassifier:
+    def __init__(self, device: str = None, num_cpu_threads: int = 1) -> None:
         # add more models here as we see fit, can also swap current models for smaller models
-        
-        if not device :
-            self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-        else :
+
+        if not device:
+            self.device = torch.device(
+                'cuda') if torch.cuda.is_available() else torch.device('cpu')
+        else:
             self.device = torch.device(device)
 
         torch.set_num_threads(num_cpu_threads)
-        
+
         self.model_fair_7 = models.resnet34(pretrained=True)
-        self.model_fair_7.fc = torch.nn.Linear(self.model_fair_7.fc.in_features, 18)
-        fair_7_state_dict = torch.load('models/res34_fair_align_multi_7_20190809.pt', map_location = self.device)
+        self.model_fair_7.fc = torch.nn.Linear(
+            self.model_fair_7.fc.in_features, 18)
+        fair_7_state_dict = torch.load(
+            'models/res34_fair_align_multi_7_20190809.pt', map_location=self.device)
         self.model_fair_7.load_state_dict(fair_7_state_dict)
         self.model_fair_7.to(self.device).eval()
-        #https://github.com/dchen236/FairFace/tree/master
+        # https://github.com/dchen236/FairFace/tree/master
         # weights available @ https://drive.google.com/file/d/113QMzQzkBDmYMs9LwzvD-jxEZdBQ5J4X/view?usp=drive_link
 
 
     def predict_age_gender_ethnicity(
-            self, faces: list, batch_size: int = 64, expose_confs:bool = False
-            ) -> tuple[list, list, list, list, list, list]:
+            self, faces: list, batch_size: int = 64, expose_confs: bool = False
+    ) -> tuple[list, list, list, list, list, list]:
+
         ethnicity_labels = {
-            0 : 'White', 1 : 'Black', 2 : 'Latino_Hispanic', 3 : 'East Asian',
-            4 : 'Southeast Asian', 5 : 'Indian', 6 : 'Middle Eastern',
-            }
+            0: 'White', 1: 'Black', 2: 'Latino_Hispanic', 3: 'East Asian',
+            4: 'Southeast Asian', 5: 'Indian', 6: 'Middle Eastern',
+        }
 
         gender_labels = {
-            0 : 'Male', 1 : 'Female',
-            }
+            0: 'Male', 1: 'Female',
+        }
 
         age_labels = {
-            0 : '0-2', 1 : '3-9', 2 : '10-19', 3 : '20-29', 4 : '30-39',
-            5 : '40-49', 6 : '50-59', 7 : '60-69', 8 : '70+',
-            }
+            0: '0-2', 1: '3-9', 2: '10-19', 3: '20-29', 4: '30-39',
+            5: '40-49', 6: '50-59', 7: '60-69', 8: '70+',
+        }
 
         inference_transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Resize((224, 224)),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            ])
-        
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[
+                                 0.229, 0.224, 0.225]),
+        ])
+
         transformed_faces = ImageDataset(faces, inference_transform)
-        dataloader = DataLoader(transformed_faces, batch_size=batch_size, shuffle=False, num_workers=0)
+        dataloader = DataLoader(
+            transformed_faces, batch_size=batch_size, shuffle=False, num_workers=0)
 
         ages, genders, ethnicities = [], [], []
         age_confidences, gender_confidences, ethnicity_confidences = [], [], []
@@ -68,28 +75,35 @@ class VisionClassifier :
                 ethnicity_outputs = outputs_cpu[:, :7]
 
                 # get confidence scores and argmax of predictions
-                age_results = torch.max(torch.softmax(age_outputs, dim = 1), dim = 1)
-                gender_results = torch.max(torch.softmax(gender_outputs, dim = 1), dim = 1)
-                ethnicity_results = torch.max(torch.softmax(ethnicity_outputs, dim = 1), dim = 1)
+                age_results = torch.max(
+                    torch.softmax(age_outputs, dim=1), dim=1)
+                gender_results = torch.max(
+                    torch.softmax(gender_outputs, dim=1), dim=1)
+                ethnicity_results = torch.max(
+                    torch.softmax(ethnicity_outputs, dim=1), dim=1)
 
                 ages.extend(age_results.indices.tolist())
                 genders.extend(gender_results.indices.tolist())
                 ethnicities.extend(ethnicity_results.indices.tolist())
-                
-                if expose_confs :
-                    age_confs = torch.softmax(age_outputs, dim = 1).tolist()
-                    gender_confs = torch.softmax(gender_outputs, dim = 1).tolist()
-                    ethnicity_confs = torch.softmax(ethnicity_outputs, dim = 1).tolist()
+
+                if expose_confs:
+                    age_confs = torch.softmax(age_outputs, dim=1).tolist()
+                    gender_confs = torch.softmax(
+                        gender_outputs, dim=1).tolist()
+                    ethnicity_confs = torch.softmax(
+                        ethnicity_outputs, dim=1).tolist()
                     age_confidences.extend(age_confs)
                     gender_confidences.extend(gender_confs)
                     ethnicity_confidences.extend(ethnicity_confs)
-                else :
+                else:
                     age_confidences.extend(age_results.values.tolist())
                     gender_confidences.extend(gender_results.values.tolist())
-                    ethnicity_confidences.extend(ethnicity_results.values.tolist())
-                
+                    ethnicity_confidences.extend(
+                        ethnicity_results.values.tolist())
+
         ages = [age_labels[age] for age in ages]
         genders = [gender_labels[gender] for gender in genders]
-        ethnicities = [ethnicity_labels[ethnicity] for ethnicity in ethnicities]
-        
+        ethnicities = [ethnicity_labels[ethnicity]
+                       for ethnicity in ethnicities]
+
         return ages, genders, ethnicities, age_confidences, gender_confidences, ethnicity_confidences

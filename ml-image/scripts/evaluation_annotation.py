@@ -10,6 +10,9 @@ from copy import deepcopy
 from PIL import Image, ImageDraw, ImageFont
 from utils import frame_capture
 
+from utils import frame_capture
+import vision_detection
+
 
 def get_frames(trailer_path:str) -> None:
     frames = frame_capture(trailer_path)
