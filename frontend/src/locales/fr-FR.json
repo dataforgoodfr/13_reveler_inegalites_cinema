@@ -1,11 +1,21 @@
 {
-  "country_adjective": {
-    "France": "Film français"
+  "distribution": {
+    "production_company": "Produit par",
+    "distribution_company": "Distribué par"
   },
   "roles": {
-    "actor": "Acteur",
-    "director": "Réalisateur",
-    "screenwriter": "Scénariste",
-    "producer": "Producteur"
+    "first_assistant_director": "Assistant·e à la réalisation",
+    "head_costume_designer": "Costumier·ère",
+    "production_designer": "Décorateur·rice",
+    "casting_director": "Directeur·rice de casting",
+    "director_of_photography": "Directeur·rice de la photo",
+    "director_of_production": "Directeur·rice de production",
+    "visual_effects_producer": "Effets spéciaux",
+    "sound_engineer": "Ingénieur·e du son",
+    "lead_editor": "Monteur·euse",
+    "composer": "Auteur·rice de la musique",
+    "executive_producer": "Producteur·rice délégué·e",
+    "director": "Réalisateur·rice",
+    "screenwriter": "Scénariste"
   }
 }
