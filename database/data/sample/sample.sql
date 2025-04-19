@@ -90,18 +90,18 @@ country_id, film_id, budget_allocation
 INSERT INTO ric_festivals (
 id, name, description, image_base64, country_id
 ) VALUES
-(1, 'César', 'Les César du cinéma sont des récompenses cinématographiques créées en 1976 et remises annuellement à Paris par l''Académie des arts et techniques du cinéma', '', 21),
-(2, 'Lumières de la presse étrangère', 'Les Lumières de la presse internationale sont un ensemble de récompenses cinématographiques françaises créées en 1996 et remises annuellement à Paris par l''Académie des Lumières de la presse internationale, composée de correspondants de la presse internationale à Paris.', '', 21),
-(3, 'Festival de Cannes', 'Au fil de ses éditions, le Festival de Cannes s''est imposé comme l''un des miroirs de la production cinématographique à travers le monde.', '', 21),
-(4, 'Oscars', 'Les Oscars sont des récompenses cinématographiques américaines décernées chaque année depuis 1929 à Los Angeles et destinées à saluer l''excellence des productions internationales du cinéma.', '', 23),
-(5, 'BAFTA Awards', 'Les BAFTA Awards sont des récompenses britanniques décernées chaque année par la British Academy of Film and Television Arts.', '', 22),
-(6, 'Golden Globes', 'Les Golden Globes sont des récompenses américaines décernées chaque année par la Hollywood Foreign Press Association.', '', 23),
-(7, 'Mostra de Venise', 'La Mostra de Venise est un festival international de cinéma qui se tient chaque année à Venise, en Italie.', '', 22),
-(8, 'Festival International du Film de la Roche-sur-Yon', 'Festival de cinéma se tenant chaque année à La Roche-sur-Yon, en France.', '', 21),
-(9, 'Festival International des Jeunes Réalisateurs de Saint-Jean-de-Luz', 'Festival mettant en avant les jeunes réalisateurs, se tenant à Saint-Jean-de-Luz, France.', '', 21),
-(10, 'Directors Guild of America Awards', 'Récompenses décernées par la Directors Guild of America aux meilleurs réalisateurs.', '', 23),
-(11, 'European Film Awards', 'Ces prix saluent l''excellence des œuvres et des productions européennes dans différents domaines.', '', 24),
-(12, 'Fondation Gan pour le cinéma', 'La Fondation Gan pour le cinéma est une fondation du Groupe d''assurances Groupama. Créée en 1987, sous l''égide du réalisateur français Costa-Gavras, elle a vocation à soutenir la création et la diffusion de premiers longs métrages.', '', 21);
+(1, 'César', 'Les César du cinéma sont des récompenses cinématographiques créées en 1976 et remises annuellement à Paris par l''Académie des arts et techniques du cinéma', '	https://www.academie-cinema.org/wp-content/themes/cesar/assets/images/logo.svg', 21),
+(2, 'Lumières de la presse étrangère', 'Les Lumières de la presse internationale sont un ensemble de récompenses cinématographiques françaises créées en 1996 et remises annuellement à Paris par l''Académie des Lumières de la presse internationale, composée de correspondants de la presse internationale à Paris.', 'https://academiedeslumieres.com/wp-content/uploads/2022/12/Lumieres_Lockup_Lockup_no-28-1.jpg', 21),
+(3, 'Festival de Cannes', 'Au fil de ses éditions, le Festival de Cannes s''est imposé comme l''un des miroirs de la production cinématographique à travers le monde.', 'https://upload.wikimedia.org/wikipedia/fr/thumb/f/fd/Festival_de_Cannes_Logo.svg/langfr-280px-Festival_de_Cannes_Logo.svg.png', 21),
+(4, 'Oscars', 'Les Oscars sont des récompenses cinématographiques américaines décernées chaque année depuis 1929 à Los Angeles et destinées à saluer l''excellence des productions internationales du cinéma.', 'https://assets-cdn.watchdisneyfe.com/delta/assets/abc/shows/Oscars-Logo.png', 23),
+(5, 'BAFTA Awards', 'Les BAFTA Awards sont des récompenses britanniques décernées chaque année par la British Academy of Film and Television Arts.', 'https://www.bafta.org/wp-content/themes/bafta/img/framework/logo.svg', 22),
+(6, 'Golden Globes', 'Les Golden Globes sont des récompenses américaines décernées chaque année par la Hollywood Foreign Press Association.', '	https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Golden_Globes_%282024%2C_logo%29.png/330px-Golden_Globes_%282024%2C_logo%29.png', 23),
+(7, 'Mostra de Venise', 'La Mostra de Venise est un festival international de cinéma qui se tient chaque année à Venise, en Italie.', 'https://upload.wikimedia.org/wikipedia/fr/thumb/b/bf/Biennale_logo_small.png/330px-Biennale_logo_small.png', 22),
+(8, 'Festival International du Film de la Roche-sur-Yon', 'Festival de cinéma se tenant chaque année à La Roche-sur-Yon, en France.', '	https:/upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Logo_du_Festival_International_du_Film.jpg/330px-Logo_du_Festival_International_du_Film.jpg', 21),
+(9, 'Festival International des Jeunes Réalisateurs de Saint-Jean-de-Luz', 'Festival mettant en avant les jeunes réalisateurs, se tenant à Saint-Jean-de-Luz, France.', 'https://static.wixstatic.com/media/4bf829_4adb3c7b96c34efeac5f71507aff40c8~mv2.jpg/v1/crop/x_6,y_0,w_482,h_344/fill/w_175,h_125,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/LOGO%20FIF%20BLEU%20WEB%202.jpg', 21),
+(10, 'Directors Guild of America Awards', 'Récompenses décernées par la Directors Guild of America aux meilleurs réalisateurs.', 'https://www.dga.org/images/dga_emblem_cp_xsm.png', 23),
+(11, 'European Film Awards', 'Ces prix saluent l''excellence des œuvres et des productions européennes dans différents domaines.', 'https://www.europeanfilmawards.eu/wp-content/uploads/2024/08/logo-efa.svg', 24),
+(12, 'Fondation Gan pour le cinéma', 'La Fondation Gan pour le cinéma est une fondation du Groupe d''assurances Groupama. Créée en 1987, sous l''égide du réalisateur français Costa-Gavras, elle a vocation à soutenir la création et la diffusion de premiers longs métrages.', 'https://www.fondation-gan.com/app/themes/starter-gan/img/logo.png', 21);
 
 
 -- Festival awards

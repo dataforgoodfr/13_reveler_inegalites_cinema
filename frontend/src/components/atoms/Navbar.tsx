@@ -52,7 +52,7 @@ const Navbar = ({
         <div className="absolute mx-auto px-4 w-full">
             {/* Overlay pour masquer le contenu en dessous */}
             <div
-            className="fixed inset-0 bg-grey bg-opacity-50 backdrop-blur-xl z-10"
+            className="fixed inset-0 bg-black/30 backdrop-blur-xl z-10"
             onClick={() => {setSearchQuery(""); setIsSearching(false); setFilteredFilms([]);}} // Réinitialiser la recherche après un clic
             />
         

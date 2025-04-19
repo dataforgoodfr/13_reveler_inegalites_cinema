@@ -87,7 +87,7 @@ export default function PageFilm() {
     }, {});
   }
 
-  if (isLoading) {
+  if (isLoading || !filmData) {
     return (
       <main className="p-20 bg-transparent text-white flex justify-center items-center">
         <p>Chargement...</p>
@@ -95,7 +95,7 @@ export default function PageFilm() {
     );
   }
 
-  if (hasError || !filmData) {
+  if (hasError) {
     return (
       <main className="p-20 bg-transparent text-white flex justify-center items-center">
         <h1 className="text-4xl font-bold">404 - Film non trouvé</h1>
@@ -470,15 +470,18 @@ export default function PageFilm() {
                           filmData.awards.filter(
                             (award: any) => !award.is_winner
                           ),
-                          "festival_name"
+                          "festival_id"
                         )
-                      ).map(([festival_name, awards]: any[], index: number) => (
+                      ).map(([festival_id, awards]: any[], index: number) => (
                         <AccordionItem value={`item-${index}`} key={index}>
                           <AccordionTrigger>
                             <div className="flex gap-2">
-                              <Badge className="bg-indigo-700">
-                                ⭐️ {festival_name}
-                              </Badge>
+                              <a
+                                href={`/festivals/${festival_id}`}
+                                className="text-indigo-400 underline"
+                              >
+                                ⭐️ {awards[0].festival_name}
+                              </a>
                               <p>{awards.length} nominations</p>
                             </div>
                           </AccordionTrigger>

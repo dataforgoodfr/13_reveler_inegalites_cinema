@@ -13,7 +13,7 @@ import {
 } from "../ui/dialog";
 
 const ShareDialog = ({ imageSource }: { imageSource: string }) => {
-  const shareUrl = window.location.href;
+  const shareUrl = window?.location.href;
   const shareText = "Découvrez ce film incroyable !";
 
   const copyLink = () => {
