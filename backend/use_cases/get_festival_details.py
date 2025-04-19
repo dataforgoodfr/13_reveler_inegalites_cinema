@@ -61,6 +61,8 @@ class GetFestivalDetails:
                 "id": festival.id,
                 "name": festival.name,
                 "description": festival.description,
+                "date": nomination.date.year if nomination.date else None,
+                "image_base64": festival.image_base64 if festival.image_base64 else None,
                 "festival_metrics": festival_metrics,
             },
             "awards": award_data
