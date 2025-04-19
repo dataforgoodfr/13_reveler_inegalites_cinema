@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routers import film
+from backend.routers import film, festival
 
 backend = FastAPI()
 
@@ -19,3 +19,7 @@ def read_root():
  
 # Mount routers
 backend.include_router(film.router)
+backend.include_router(festival.router)
+
+for route in backend.routes:
+    print(f"{route.path} -> {route.name}")

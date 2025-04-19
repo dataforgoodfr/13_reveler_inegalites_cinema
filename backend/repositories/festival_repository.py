@@ -19,3 +19,9 @@ def find_or_create_festival(session: Session, country_id: int, name: str, descri
         session.flush()
 
     return festival
+
+def get_festival(session: Session, festival_id: int) -> Festival:
+    festival = session.query(Festival).filter(Festival.id == festival_id).first()
+    if not festival:
+        return None
+    return festival
