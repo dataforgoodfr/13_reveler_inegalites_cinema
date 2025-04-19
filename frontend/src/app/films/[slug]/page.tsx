@@ -27,10 +27,10 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-import { t } from "../../../utils/i18n";
 import ShareDialog from "@/components/atoms/ShareDialog";
 import TrailerAnalysisDialog from "@/components/atoms/TrailerAnalysisDialog";
 import PosterAnalysisDialog from "@/components/atoms/PosterAnalysisDialog";
+import { t } from "@/utils/i18n";
 
 // Ceci est un composant de page avec une route dynamique
 // Le [slug] dans le nom du dossier sera disponible comme paramètre
@@ -74,17 +74,17 @@ export default function PageFilm() {
     return new Intl.DateTimeFormat("fr-FR", options).format(date);
   }
 
-  function groupByCriteria(list: any[], criteria: string){
+  function groupByCriteria(list: any[], criteria: string) {
     return list.reduce((acc, element) => {
       const data = element[criteria];
-    
+
       if (!acc[data]) {
         acc[data] = [];
       }
-    
+
       acc[data].push(element);
       return acc;
-    }, {})
+    }, {});
   }
 
   if (isLoading) {
@@ -122,23 +122,49 @@ export default function PageFilm() {
             width={257.45}
           />
           <div className="absolute flex flex-col gap-2 bottom-2 left-2">
-            <PosterAnalysisDialog imageSource={filmData.poster_image_base64} />
-            <TrailerAnalysisDialog filmName={filmData.original_name} releaseDate={filmData.release_date} trailerUrl={filmData.trailer_url} />
+            <PosterAnalysisDialog
+              imageSource={filmData.poster_image_base64}
+              femaleVisibleRatioOnPoster={
+                filmData.metrics.female_visible_ratio_on_poster
+              }
+              nonWhiteVisibleRatioOnPoster={
+                filmData.metrics.non_white_visible_ratio_on_poster
+              }
+            />
+            <TrailerAnalysisDialog
+              filmName={filmData.original_name}
+              releaseDate={filmData.release_date}
+              trailerUrl={filmData.trailer_url}
+              femaleScreenTimeInTrailer={
+                filmData.metrics.female_screen_time_in_trailer
+              }
+              nonWhiteScreenTimeInTrailer={
+                filmData.metrics.non_white_screen_time_in_trailer
+              }
+            />
             <ShareDialog imageSource={filmData.poster_image_base64} />
           </div>
         </div>
         <div className="w-full flex md:block flex-col">
           <h1 className="text-4xl font-bold mb-4">
             {filmData.original_name + " "}
-            <span className="text-sm">({new Date(filmData.release_date).getFullYear()})</span>
+            <span className="text-sm">
+              ({new Date(filmData.release_date).getFullYear()})
+            </span>
           </h1>
           <h2>
             Réalisé par{" "}
-            {filmData.credits.find((c: any) => c.role === "director")?.name}
+            {filmData.credits
+              .key_roles
+              .filter((c: any) => c.role === "director")
+              .map((c: any) => c.name)
+              .join(", ")}
           </h2>
           <p className="text-lg mb-2">
-            {t(`country_adjective.${filmData.top_budget_country}`)} {getDate(filmData.release_date)} en salle{" "}
-            {"2h40min"}
+            {getDate(filmData.release_date)} en salle {filmData.duration}
+          </p>
+          <p className="text-lg mb-2">
+            Pays d'origine: {filmData.countries_sorted_by_budget.join(", ")}
           </p>
           <div className="flex mb-4 gap-2">
             {filmData.genres.map((genre: string, index: number) => (
@@ -220,8 +246,8 @@ export default function PageFilm() {
             {activeSection === "Statistiques" && (
               <div className="mt-4">
                 <div className="flex flex-col md:flex-row gap-5">
-                  {filmData.female_representation_in_key_roles ||
-                  filmData.female_representation_in_casting ? (
+                  {filmData.metrics.female_representation_in_key_roles ||
+                  filmData.metrics.female_representation_in_casting ? (
                     <>
                       <Card
                         className="md:w-[220px]"
@@ -232,8 +258,8 @@ export default function PageFilm() {
                       >
                         <CardHeader>
                           <CardTitle className="text-violet-300">
-                            {filmData.female_representation_in_key_roles
-                              ? `${filmData.female_representation_in_key_roles} %`
+                            {filmData.metrics.female_representation_in_key_roles
+                              ? `${filmData.metrics.female_representation_in_key_roles} %`
                               : "NC"}
                           </CardTitle>
                           <CardDescription className="text-white">
@@ -253,8 +279,8 @@ export default function PageFilm() {
                       >
                         <CardHeader>
                           <CardTitle className="text-violet-300">
-                            {filmData.female_representation_in_casting
-                              ? `${filmData.female_representation_in_casting} %`
+                            {filmData.metrics.female_representation_in_casting
+                              ? `${filmData.metrics.female_representation_in_casting} %`
                               : "NC"}
                           </CardTitle>
                           <CardDescription className="text-white">
@@ -286,12 +312,41 @@ export default function PageFilm() {
             )}
 
             {activeSection === "Distribution" && (
-              <div className="mt-4">
-                <span className="block rounded-sm font-bold w-full px-2 py-1" style={{backgroundColor: "rgba(63, 63, 70, 0.4)"}}>Budget</span>
-                <div className="px-2 py-1">
-                <span>{filmData.budget.toLocaleString()} €</span>
+              <>
+                {Object.entries(
+                  groupByCriteria(
+                    filmData.credits.distribution,
+                    "role"
+                  )
+                ).map(([role, credits]: any, role_index: number) => (
+                  <div key={role_index} className="mt-4">
+                    <span
+                      className="block rounded-sm font-bold w-full px-2 py-1"
+                      style={{ backgroundColor: "rgba(63, 63, 70, 0.4)" }}
+                    >
+                      {t(`distribution.${role}`)}
+                    </span>
+                    <div className="flex">
+                      {credits.map((credit: any, index: number) => (
+                        <div className="px-2 py-1" key={index}>
+                          <Badge className="bg-gray-800">{credit.name}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                <div className="mt-4">
+                  <span
+                    className="block rounded-sm font-bold w-full px-2 py-1"
+                    style={{ backgroundColor: "rgba(63, 63, 70, 0.4)" }}
+                  >
+                    Budget
+                  </span>
+                  <div className="px-2 py-1">
+                    <span>{filmData.budget.toLocaleString()} €</span>
+                  </div>
                 </div>
-              </div>
+              </>
             )}
 
             {activeSection === "Equipe du film" && (
@@ -302,10 +357,15 @@ export default function PageFilm() {
                   rowGap: "24px",
                 }}
               >
-                {Object.entries(groupByCriteria(filmData.credits, 'role')).map(([role_name, roles]: any[], index: number) => (
+                {Object.entries(
+                  groupByCriteria(
+                    filmData.credits.key_roles,
+                    "role"
+                  )
+                ).map(([role_name, roles]: any[], index: number) => (
                   <div
                     key={index}
-                    className="grid"
+                    className="flex flex-col"
                     style={{
                       gap: "12px",
                     }}
@@ -320,20 +380,18 @@ export default function PageFilm() {
                       {t(`roles.${role_name}`)}
                     </div>
                     <div className="flex flex-wrap gap-1">
-                      {
-                        roles.map((role: any, index: number) => 
-                          <Badge
-                            key={index}
-                            className={
+                      {roles.map((role: any, index: number) => (
+                        <Badge
+                          key={index}
+                          className={
                             role.gender === "male"
                               ? "bg-slate-700"
                               : "bg-violet-800"
-                        }
-                      >
-                        {role.name}
-                      </Badge>                        
-                        )
-                      }
+                          }
+                        >
+                          {role.name}
+                        </Badge>
+                      ))}
                     </div>
                   </div>
                 ))}
@@ -342,8 +400,7 @@ export default function PageFilm() {
 
             {activeSection === "Casting" && (
               <div className="pt-5 flex flex-wrap gap-2">
-                {filmData.credits
-                  .filter((credit: any) => credit.role === "actor")
+                {filmData.credits.casting
                   .map((actor: any, index: number) => (
                     <Badge
                       key={index}
@@ -408,29 +465,34 @@ export default function PageFilm() {
                   </div>
                   <div>
                     <Accordion type="single" collapsible className="w-full">
-                      {Object.entries(groupByCriteria(filmData.awards
-                        .filter((award: any) => !award.is_winner), 'festival_name'))
-                        .map(([festival_name, awards]: any[], index: number) => (
-                          <AccordionItem value={`item-${index}`} key={index}>
-                            <AccordionTrigger>
-                              <div className="flex gap-2">
-                                <Badge className="bg-indigo-700">
-                                  ⭐️ {festival_name}
-                                </Badge>
-                                <p>{awards.length} nominations</p>
-                              </div>
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="flex flex-wrap gap-2">
-                                {awards.map((award: any, index: number) =>                                 
+                      {Object.entries(
+                        groupByCriteria(
+                          filmData.awards.filter(
+                            (award: any) => !award.is_winner
+                          ),
+                          "festival_name"
+                        )
+                      ).map(([festival_name, awards]: any[], index: number) => (
+                        <AccordionItem value={`item-${index}`} key={index}>
+                          <AccordionTrigger>
+                            <div className="flex gap-2">
+                              <Badge className="bg-indigo-700">
+                                ⭐️ {festival_name}
+                              </Badge>
+                              <p>{awards.length} nominations</p>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="flex flex-wrap gap-2">
+                              {awards.map((award: any, index: number) => (
                                 <Badge className="bg-gray-800" key={index}>
                                   {award.award_name}
                                 </Badge>
-                                )}
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        ))}
+                              ))}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
                     </Accordion>
                   </div>
                 </div>

@@ -14,10 +14,14 @@ const TrailerAnalysisDialog = ({
   filmName,
   releaseDate,
   trailerUrl,
+  femaleScreenTimeInTrailer,
+  nonWhiteScreenTimeInTrailer
 }: {
   filmName: string;
   releaseDate: string;
   trailerUrl: string;
+  femaleScreenTimeInTrailer: number;
+  nonWhiteScreenTimeInTrailer: number;
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [duration, setDuration] = useState(0);
@@ -51,7 +55,7 @@ const TrailerAnalysisDialog = ({
       </DialogTrigger>
       <DialogContent
         className="border-0 text-white"
-        style={{ backgroundColor: "rgb(30,30,30)", width: "60%", height: "80%", maxWidth: 'unset' }}
+        style={{ backgroundColor: "rgb(30,30,30)", width: "800px", height: "500px", maxWidth: 'unset' }}
       >
         <DialogHeader className="items-center text-center p-5 h-full">
           <DialogTitle className="font-bold">
@@ -77,14 +81,14 @@ const TrailerAnalysisDialog = ({
                   <span>Temps d'écran des personnages perçus comme </span>
                   <span className="text-violet-500">femmes</span>
                 </div>
-                <span className="text-violet-500">{"30 secondes"}</span>
+                <span className="text-violet-500">{formatTime(femaleScreenTimeInTrailer)}</span>
               </div>
               <div>
                 <div>
                   <span>Temps d'écran des personnages perçus comme </span>
                   <span className="text-violet-500">non blancs</span>
                 </div>
-                <span className="text-violet-500">{"10 secondes"}</span>
+                <span className="text-violet-500">{formatTime(nonWhiteScreenTimeInTrailer)}</span>
               </div>
             </div>
           </div>
