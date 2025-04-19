@@ -49,7 +49,7 @@ const Navbar = ({
     {
       isSearching
       ? (
-        <div className="absolute max-w-7xl mx-auto px-4 w-full">
+        <div className="absolute mx-auto px-4 w-full">
             {/* Overlay pour masquer le contenu en dessous */}
             <div
             className="fixed inset-0 bg-grey bg-opacity-50 backdrop-blur-xl z-10"
@@ -88,7 +88,7 @@ const Navbar = ({
                               <strong className="text-xl">{film.title}</strong> ({film.year})
                             </span>
                             <span>
-                              Réalisé par <strong>{film.director}</strong>
+                              Réalisé par <strong>{film.directors.join(' & ')}</strong>
                             </span>
                           </div>
                         </div>
@@ -115,7 +115,7 @@ const Navbar = ({
             </Link>
           </div>
         }
-        <div className="max-w-7xl mx-auto px-4 w-full">
+        <div className="mx-auto px-4 w-full">
           <div className="flex items-center justify-end h-16">
             {/* Menu desktop */}
             <div className="hidden md:block">
