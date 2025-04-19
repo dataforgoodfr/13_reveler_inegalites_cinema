@@ -92,10 +92,6 @@ class GetFilmDetails:
                 "is_winner": nomination.is_winner,
             })
 
-        # Get list of festivals by film id
-        festivals = festival_repository.get_festivals_by_film_id(self.db, film_id)
-        film_data["festivals"] = festivals if festivals else []
-        
         # Get the film key metrics
         metrics = FilmMetricsCalculator(film)
         film_data["metrics"] = {
