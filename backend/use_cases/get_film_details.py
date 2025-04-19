@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from database.models import Film
 from backend.services.film_metrics_calculator import FilmMetricsCalculator
 from backend.entities.credit_holder_entity import CreditHolderEntity
-
+from backend.repositories import festival_repository
 
 class GetFilmDetails:
     def __init__(self, db: Session):
@@ -92,6 +92,10 @@ class GetFilmDetails:
                 "is_winner": nomination.is_winner,
             })
 
+        # Get list of festivals by film id
+        festivals = festival_repository.get_festivals_by_film_id(self.db, film_id)
+        film_data["festivals"] = festivals if festivals else []
+        
         # Get the film key metrics
         metrics = FilmMetricsCalculator(film)
         film_data["metrics"] = {
