@@ -1,5 +1,4 @@
 from sqlalchemy.orm import Session
-from database.models import Festival
 from backend.repositories import festival_repository, festival_award_repository, award_nomination_repository, film_repository
 from backend.use_cases import get_film_details
 
