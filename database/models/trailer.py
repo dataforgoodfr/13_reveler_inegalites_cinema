@@ -10,3 +10,4 @@ class Trailer(Base):
     film_id = Column(Integer, ForeignKey('ric_films.id'), nullable=False)
 
     film = relationship("Film", back_populates="trailer")
+    characters = relationship("TrailerCharacter", back_populates="trailer")
