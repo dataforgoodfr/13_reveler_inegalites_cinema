@@ -2,7 +2,6 @@ from sqlalchemy.orm import Session
 from database.models import Film
 from backend.services.film_metrics_calculator import FilmMetricsCalculator
 from backend.entities.credit_holder_entity import CreditHolderEntity
-from backend.repositories import festival_repository
 
 class GetFilmDetails:
     def __init__(self, db: Session):
