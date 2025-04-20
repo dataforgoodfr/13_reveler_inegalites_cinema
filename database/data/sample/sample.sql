@@ -989,3 +989,48 @@ INSERT INTO ric_film_credits (
   (1, 37, 145);
 
 
+-- Trailer characters (ML) 
+INSERT INTO ric_trailer_characters (
+  id, trailer_id, age_min, age_max, gender, ethnicity, time_on_screen, average_size_on_screen
+) VALUES
+-- Le Comte de Monte-Cristo
+(0, 1, 20, 29, 'Male', 'White', 7.625, 0.09),
+(1, 1, 20, 29, 'Female', 'White', 6.292, 0.11),
+(2, 1, 30, 39, 'Male', 'White', 3.916, 0.05),
+(3, 1, 40, 49, 'Male', 'White', 2.292, 0.02),
+(4, 1, 20, 29, 'Male', 'White', 1.542, 0.20),
+(5, 1, 30, 39, 'Male', 'White', 3.083, 0.12),
+-- Emilia Pérez
+(6, 2, 20, 29, 'Female', 'Black', 18.52, 0.10),
+(7, 2, 20, 29, 'Female', 'Latino_Hispanic', 3.28, 0.09),
+(8, 2, 20, 29, 'Female', 'White', 5.0, 0.12),
+(9, 2, 20, 29, 'Female', 'White', 6.4, 0.11),
+-- Saint Omer
+(10, 3, 20, 29, 'Female', 'Black', 25.875, 0.08),
+(11, 3, 40, 49, 'Female', 'White', 3.208, 0.04),
+(12, 3, 20, 29, 'Female', 'Black', 15.71, 0.10),
+(13, 3, 60, 69, 'Female', 'Black', 3.0, 0.07),
+(14, 3, 30, 39, 'Female', 'White', 2.667, 0.10),
+-- L'Événement
+(15, 4, 20, 29, 'Female', 'White', 27.291, 0.09),
+(16, 4, 30, 39, 'Male', 'White', 13.875, 0.03),
+(17, 4, 20, 29, 'Male', 'White', 9.667, 0.05),
+-- Titane
+(18, 5, 50, 59, 'Male', 'White', 11.208, 0.07),
+(19, 5, 20, 29, 'Female', 'White', 4.708, 0.10),
+(20, 5, 20, 29, 'Female', 'White', 1.292, 0.13);
+
+
+-- Poster characters (ML)
+INSERT INTO ric_poster_characters (
+  id, poster_id, age_min, age_max, gender, ethnicity, poster_percentage
+) VALUES
+-- Le Comte de Monte-Cristo
+(1, 1, 20, 29, 'Male', 'Middle Eastern', 0.89),
+-- Emilia Pérez
+-- Saint Omer
+(2, 3, 20, 29, 'Female', 'Black', 0.39),
+-- L'Événement
+(3, 4, 10, 19, 'Female', 'White', 0.98),
+-- Titane
+(4, 5, 20, 29, 'Female', 'White', 0.55);
