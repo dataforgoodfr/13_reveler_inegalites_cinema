@@ -2,6 +2,8 @@ from sqlalchemy.orm import Session
 from database.models import Film
 from backend.services.film_metrics_calculator import FilmMetricsCalculator
 from backend.entities.credit_holder_entity import CreditHolderEntity
+from backend.entities.trailer_entity import TrailerEntity
+from backend.entities.poster_entity import PosterEntity
 
 class GetFilmDetails:
     def __init__(self, db: Session):
@@ -94,16 +96,18 @@ class GetFilmDetails:
 
         # Get the film key metrics
         metrics = FilmMetricsCalculator(film)
+        trailer = TrailerEntity(film.trailer[0] if film.trailer else None)
+        poster = PosterEntity(film.poster[0] if film.poster else None)
         film_data["metrics"] = {
             # Get the film main metrics
             "female_representation_in_key_roles": metrics.calculate_female_representation_in_key_roles(),
             "female_representation_in_casting": metrics.calculate_female_representation_in_casting(),
             # Get the film trailer metrics
-            "female_screen_time_in_trailer": metrics.calculate_female_screen_time_in_trailer(),
-            "non_white_screen_time_in_trailer": metrics.calculate_non_white_screen_time_in_trailer(),
+            "female_screen_time_in_trailer": trailer.female_screen_time(),
+            "non_white_screen_time_in_trailer": trailer.non_white_screen_time(),
             # Get the film poster metrics
-            "female_visible_ratio_on_poster": metrics.calculate_female_visible_ratio_on_poster(),
-            "non_white_visible_ratio_on_poster": metrics.calculate_non_white_visible_ratio_on_poster()
+            "female_visible_ratio_on_poster": poster.female_average_ratio_on_poster(),
+            "non_white_visible_ratio_on_poster": poster.non_white_average_ratio_on_poster()
         }
 
         return film_data
