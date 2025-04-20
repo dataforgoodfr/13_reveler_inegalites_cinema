@@ -10,3 +10,4 @@ class Poster(Base):
     film_id = Column(Integer, ForeignKey('ric_films.id'), nullable=False)
 
     film = relationship("Film", back_populates="poster")
+    characters = relationship("PosterCharacter", back_populates="poster")
