@@ -12,6 +12,7 @@ from .festival import Festival
 from .festival_award import FestivalAward
 from .award_nomination import AwardNomination
 from .trailer_character import TrailerCharacter
+from .poster_character import PosterCharacter
 
 __all__ = [
     "Film",
@@ -22,6 +23,7 @@ __all__ = [
     "Trailer",
     "TrailerCharacter",
     "Poster",
+    "PosterCharacter",
     "Role",
     "CreditHolder",
     "FilmCredit",
