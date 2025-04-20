@@ -11,5 +11,21 @@ from .film_credit import FilmCredit
 from .festival import Festival
 from .festival_award import FestivalAward
 from .award_nomination import AwardNomination
+from .trailer_character import TrailerCharacter
 
-__all__ = ["Film", "Genre", "FilmGenre", "Country", "FilmCountryBudgetAllocation", "Trailer", "Poster", "Role", "CreditHolder", "FilmCredit", "Festival", "FestivalAward", "AwardNomination"]
+__all__ = [
+    "Film",
+    "Genre",
+    "FilmGenre",
+    "Country",
+    "FilmCountryBudgetAllocation",
+    "Trailer",
+    "TrailerCharacter",
+    "Poster",
+    "Role",
+    "CreditHolder",
+    "FilmCredit",
+    "Festival",
+    "FestivalAward",
+    "AwardNomination"
+]
