@@ -1,7 +1,8 @@
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
-from database.models import Film, FilmCredit, Role, CreditHolder
+from database.models import Film, FilmCredit, Role, CreditHolder, AwardNomination
 from backend.entities.credit_holder_entity import CreditHolderEntity
+from typing import List
 
 def create_film(session: Session, film_data: dict) -> Film:
     film = Film(**film_data)
@@ -69,3 +70,14 @@ def get_individual_directors_for_film(session: Session, film_id: int) -> list[st
     results = session.scalars(stmt).all()
 
     return [CreditHolderEntity(holder).full_name() for holder in results]
+
+def get_films_by_award_id(session: Session, award_id: int) -> List[Film]:
+    """
+    Returns a list of films that were nominated for a specific award.
+    """
+    return (
+        session.query(Film)
+        .join(AwardNomination, AwardNomination.film_id == Film.id)
+        .filter(AwardNomination.award_id == award_id)
+        .all()
+    )

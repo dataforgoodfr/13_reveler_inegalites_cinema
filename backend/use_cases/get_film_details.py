@@ -3,7 +3,6 @@ from database.models import Film
 from backend.services.film_metrics_calculator import FilmMetricsCalculator
 from backend.entities.credit_holder_entity import CreditHolderEntity
 
-
 class GetFilmDetails:
     def __init__(self, db: Session):
         self.db = db
@@ -86,6 +85,7 @@ class GetFilmDetails:
             award = nomination.festival_award
             festival = award.festival if award else None
             film_data["awards"].append({
+                "festival_id": festival.id if festival else None,
                 "festival_name": festival.name if festival else None,
                 "award_name": award.name if award else None,
                 "date": nomination.date.isoformat() if nomination.date else None,
