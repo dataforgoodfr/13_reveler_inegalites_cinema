@@ -8,18 +8,41 @@ permissions:
   contents: read
   packages: write
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME_BACKEND: ric-backend
+  IMAGE_NAME_FRONTEND: ric-frontend
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - uses: actions/checkout@v3
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
+    environment: production
+
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.D4GTECH_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_BACKEND }}
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_FRONTEND }}
 
       - name: Build and push Backend
         uses: docker/build-push-action@v4
@@ -27,7 +50,7 @@ jobs:
           context: .
           file: ./backend/Dockerfile.prod
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ric-backend:latest
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_BACKEND }}:latest
 
       - name: Build and push Frontend
         uses: docker/build-push-action@v4
@@ -35,33 +58,33 @@ jobs:
           context: ./frontend
           file: ./frontend/Dockerfile.prod
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ric-frontend:latest
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_FRONTEND}}:latest
 
-      - name: Install SSH key
-        uses: shimataro/ssh-key-action@v2
-        with:
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+      # - name: Install SSH key
+      #   uses: shimataro/ssh-key-action@v2
+      #   with:
+      #     key: ${{ secrets.SSH_PRIVATE_KEY }}
+      #     known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
 
-      - name: Copy docker-compose.prod.yml
-        env:
-          SSH_HOST: ${{ secrets.PROD_SSH_HOST }}
-          SSH_USER: ${{ secrets.PROD_SSH_USER }}
-        run: |
-          scp docker-compose.prod.yml $SSH_USER@$SSH_HOST:/opt/ric/docker-compose.yml
+      # - name: Copy docker-compose.prod.yml
+      #   env:
+      #     SSH_HOST: ${{ secrets.PROD_SSH_HOST }}
+      #     SSH_USER: ${{ secrets.PROD_SSH_USER }}
+      #   run: |
+      #     scp docker-compose.prod.yml $SSH_USER@$SSH_HOST:/opt/ric/docker-compose.yml
 
-      - name: Deploy to production
-        env:
-          SSH_HOST: ${{ secrets.PROD_SSH_HOST }}
-          SSH_USER: ${{ secrets.PROD_SSH_USER }}
-        run: |
-          ssh $SSH_USER@$SSH_HOST << 'EOF'
-            cd /opt/ric
-            export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
-            export POSTGRES_USER=${{ secrets.POSTGRES_USER }}
-            export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-            export POSTGRES_DB=${{ secrets.POSTGRES_DB }}
-            docker compose pull
-            docker compose up -d --force-recreate
-            docker system prune -f
-          EOF
+      # - name: Deploy to production
+      #   env:
+      #     SSH_HOST: ${{ secrets.PROD_SSH_HOST }}
+      #     SSH_USER: ${{ secrets.PROD_SSH_USER }}
+      #   run: |
+      #     ssh $SSH_USER@$SSH_HOST << 'EOF'
+      #       cd /opt/ric
+      #       export DOCKERHUB_USERNAME=${{ env.DOCKERHUB_USERNAME }}
+      #       export POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+      #       export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+      #       export POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+      #       docker compose pull
+      #       docker compose up -d --force-recreate
+      #       docker system prune -f
+      #     EOF
