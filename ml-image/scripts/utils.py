@@ -100,6 +100,8 @@ def frame_capture(path: str) -> np.ndarray:
     vidObj = cv2.VideoCapture(path) 
     frames = []
 
+    # Get the FPS of the video
+    fps = vidObj.get(cv2.CAP_PROP_FPS)
     success = 1 # checks whether frames were extracted 
     
     while success: 
@@ -109,7 +111,7 @@ def frame_capture(path: str) -> np.ndarray:
             break
         frames.append(image)
         
-    return np.array(frames)
+    return np.array(frames), fps
 
 def draw_predictions_on_video(frames: np.ndarray, video_persons: list, frame_persons: list) -> np.ndarray:
     """

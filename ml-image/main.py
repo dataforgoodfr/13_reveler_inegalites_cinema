@@ -136,11 +136,11 @@ def embed_faces(flattened_faces, batch_size, device):
 
     return embedded_faces
 
-def cluster_faces(embedded_faces, model, threshold, classified_faces, method):
+def cluster_faces(embedded_faces, model, threshold, classified_faces, method, fps, effective_area):
     ### Cluster faces and aggregate predictions for each character
 
     faces_clustering = scripts.FacesClustering(model=model, threshold=threshold)
-    aggregated_estimations = faces_clustering.aggregate_estimations(classified_faces, embedded_faces, method=method)
+    aggregated_estimations = faces_clustering.aggregate_estimations(classified_faces, embedded_faces, fps, effective_area, method=method)
 
     return aggregated_estimations
 
@@ -154,7 +154,7 @@ def main(source, num_cpu, batch_size, min_area, max_area, min_conf, min_conf_cla
     print("Data loaded", datetime.now() - start_time)
 
     ### Extract frames from video
-    frames = scripts.frame_capture(data["trailer_path"])
+    frames, fps = scripts.frame_capture(data["trailer_path"])
     print("Frames extracted", datetime.now() - start_time)
 
     ### Initialize constants
@@ -194,6 +194,7 @@ def main(source, num_cpu, batch_size, min_area, max_area, min_conf, min_conf_cla
 
         for id, face in enumerate(linked_detections):
             occupied_area = scripts.compute_area(face["body_bbox"], total_area)
+            face["occupied_area"] = occupied_area
             print(f"Character {id} with predicted gender: {face['gender']}, age: {face['age']}, ethnicity: {face['ethnicity']} representing {occupied_area:.2%} of the image")
 
         ### Draw predictions on poster
@@ -225,11 +226,11 @@ def main(source, num_cpu, batch_size, min_area, max_area, min_conf, min_conf_cla
 
     ### Cluster faces and aggregate predictions for each character
     embedded_faces = embed_faces(flattened_faces, batch_size, device)
-    aggregated_estimations = cluster_faces(embedded_faces, model=cluster_model, threshold=cluster_threshold, classified_faces=classified_faces, method=agr_method)
+    aggregated_estimations = cluster_faces(embedded_faces, cluster_model, cluster_threshold, classified_faces, agr_method, fps, effective_area)
     print("Faces clustered", datetime.now() - start_time)
 
     ### Store predictions on video
-    scripts.store_predictions_on_video(frames, aggregated_estimations, classified_faces, fps=25, output_name='predictions_trailer.avi')
+    scripts.store_predictions_on_video(frames, aggregated_estimations, classified_faces, fps=fps, output_name='predictions_trailer.avi')
     print("Video with predictions saved", datetime.now() - start_time)
 
 if __name__ == '__main__':
