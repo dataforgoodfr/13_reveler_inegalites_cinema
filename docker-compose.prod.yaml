@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:latest
+    image: postgres:15.12-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -8,7 +8,7 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready", "-U", postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -16,7 +16,7 @@ services:
       - web
 
   backend:
-    image: ${DOCKERHUB_USERNAME}/ric-backend:latest
+    image: ${DOCKERHUB_USERNAME:-nicorvl}/ric-backend:latest
     expose:
       - 5001
     environment:
@@ -28,7 +28,7 @@ services:
       - web
 
   frontend:
-    image: ${DOCKERHUB_USERNAME}/ric-frontend:latest
+    image: ${DOCKERHUB_USERNAME:-nicorvl}/ric-frontend:latest
     expose:
       - 80
     depends_on:
@@ -37,7 +37,7 @@ services:
       - web
 
   nginx:
-    image: nginx:alpine
+    image: nginx:alpine3.21-slim
     ports:
       - "80:80"
       - "443:443"
