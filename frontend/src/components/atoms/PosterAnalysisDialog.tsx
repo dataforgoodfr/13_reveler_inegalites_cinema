@@ -15,6 +15,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "../ui/carousel";
+import Image from "next/image";
 
 const PosterAnalysisDialog = ({
   imageSource,
@@ -29,7 +30,7 @@ const PosterAnalysisDialog = ({
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline" size="icon" style={{ opacity: 0.8 }}>
-          <img
+          <Image
             src="/frame_search.svg"
             alt="Rechercher"
             width={24}
@@ -42,13 +43,13 @@ const PosterAnalysisDialog = ({
         style={{ backgroundColor: "rgb(30,30,30)" }}
       >
         <DialogHeader style={{ textAlign: "center", justifyContent: "center" }}>
-          <DialogTitle>Analyse de l'affiche</DialogTitle>
+          <DialogTitle>Analyse de l&apos;affiche</DialogTitle>
           <div className="w-full flex justify-center">
             <div className="w-3/4">
               <Carousel>
                 <CarouselContent>
                   <CarouselItem>
-                    <img
+                    <Image
                       style={{ height: "fit-content" }}
                       src={imageSource}
                       alt="Affiche"
@@ -62,7 +63,7 @@ const PosterAnalysisDialog = ({
                         backgroundColor: "rgba(30, 30, 30, 0.8)",
                       }}
                     >
-                      <img
+                      <Image
                         style={{ height: "fit-content" }}
                         src={imageSource}
                         alt="Affiche"
@@ -86,7 +87,7 @@ const PosterAnalysisDialog = ({
                         backgroundColor: "rgba(30, 30, 30, 0.8)",
                       }}
                     >
-                      <img
+                      <Image
                         style={{ height: "fit-content" }}
                         src={imageSource}
                         alt="Affiche"
