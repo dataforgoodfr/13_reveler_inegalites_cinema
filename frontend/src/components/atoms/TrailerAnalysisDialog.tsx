@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { Button } from "../ui/button";
 import {
   Dialog,
@@ -15,7 +16,7 @@ const TrailerAnalysisDialog = ({
   releaseDate,
   trailerUrl,
   femaleScreenTimeInTrailer,
-  nonWhiteScreenTimeInTrailer
+  nonWhiteScreenTimeInTrailer,
 }: {
   filmName: string;
   releaseDate: string;
@@ -36,16 +37,16 @@ const TrailerAnalysisDialog = ({
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    const minPart = mins ? `${mins} ${mins > 1 ? 'minutes' : 'minute'}` : '';
-    const secPart = secs ? `${secs} ${secs > 1 ? 'secondes' : 'seconde'}` : '';
-    return [minPart, secPart].filter(Boolean).join(' ');
+    const minPart = mins ? `${mins} ${mins > 1 ? "minutes" : "minute"}` : "";
+    const secPart = secs ? `${secs} ${secs > 1 ? "secondes" : "seconde"}` : "";
+    return [minPart, secPart].filter(Boolean).join(" ");
   };
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon" style={{ opacity: 0.8 }}>
-          <img
+        <Button variant="outline" className="w-1/2">
+          <Image
             src="/video_search.svg"
             alt="Rechercher"
             width={24}
@@ -55,7 +56,12 @@ const TrailerAnalysisDialog = ({
       </DialogTrigger>
       <DialogContent
         className="border-0 text-white"
-        style={{ backgroundColor: "rgb(30,30,30)", width: "800px", height: "500px", maxWidth: 'unset' }}
+        style={{
+          backgroundColor: "rgb(30,30,30)",
+          width: "800px",
+          height: "500px",
+          maxWidth: "unset",
+        }}
       >
         <DialogHeader className="items-center text-center p-5 h-full">
           <DialogTitle className="font-bold">
@@ -78,17 +84,21 @@ const TrailerAnalysisDialog = ({
             <div className="flex font-bold gap-50">
               <div>
                 <div>
-                  <span>Temps d'écran des personnages perçus comme </span>
+                  <span>Temps d&apos;écran des personnages perçus comme </span>
                   <span className="text-violet-500">femmes</span>
                 </div>
-                <span className="text-violet-500">{formatTime(femaleScreenTimeInTrailer)}</span>
+                <span className="text-violet-500">
+                  {formatTime(femaleScreenTimeInTrailer)}
+                </span>
               </div>
               <div>
                 <div>
-                  <span>Temps d'écran des personnages perçus comme </span>
+                  <span>Temps d&apos;écran des personnages perçus comme </span>
                   <span className="text-violet-500">non blancs</span>
                 </div>
-                <span className="text-violet-500">{formatTime(nonWhiteScreenTimeInTrailer)}</span>
+                <span className="text-violet-500">
+                  {formatTime(nonWhiteScreenTimeInTrailer)}
+                </span>
               </div>
             </div>
           </div>
