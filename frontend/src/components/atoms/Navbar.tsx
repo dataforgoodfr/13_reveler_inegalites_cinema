@@ -23,9 +23,8 @@ const Navbar = ({
 
   const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value.toLowerCase();
-    
+    setSearchQuery(query);
     if (query) {
-      setSearchQuery(query);
       try {
         const url = `http://localhost:5001/search?q=${query}`;
         const response = await fetch(url); // Default mode (CORS enabled on backend)
@@ -52,7 +51,7 @@ const Navbar = ({
         <div className="absolute mx-auto px-4 w-full">
             {/* Overlay pour masquer le contenu en dessous */}
             <div
-            className="fixed inset-0 bg-grey bg-opacity-50 backdrop-blur-xl z-10"
+            className="fixed inset-0 bg-black/30 backdrop-blur-xl z-10"
             onClick={() => {setSearchQuery(""); setIsSearching(false); setFilteredFilms([]);}} // Réinitialiser la recherche après un clic
             />
         
@@ -88,7 +87,7 @@ const Navbar = ({
                               <strong className="text-xl">{film.title}</strong> ({film.year})
                             </span>
                             <span>
-                              Réalisé par <strong>{film.directors.join(' & ')}</strong>
+                              Réalisé par <strong>{film.directors.join(', ')}</strong>
                             </span>
                           </div>
                         </div>

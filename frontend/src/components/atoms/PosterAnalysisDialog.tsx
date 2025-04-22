@@ -48,14 +48,6 @@ const PosterAnalysisDialog = ({
               <Carousel>
                 <CarouselContent>
                   <CarouselItem>
-                    <img
-                      style={{ height: "fit-content" }}
-                      src={imageSource}
-                      alt="Affiche"
-                      width={300}
-                    />
-                  </CarouselItem>
-                  <CarouselItem>
                     <div
                       className="relative"
                       style={{
@@ -69,9 +61,9 @@ const PosterAnalysisDialog = ({
                         width={300}
                       />
                       <div className="absolute inset-0 bg-black/60"></div>
-                      <div className="absolute bottom-0 flex p-2">
+                      <div className="absolute bottom-0 flex flex-col p-2">
                         <span className="text-violet-500 text-left text-6xl font-bold">
-                          {femaleVisibleRatioOnPoster}%
+                          {typeof femaleVisibleRatioOnPoster === 'number' ? `${femaleVisibleRatioOnPoster}%` : 'NC'}
                         </span>
                         <span className="text-white text-left text-l font-bold">
                           Part de personnages perçus comme femmes
@@ -95,7 +87,7 @@ const PosterAnalysisDialog = ({
                       <div className="absolute inset-0 bg-black/60"></div>
                       <div className="absolute bottom-0 flex flex-col p-2">
                         <span className="text-violet-500 text-left text-6xl font-bold">
-                          {nonWhiteVisibleRatioOnPoster}%
+                        {typeof nonWhiteVisibleRatioOnPoster === 'number' ? `${nonWhiteVisibleRatioOnPoster}%` : 'NC'}
                         </span>
                         <span className="text-white text-left text-l font-bold">
                           Part de personnages perçus comme non blancs
