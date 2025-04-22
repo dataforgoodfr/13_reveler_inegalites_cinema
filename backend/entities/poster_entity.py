@@ -20,7 +20,7 @@ class PosterEntity:
             return 0
 
         total = sum(c.poster_percentage for c in female_characters)
-        return total / len(female_characters)
+        return total * 100.0 / len(female_characters)
 
 
     def non_white_average_ratio_on_poster(self) -> float | None:
@@ -37,4 +37,4 @@ class PosterEntity:
             return 0
 
         total = sum(c.poster_percentage for c in non_white_characters)
-        return total / len(non_white_characters)
+        return total * 100.0 / len(non_white_characters)
