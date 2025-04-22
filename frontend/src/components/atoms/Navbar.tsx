@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { usePathname } from "next/navigation";
-import { SearchFilmResultDto } from "@/dto/search-film-result.dto";
+import { SearchFilmResultDto } from "@/dto/film/search-film-result.dto";
 import Image from "next/image";
 
 const Navbar = ({
@@ -25,9 +25,8 @@ const Navbar = ({
 
   const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value.toLowerCase();
-
+    setSearchQuery(query);
     if (query) {
-      setSearchQuery(query);
       try {
         const url = `http://localhost:5001/search?q=${query}`;
         const response = await fetch(url); // Default mode (CORS enabled on backend)
@@ -87,6 +86,7 @@ const Navbar = ({
                     >
                       <div className="flex text-white hover:text-black relative">
                         <Image
+                          loader={() => film.image}
                           src={film.image}
                           alt={film.title}
                           className="w-16 h-24 object-cover rounded-md mr-2"
@@ -100,7 +100,7 @@ const Navbar = ({
                           </span>
                           <span>
                             Réalisé par{" "}
-                            <strong>{film.directors.join(" & ")}</strong>
+                            <strong>{film.directors.join(", ")}</strong>
                           </span>
                         </div>
                       </div>
@@ -146,7 +146,7 @@ const Navbar = ({
                     À propos
                   </Link>
                   <button
-                    className="p-4 rounded-md relative"
+                    className="px-3 py-2 rounded-md"
                     onClick={() => setIsSearching(!isSearching)}
                   >
                     <Image src="/search.svg" alt="Rechercher" fill />

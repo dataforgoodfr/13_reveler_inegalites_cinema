@@ -45,7 +45,7 @@ const TrailerAnalysisDialog = ({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-1/2">
+        <Button variant="outline" size="icon" style={{ opacity: 0.8 }}>
           <Image
             src="/video_search.svg"
             alt="Rechercher"
