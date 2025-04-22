@@ -1,5 +1,7 @@
 export type Award = {
-  award_name: string;
+  festival_id: number;
   festival_name: string;
+  award_name: string;
+  date: string;
   is_winner: boolean;
 };

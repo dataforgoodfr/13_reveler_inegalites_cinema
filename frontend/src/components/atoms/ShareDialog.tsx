@@ -14,7 +14,7 @@ import {
 import Image from "next/image";
 
 const ShareDialog = ({ imageSource }: { imageSource: string }) => {
-  const shareUrl = window.location.href;
+  const shareUrl = window?.location.href;
   const shareText = "Découvrez ce film incroyable !";
 
   const copyLink = () => {
@@ -68,10 +68,12 @@ const ShareDialog = ({ imageSource }: { imageSource: string }) => {
           <DialogTitle>Partager le film</DialogTitle>
           <DialogDescription>
             <Image
+              loader={() => imageSource}
               style={{ height: "fit-content" }}
               src={imageSource}
               alt="Affiche"
               width={257.45}
+              height={0}
             />
           </DialogDescription>
           <DialogFooter className="flex justify-between">
@@ -79,35 +81,35 @@ const ShareDialog = ({ imageSource }: { imageSource: string }) => {
               className="flex flex-col items-center flex-1 text-xs text-center cursor-pointer relative"
               onClick={copyLink}
             >
-              <Image src="/copy_link.svg" alt="Copier le lien" fill />
+              <Image src="/copy_link.svg" alt="Copier le lien" fill/>
               <span>Copier le lien</span>
             </div>
             <div
               className="flex flex-col items-center flex-1 text-xs text-center cursor-pointer relative"
               onClick={() => openSocialShare("mail")}
             >
-              <Image src="/mail.svg" alt="Mail" fill />
+              <Image src="/mail.svg" alt="Mail" fill/>
               <span>Mail</span>
             </div>
             <div
               className="flex flex-col items-center flex-1 text-xs text-center cursor-pointer relative"
               onClick={() => openSocialShare("instagram")}
             >
-              <Image src="/instagram.svg" alt="Instagram" fill />
+              <Image src="/instagram.svg" alt="Instagram" fill/>
               <span>Instagram</span>
             </div>
             <div
               className="flex flex-col items-center flex-1 text-xs text-center cursor-pointer relative"
               onClick={() => openSocialShare("twitter")}
             >
-              <Image src="/twitter.svg" alt="Twitter" fill />
+              <Image src="/twitter.svg" alt="Twitter" fill/>
               <span>Twitter</span>
             </div>
             <div
               className="flex flex-col items-center flex-1 text-xs text-center cursor-pointer relative"
               onClick={() => openSocialShare("whatsapp")}
             >
-              <Image src="/whatsapp.svg" alt="WhatsApp" fill />
+              <Image src="/whatsapp.svg" alt="WhatsApp" fill/>
               <span>WhatsApp</span>
             </div>
           </DialogFooter>

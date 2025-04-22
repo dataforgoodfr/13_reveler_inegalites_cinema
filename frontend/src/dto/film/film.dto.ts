@@ -3,6 +3,7 @@ import { Metrics } from "./metrics.dto";
 import { Award } from "./award.dto";
 
 export type Film = {
+  id: number;
   original_name: string;
   release_date: string;
   duration: string;
@@ -15,8 +16,6 @@ export type Film = {
   credits: Credits;
   awards: Award[];
   trailer_url?: string;
-};
-
-export type FilmApiResponse = {
-  film: Film;
+  first_language: string;
+  cnc_agrement_year: number;
 };
