@@ -712,6 +712,18 @@ files = [
 ]
 
 [[package]]
+name = "gender-guesser"
+version = "0.4.0"
+description = "Get the gender from first name."
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "gender-guesser-0.4.0.tar.gz", hash = "sha256:1591c14592805ca7da06a46d5f7202511f7cb87547049a68dfccbeedb879f31b"},
+    {file = "gender_guesser-0.4.0-py2.py3-none-any.whl", hash = "sha256:7cb01ce5d8d43b94573498bc02c959b622872abd399622ca67d1b73ba6e7e222"},
+]
+
+[[package]]
 name = "greenlet"
 version = "3.1.1"
 description = "Lightweight in-process concurrent programming"
@@ -3265,4 +3277,4 @@ test = ["websockets"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "c102703dc92f884f01963eae6a4d90a764cc9ac41c503934f1ccf9815be9eda6"
+content-hash = "9e32babaf7c062576595c451bad8cd0548a1290212a6e31c1281f8e2ed7ac012"
