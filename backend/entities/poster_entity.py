@@ -4,7 +4,7 @@ class PosterEntity:
 
     @property
     def characters(self):
-        return self._model.characters
+        return self._model.characters if self._model else None
 
     def female_average_ratio_on_poster(self) -> float | None:
         if not self.characters:
