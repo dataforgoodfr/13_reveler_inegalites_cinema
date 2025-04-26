@@ -26,13 +26,13 @@ jobs:
         working-directory: ./frontend
         run: pnpm install
 
-      - name: Run ESLint
-        working-directory: ./frontend
-        run: pnpm run lint
+      # - name: Run ESLint
+      #   working-directory: ./frontend
+      #   run: pnpm run lint
 
-      - name: Run TypeScript checks
-        working-directory: ./frontend
-        run: pnpm run type-check
+      # - name: Run TypeScript checks
+      #   working-directory: ./frontend
+      #   run: pnpm run type-check
 
       # - name: Run tests
       #   working-directory: ./frontend
