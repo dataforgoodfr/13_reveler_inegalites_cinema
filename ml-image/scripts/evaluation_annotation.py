@@ -50,6 +50,25 @@ def get_faces(subframes:np.ndarray, vision_detector:vision_detection.VisionDetec
     return detections
 
 
+def get_valid_input(prompt, valid_options) -> str:
+    """
+    Prompt the user for input and ensure it is valid.
+
+    Args:
+        prompt (str): The input prompt to display to the user.
+        valid_options (list): A list of valid input options.
+
+    Returns:
+        str: The valid input provided by the user.
+    """
+    while True:
+        prompt += f" Valid options are {', '.join(valid_options)}.\n" 
+        user_input = input(prompt).strip()
+        if user_input in valid_options:
+            return user_input
+        print(f"Invalid input. Please choose from: {', '.join(valid_options)}")
+
+
 def annotate_results(detections:list, subframes:list, subframe_indices:list, area_type:str = 'face') -> dict:
     d_annotated_results = {}
     for i in range(len(detections)):
@@ -62,7 +81,7 @@ def annotate_results(detections:list, subframes:list, subframe_indices:list, are
         if frame_annotation not in d_annotated_results:
             d_annotated_results[frame_annotation] = {}
         x1, y1, x2, y2 = detection['bbox']
-        img_subframe = Image.fromarray(subframe)
+        img_subframe = Image.fromarray(subframe[:, :, [2, 1, 0]])
         imgdraw = deepcopy(img_subframe)
         draw = ImageDraw.Draw(imgdraw)
         draw.rectangle((x1, y1, x2, y2), outline='red', width=4)
@@ -73,12 +92,15 @@ def annotate_results(detections:list, subframes:list, subframe_indices:list, are
             f'Do you want to annotate this {area_type} ? Answer with Yes or No.\n')
         match annotation.lower():
             case 'yes':
-                gender = input(
-                    'Provide the perceived gender of the detected character (Male or Female).\n')
-                age = input('Provide the perceived age range of the detected character (0-2, 3-9, 10-19, 20-29,\n'
-                            '30-39, 40-49, 50-59, 60-69, 70+).\n')
-                ethnicity = input('Provide the perceived ethnicity of the detected character (White, Black, Latino_Hispanic, East Asian,\n'
-                                  'Southeast Asian, Indian, Middle Eastern).\n')
+                gender = get_valid_input(
+                    'Provide the perceived gender of the detected character.', 
+                    ['Male', 'Female'])
+                age = get_valid_input(
+                    'Provide the perceived age range of the detected character.',
+                    ['0-2', '3-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70+'])
+                ethnicity = get_valid_input(
+                    'Provide the perceived ethnicity of the detected character.',
+                      ['White', 'Black', 'Latino_Hispanic', 'East Asian', 'Southeast Asian', 'Indian', 'Middle Eastern'])
                 annotation_idx = len(d_annotated_results[frame_annotation])
                 d_annotated_results[frame_annotation][annotation_idx] = {'face_centroid': face_centroid,
                                                              'bbox': (x1, y1, x2, y2),
@@ -221,7 +243,7 @@ def save_displayed_annotations(trailer_directory:str) -> None:
     for index in frames_indices :
         frame_annotations = annotations[f'frame_{index}']
         frame = frames[index]
-        img_frame = Image.fromarray(frame)
+        img_frame = Image.fromarray(frame[:, :, [2, 1, 0]])
         imgdraw = deepcopy(img_frame)
         draw = ImageDraw.Draw(imgdraw)
         font = ImageFont.load_default(size = 16)
@@ -230,10 +252,9 @@ def save_displayed_annotations(trailer_directory:str) -> None:
             x1, y1, x2, y2 = frame_annotations[i]['bbox']
             match frame_annotations[i]["gender"]:
                 case "Male":
-                    color = (0, 0, 255)
-                case "Female":
                     color = (255, 0, 0)
-            
+                case "Female":
+                    color = (0, 0, 255)
             draw.rectangle((x1, y1, x2, y2), outline=color, width=2)
             draw.text((x1, y1 - 1), f"{frame_annotations[i]['age']}, {frame_annotations[i]['ethnicity']}", 
                       anchor='lb', fill=color, font=font)
