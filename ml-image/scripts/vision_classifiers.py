@@ -1,3 +1,4 @@
+
 import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms, models
@@ -6,6 +7,7 @@ from utils import ImageDataset
 
 # https://github.com/alihassanml/Yolo11-Face-Emotion-Detection
 # Face emotion detection ?
+
 
 
 class VisionClassifier:
@@ -30,9 +32,11 @@ class VisionClassifier:
         # https://github.com/dchen236/FairFace/tree/master
         # weights available @ https://drive.google.com/file/d/113QMzQzkBDmYMs9LwzvD-jxEZdBQ5J4X/view?usp=drive_link
 
+
     def predict_age_gender_ethnicity(
             self, faces: list, batch_size: int = 64, expose_confs: bool = False
     ) -> tuple[list, list, list, list, list, list]:
+
         ethnicity_labels = {
             0: 'White', 1: 'Black', 2: 'Latino_Hispanic', 3: 'East Asian',
             4: 'Southeast Asian', 5: 'Indian', 6: 'Middle Eastern',

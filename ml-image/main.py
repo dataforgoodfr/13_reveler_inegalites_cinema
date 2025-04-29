@@ -61,8 +61,8 @@ def classify_faces(filtered_detections, batch_size, device):
 
     flattened_faces = [det["cropped_face"] for det in filtered_detections]
     if len(flattened_faces) > 0:
-        ages, genders, ethnicities, gender_confs, age_confs, ethnicity_confs = classifier.predict_age_gender_ethnicity(
-            flattened_faces, batch_size=batch_size)
+        ages, genders, ethnicities, age_confs, gender_confs, ethnicity_confs = classifier.predict_age_gender_ethnicity(
+          flattened_faces, batch_size = batch_size)
 
         for i, det in enumerate(filtered_detections):
             det["gender"] = genders[i]
