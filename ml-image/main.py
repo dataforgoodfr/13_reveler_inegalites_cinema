@@ -190,7 +190,7 @@ if __name__ == '__main__':
     elif args.source[-4:] == ".csv":
         df = pd.read_csv(args.source)
         logger.info(f"Found {len(df)} films to analyze in the source csv.")
-        for index, row in tqdm(df.iterrows(), total=len(df)):
+        for _, row in tqdm(df.iterrows(), total=len(df)):
             main(
                 row.allocine_url, args.num_cpu, args.batch_size, args.min_area, args.max_area, args.min_conf, args.min_sharpness,
                 args.max_z, args.min_mouth_opening, args.cluster_model, args.cluster_threshold, args.agr_method)
