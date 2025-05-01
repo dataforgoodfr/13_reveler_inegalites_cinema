@@ -16,6 +16,7 @@ class DetectionFilter:
         match mode:
             case "clustering":
                 filtered_detections = [det for det in detections if all(f(det, **self.kwargs) for f in self.simple_filters)]
+                
                 return [det for det in filtered_detections if all(f(det, **self.kwargs) for f in self.complex_filters)]
             
             case "classification":
@@ -56,7 +57,7 @@ def compute_sharpness(image: np.ndarray) -> float:
 
 def validates_sharpness_filter(det: Dict, **kwargs) -> bool:
     min_sharpness = kwargs.get("min_sharpness", 35.0)
-    sharpness = compute_sharpness(det[f"cropped_face"])
+    sharpness = compute_sharpness(det["cropped_face"])
     return sharpness >= min_sharpness
 
 mp_face_mesh = mp.solutions.face_mesh
@@ -78,7 +79,7 @@ def validates_pose_filter(det: Dict, **kwargs) -> bool:
     max_z = kwargs.get("max_z", -0.20)
     #draw_landmarks(det[f"cropped_face"])
     
-    pose = get_face_landmarks(det[f"cropped_face"])
+    pose = get_face_landmarks(det["cropped_face"])
     
     if pose is None:
         return False
@@ -88,7 +89,7 @@ def validates_pose_filter(det: Dict, **kwargs) -> bool:
     return nose_z <= max_z
 
 def is_face_not_occluded(det: Dict, **kwargs) -> bool:
-    pose = get_face_landmarks(det[f"cropped_face"])
+    pose = get_face_landmarks(det["cropped_face"])
     if pose is None:
         return False  # Aucun visage détecté = obstruction probable
     

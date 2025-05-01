@@ -23,9 +23,9 @@ class ImageDataset(Dataset):
             return self.transform(image)
         raise ValueError("No transformation provided")
 
-def get_data_from_url(url: str, 
-                          output_poster: str = 'downloaded_poster', 
-                          output_trailer: str = 'downloaded_trailer') -> None:
+def get_data_from_url(url: str,
+                      output_poster: str = 'downloaded_poster',
+                      output_trailer: str = 'downloaded_trailer') -> None:
         """
         Download poster and trailer from a given Allocine URL (only works for allocine)
         """
@@ -37,36 +37,37 @@ def get_data_from_url(url: str,
 
         # to download trailer
         figure_tag = soup.find('figure', class_='player')
-        if not figure_tag :
+        if not figure_tag:
             video_path = ""
-        else :
+            quality = ""
+        else:
             video_path = os.path.join('example', f'{output_trailer}.mp4')
             data_model = figure_tag['data-model']
             data_model = json.loads(data_model)
             video_sources = data_model['videos'][0]['sources']
-            if "high" in video_sources :
+            if "high" in video_sources:
                 link = video_sources["high"]
                 quality = "high"
-            elif "medium" in video_sources :
+            elif "medium" in video_sources:
                 link = video_sources["medium"]
                 quality = "medium"
-            else :
+            else:
                 link = video_sources["low"]
                 quality = "low"
             print(f"Downloading trailer in {quality} quality")
-            r = requests.get(link, stream = True)
+            r = requests.get(link, stream=True)
             with open(video_path, 'wb') as f:
-                for chunk in r.iter_content(chunk_size = 1024*1024) :
+                for chunk in r.iter_content(chunk_size=1024*1024) :
                     if chunk:
                         f.write(chunk)
 
         # to download poster
         poster_path = os.path.join('example', f'{output_poster}.jpg')
-        poster_tag = soup.find('meta', property = 'og:image')
+        poster_tag = soup.find('meta', property='og:image')
         poster_url = poster_tag['content']
-        r = requests.get(poster_url, stream = True)
-        with open(poster_path, 'wb') as f :
-            for chunk in r :
+        r = requests.get(poster_url, stream=True)
+        with open(poster_path, 'wb') as f:
+            for chunk in r:
                 f.write(chunk)
         
         poster_image = cv2.imread(poster_path)
@@ -75,37 +76,38 @@ def get_data_from_url(url: str,
 
         return data
         
-def get_data_from_file(file_path:str, filetype:str = "poster") -> None:
+def get_data_from_file(file_path: str, filetype: str = "poster") -> None:
     """
     Load data from local file for either a 'poster' or 'trailer' file
     """
-    data = {"url": "unknow", "poster_path": "unknow", "trailer_path": "unknow", "image": "unknow"}
+    data = {"url": "unknow", "poster_path": "unknow",
+             "trailer_path": "unknow", "image": "unknow"}
 
-    if filetype == "poster" :
+    if filetype == "poster":
         data["image"] = Image.open(file_path)
         data["poster_path"] = file_path
     
-    elif filetype == "trailer" :
+    elif filetype == "trailer":
         data["trailer_path"] = file_path
 
-    else :
+    else:
         raise ValueError("filetype needs to be one of ['poster', 'trailer']")
     
     return data
 
-def frame_capture(path: str) -> np.ndarray: 
+def frame_capture(path: str) -> np.ndarray:
     """
     Extract frames from a video file
     """
-    vidObj = cv2.VideoCapture(path) 
+    vidObj = cv2.VideoCapture(path)
     frames = []
 
     # Get the FPS of the video
     fps = vidObj.get(cv2.CAP_PROP_FPS)
     success = 1 # checks whether frames were extracted 
     
-    while success: 
-        # vidObj object calls read 
+    while success:
+        # vidObj object calls read
         success, image = vidObj.read() # function extract frames 
         if not success:
             break
@@ -121,9 +123,10 @@ def draw_predictions_on_video(frames: np.ndarray, video_persons: list, frame_per
     for frame in frames:
         for person in frame_persons:
             if person["frame_id"] == frame_index:
-                bbox = [int(coord) for coord in person["bbox"]]  # Ensure bbox coordinates are integers
+                # Ensure bbox coordinates are integers
+                bbox = [int(coord) for coord in person["bbox"]]
                 for video_person in video_persons:
-                    if person["person_id"]  in video_person["persons_id"]:
+                    if person["person_id"] in video_person["persons_id"]:
                         match video_person["gender"]:
                             case "Male":
                                 color = (0, 0, 255)
@@ -131,8 +134,10 @@ def draw_predictions_on_video(frames: np.ndarray, video_persons: list, frame_per
                                 color = (255, 0, 0)
                             case _:
                                 color = (0, 255, 0)
-                        cv2.rectangle(frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, 2)
-                        cv2.putText(frame, f"{video_person['label']}, {video_person['age']}, {video_person['ethnicity']}", (bbox[0], bbox[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+                        cv2.rectangle(
+                            frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, 2)
+                        cv2.putText(frame, f"{video_person['label']}, {video_person['age']}, {video_person['ethnicity']}", (
+                            bbox[0], bbox[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
         frame_index += 1
     
     return frames
@@ -150,8 +155,10 @@ def draw_predictions_on_poster(poster: np.ndarray, predictions: list, output_nam
                 color = (255, 0, 0)
             case _:
                 color = (0, 255, 0)
-        cv2.rectangle(poster, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, 2)
-        cv2.putText(poster, f"{person['age']}, {person['ethnicity']}", (bbox[0], bbox[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+        cv2.rectangle(
+            poster, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, 2)
+        cv2.putText(poster, f"{person['age']}, {person['ethnicity']}", (
+            bbox[0], bbox[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
     
     output_path = os.path.join('example', output_name)
     cv2.imwrite(output_path, poster)
@@ -160,12 +167,14 @@ def store_predictions_on_video(frames: np.ndarray, video_persons: list, frame_pe
     """
     Draw predictions on video frames and store the result in a new video file
     """
-    modified_frames = draw_predictions_on_video(frames, video_persons, frame_persons)
+    modified_frames = draw_predictions_on_video(
+        frames, video_persons, frame_persons)
 
     # Define the codec and create VideoWriter object
-    height, width, _= modified_frames[0].shape
+    height, width, _ = modified_frames[0].shape
     output_path = os.path.join('example', output_name)
-    video = cv2.VideoWriter(output_path, cv2.VideoWriter_fourcc(*'DIVX'), fps, (width, height))
+    video = cv2.VideoWriter(output_path, cv2.VideoWriter_fourcc(
+        *'DIVX'), fps, (width, height))
 
     # Write each frame to the video file
     for frame in modified_frames:

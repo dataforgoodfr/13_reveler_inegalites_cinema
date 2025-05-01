@@ -4,6 +4,9 @@ FROM python:3.10
 # Install Poetry
 RUN pip install poetry
 
+# Disable venvs for Docker
+ENV POETRY_VIRTUALENVS_CREATE=false
+
 # Set the working directory in the container
 WORKDIR /backend
 
@@ -17,4 +20,4 @@ RUN poetry install
 EXPOSE 5001
 
 # Command to run your backend (adjust with your specific entry point)
-CMD ["poetry", "run", "uvicorn", "backend.main:backend", "--host", "0.0.0.0", "--port", "5001", , "--reload"]
+CMD ["poetry", "run", "uvicorn", "backend.main:backend", "--host", "0.0.0.0", "--port", "5001", "--reload"]
