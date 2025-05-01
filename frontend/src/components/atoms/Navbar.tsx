@@ -85,11 +85,13 @@ const Navbar = ({
                         setFilteredFilms([]);
                       }} // Réinitialiser la recherche après un clic
                     >
-                      <div className="flex text-white hover:text-black">
+                      <div className="flex text-white hover:text-black relative">
                         <Image
                           src={film.image}
                           alt={film.title}
                           className="w-16 h-24 object-cover rounded-md mr-2"
+                          width={32}
+                          height={48}
                         />
                         <div className="flex flex-col">
                           <span>
@@ -144,10 +146,10 @@ const Navbar = ({
                     À propos
                   </Link>
                   <button
-                    className="px-3 py-2 rounded-md"
+                    className="p-4 rounded-md relative"
                     onClick={() => setIsSearching(!isSearching)}
                   >
-                    <Image src="/search.svg" alt="Rechercher" />
+                    <Image src="/search.svg" alt="Rechercher" fill />
                   </button>
                   <Link href="/dashboard" className="px-3 py-2 rounded-md">
                     <Button>Donnez nous votre avis 💬</Button>
@@ -159,10 +161,10 @@ const Navbar = ({
               <div className="md:hidden w-full flex flex-row justify-end">
                 {!isOpen && (
                   <button
-                    className="px-3 py-2 rounded-md"
+                    className="p-4 rounded-md relative"
                     onClick={() => setIsSearching(!isSearching)}
                   >
-                    <Image src="/search.svg" alt="Rechercher" />
+                    <Image src="/search.svg" alt="Rechercher" fill />
                   </button>
                 )}
                 <button
