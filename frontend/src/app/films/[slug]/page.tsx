@@ -124,7 +124,6 @@ export default function PageFilm() {
             alt="Affiche"
             width={257.45}
             height={380}
-            unoptimized
           />
           <div className="absolute flex flex-col gap-2 bottom-2 left-2">
             <PosterAnalysisDialog
@@ -183,14 +182,24 @@ export default function PageFilm() {
               <Button className="bg-green-200 hover:bg-green-200 text-green-950 rounded-full">
                 Bonus parité du CNC
                 <DialogTrigger asChild>
-                  <Image src="/info.svg" alt="Rechercher" />
+                  <Image
+                    src="/info.svg"
+                    alt="Rechercher"
+                    width={24}
+                    height={24}
+                  />
                 </DialogTrigger>
               </Button>
             ) : (
               <Button className="bg-red-200 hover:bg-red-200 text-red-950 rounded-full">
                 Film non éligible au bonus parité du CNC
                 <DialogTrigger asChild>
-                  <Image src="/info.svg" alt="Rechercher" />
+                  <Image
+                    src="/info.svg"
+                    alt="Rechercher"
+                    width={24}
+                    height={24}
+                  />
                 </DialogTrigger>
               </Button>
             )}
