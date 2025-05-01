@@ -42,6 +42,7 @@ def get_data_from_url(url: str,
     figure_tag = soup.find('figure', class_='player')
     if not figure_tag:
         video_path = ""
+        quality = ""
     else:
         video_path = os.path.join('example', f'{output_trailer}.mp4')
         data_model = figure_tag['data-model']

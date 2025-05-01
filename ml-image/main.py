@@ -1,6 +1,9 @@
 import argparse
 from datetime import datetime
+from loguru import logger
 import torch
+from tqdm import tqdm
+import pandas as pd
 
 from scripts import faces_clustering as faces_clus
 from scripts import filter_detections as filter_det
@@ -21,7 +24,8 @@ def load_data(source):
     return data
 
 
-def detect_faces(frames, H_original, W_original, area_type, batch_size, device, num_cpu_threads):
+def detect_faces(
+        frames, H_original, W_original, area_type, batch_size, device, num_cpu_threads):
     # Detect faces in the video
 
     vision_detector = vision_detection.VisionDetection(
@@ -62,7 +66,7 @@ def classify_faces(filtered_detections, batch_size, device):
     flattened_faces = [det["cropped_face"] for det in filtered_detections]
     if len(flattened_faces) > 0:
         ages, genders, ethnicities, age_confs, gender_confs, ethnicity_confs = classifier.predict_age_gender_ethnicity(
-          flattened_faces, batch_size = batch_size)
+            flattened_faces, batch_size=batch_size)
 
         for i, det in enumerate(filtered_detections):
             det["gender"] = genders[i]
@@ -93,15 +97,21 @@ def cluster_faces(embedded_faces, model, threshold, classified_faces, method):
     return aggregated_estimations
 
 
-def main(source, num_cpu, batch_size, min_area, max_area, min_conf, min_sharpness, max_z, min_mouth_opening, cluster_model, cluster_threshold, agr_method):
+def main(source, num_cpu, batch_size, min_area, max_area, min_conf, min_sharpness, max_z, min_mouth_opening, cluster_model, cluster_threshold, agr_method) -> None:
     start_time = datetime.now()
 
     # Load data
     data = load_data(source)
     print("Data loaded", datetime.now() - start_time)
 
+    trailer_path = data["trailer_path"]
+
+    if trailer_path == "":
+        logger.warning(f"No trailer found for {source}.")
+        return
+
     # Extract frames from video
-    frames = utils.frame_capture(data["trailer_path"])
+    frames = utils.frame_capture(trailer_path)
     print("Frames extracted", datetime.now() - start_time)
 
     # Initialize constants
@@ -141,7 +151,9 @@ def main(source, num_cpu, batch_size, min_area, max_area, min_conf, min_sharpnes
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "source", type=str, help="Lien vers la fiche film allociné ou chemin vers le fichier vidéo")
+        "source", type=str, help="Lien vers la fiche film allociné, chemin vers"
+        " le fichier vidéo ou vers un fichier csv pour traiter une liste de"
+        " films.")
     parser.add_argument("--num_cpu", type=int, default=8,
                         help="Number of CPU threads to use")
     parser.add_argument("--batch_size", type=int, default=64,
@@ -166,5 +178,22 @@ if __name__ == '__main__':
                         help="Method for aggregating predictions")
 
     args = parser.parse_args()
-    main(args.source, args.num_cpu, args.batch_size, args.min_area, args.max_area, args.min_conf, args.min_sharpness,
-         args.max_z, args.min_mouth_opening, args.cluster_model, args.cluster_threshold, args.agr_method)
+
+    # Check if the source is a url or a file
+    if args.source[:4] == "http":
+        logger.info("Source is a url.")
+
+        main(
+            args.source, args.num_cpu, args.batch_size, args.min_area, args.max_area, args.min_conf, args.min_sharpness,
+            args.max_z, args.min_mouth_opening, args.cluster_model, args.cluster_threshold, args.agr_method)
+
+    elif args.source[-4:] == ".csv":
+        df = pd.read_csv(args.source)
+        logger.info(f"Found {len(df)} films to analyze in the source csv.")
+        for _, row in tqdm(df.iterrows(), total=len(df)):
+            main(
+                row.allocine_url, args.num_cpu, args.batch_size, args.min_area, args.max_area, args.min_conf, args.min_sharpness,
+                args.max_z, args.min_mouth_opening, args.cluster_model, args.cluster_threshold, args.agr_method)
+        logger.success(f"All films from {args.source} have been analyzed.")
+    else:
+        raise ValueError("Source must be a url or a file")
