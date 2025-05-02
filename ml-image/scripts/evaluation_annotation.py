@@ -3,8 +3,11 @@ import numpy as np
 from copy import deepcopy
 import psutil
 import pickle as pkl
+import os
+from PIL import Image, ImageDraw, ImageFont
 
 from utils import frame_capture
+from scripts import vision_classifiers
 import vision_detection
 
 
@@ -132,8 +135,7 @@ def annotate_trailer(trailer_directory: str) -> None:
     print(
         f'Outputting frame-numbered trailer to {trailer_path}_with_frames.avi')
     if os.path.isfile(f'{trailer_path}_with_frames.avi'):
-        print(f'{trailer_path}_with_frames.avi already exists, moving on')
-        f'Outputting frame-numbered trailer to {trailer_path}_with_frames.avi')
+        print(f'Outputting frame-numbered trailer to {trailer_path}_with_frames.avi')
     if os.path.isfile(f'{trailer_path}_with_frames.avi'):
         print(f'{trailer_path}_with_frames.avi already exists, moving on')
     else:
