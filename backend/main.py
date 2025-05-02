@@ -20,6 +20,3 @@ def read_root():
 # Mount routers
 backend.include_router(film.router)
 backend.include_router(festival.router)
-
-for route in backend.routes:
-    print(f"{route.path} -> {route.name}")

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -14,7 +15,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -31,14 +31,15 @@ import ShareDialog from "@/components/atoms/ShareDialog";
 import TrailerAnalysisDialog from "@/components/atoms/TrailerAnalysisDialog";
 import PosterAnalysisDialog from "@/components/atoms/PosterAnalysisDialog";
 import { t } from "@/utils/i18n";
+import { Film, FilmApiResponse } from "@/dto/film.dto";
 
 // Ceci est un composant de page avec une route dynamique
 // Le [slug] dans le nom du dossier sera disponible comme paramètre
 export default function PageFilm() {
   // useParams est un hook qui permet d'accéder aux paramètres dynamiques de l'URL
   const params = useParams();
-  const slug = params?.slug; // Contient la valeur dynamique de l'URL (ex: pour /films/avatar, slug = "avatar")
-  const [filmData, setFilmData] = useState<any>(null);
+  const slug = params?.slug as string; // Ajout du typage explicite
+  const [filmData, setFilmData] = useState<Film | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [activeSection, setActiveSection] = useState("Statistiques");
@@ -49,11 +50,10 @@ export default function PageFilm() {
       .then((response) => {
         if (response.ok) {
           return response.json();
-        } else {
-          throw new Error("Fetch error");
         }
+        throw new Error("Fetch error");
       })
-      .then((value) => {
+      .then((value: FilmApiResponse) => {
         setFilmData(value.film);
         setIsLoading(false);
       })
@@ -63,7 +63,7 @@ export default function PageFilm() {
       });
   }, [slug]);
 
-  function getDate(dateStr: string) {
+  const getDate = (dateStr: string) => {
     const date = new Date(dateStr);
 
     const options: Intl.DateTimeFormatOptions = {
@@ -72,11 +72,14 @@ export default function PageFilm() {
       year: "numeric",
     };
     return new Intl.DateTimeFormat("fr-FR", options).format(date);
-  }
+  };
 
-  function groupByCriteria(list: any[], criteria: string) {
-    return list.reduce((acc, element) => {
-      const data = element[criteria];
+  const groupByCriteria = <T, K extends keyof T>(
+    list: T[],
+    criteria: K
+  ): Record<string, T[]> => {
+    return list.reduce((acc: Record<string, T[]>, element: T) => {
+      const data = element[criteria] as string;
 
       if (!acc[data]) {
         acc[data] = [];
@@ -85,7 +88,7 @@ export default function PageFilm() {
       acc[data].push(element);
       return acc;
     }, {});
-  }
+  };
 
   if (isLoading) {
     return (
@@ -115,31 +118,33 @@ export default function PageFilm() {
       ></div>
       <div className="flex flex-col items-center md:items-start md:flex-row gap-10">
         <div className="relative">
-          <img
+          <Image
             style={{ height: "fit-content" }}
             src={filmData.poster_image_base64}
             alt="Affiche"
             width={257.45}
+            height={380}
+            unoptimized
           />
           <div className="absolute flex flex-col gap-2 bottom-2 left-2">
             <PosterAnalysisDialog
               imageSource={filmData.poster_image_base64}
               femaleVisibleRatioOnPoster={
-                filmData.metrics.female_visible_ratio_on_poster
+                filmData.metrics.female_visible_ratio_on_poster ?? 0
               }
               nonWhiteVisibleRatioOnPoster={
-                filmData.metrics.non_white_visible_ratio_on_poster
+                filmData.metrics.non_white_visible_ratio_on_poster ?? 0
               }
             />
             <TrailerAnalysisDialog
               filmName={filmData.original_name}
               releaseDate={filmData.release_date}
-              trailerUrl={filmData.trailer_url}
+              trailerUrl={filmData.trailer_url ?? ""}
               femaleScreenTimeInTrailer={
-                filmData.metrics.female_screen_time_in_trailer
+                filmData.metrics.female_screen_time_in_trailer ?? 0
               }
               nonWhiteScreenTimeInTrailer={
-                filmData.metrics.non_white_screen_time_in_trailer
+                filmData.metrics.non_white_screen_time_in_trailer ?? 0
               }
             />
             <ShareDialog imageSource={filmData.poster_image_base64} />
@@ -154,20 +159,20 @@ export default function PageFilm() {
           </h1>
           <h2>
             Réalisé par{" "}
-            {filmData.credits
-              .key_roles
-              .filter((c: any) => c.role === "director")
-              .map((c: any) => c.name)
+            {filmData.credits.key_roles
+              .filter((c) => c.role === "director")
+              .map((c) => c.name)
               .join(", ")}
           </h2>
           <p className="text-lg mb-2">
             {getDate(filmData.release_date)} en salle {filmData.duration}
           </p>
           <p className="text-lg mb-2">
-            Pays d'origine: {filmData.countries_sorted_by_budget.join(", ")}
+            Pays d&apos;origine:{" "}
+            {filmData.countries_sorted_by_budget.join(", ")}
           </p>
           <div className="flex mb-4 gap-2">
-            {filmData.genres.map((genre: string, index: number) => (
+            {filmData.genres.map((genre, index) => (
               <Badge key={index} className="bg-zinc-700">
                 {genre}
               </Badge>
@@ -178,14 +183,14 @@ export default function PageFilm() {
               <Button className="bg-green-200 hover:bg-green-200 text-green-950 rounded-full">
                 Bonus parité du CNC
                 <DialogTrigger asChild>
-                  <img src="/info.svg" alt="Rechercher" />
+                  <Image src="/info.svg" alt="Rechercher" />
                 </DialogTrigger>
               </Button>
             ) : (
               <Button className="bg-red-200 hover:bg-red-200 text-red-950 rounded-full">
                 Film non éligible au bonus parité du CNC
                 <DialogTrigger asChild>
-                  <img src="/info.svg" alt="Rechercher" />
+                  <Image src="/info.svg" alt="Rechercher" />
                 </DialogTrigger>
               </Button>
             )}
@@ -314,11 +319,8 @@ export default function PageFilm() {
             {activeSection === "Distribution" && (
               <>
                 {Object.entries(
-                  groupByCriteria(
-                    filmData.credits.distribution,
-                    "role"
-                  )
-                ).map(([role, credits]: any, role_index: number) => (
+                  groupByCriteria(filmData.credits.distribution, "role")
+                ).map(([role, credits], role_index) => (
                   <div key={role_index} className="mt-4">
                     <span
                       className="block rounded-sm font-bold w-full px-2 py-1"
@@ -327,7 +329,7 @@ export default function PageFilm() {
                       {t(`distribution.${role}`)}
                     </span>
                     <div className="flex">
-                      {credits.map((credit: any, index: number) => (
+                      {credits.map((credit, index) => (
                         <div className="px-2 py-1" key={index}>
                           <Badge className="bg-gray-800">{credit.name}</Badge>
                         </div>
@@ -358,11 +360,8 @@ export default function PageFilm() {
                 }}
               >
                 {Object.entries(
-                  groupByCriteria(
-                    filmData.credits.key_roles,
-                    "role"
-                  )
-                ).map(([role_name, roles]: any[], index: number) => (
+                  groupByCriteria(filmData.credits.key_roles, "role")
+                ).map(([role_name, roles], index) => (
                   <div
                     key={index}
                     className="flex flex-col"
@@ -380,9 +379,9 @@ export default function PageFilm() {
                       {t(`roles.${role_name}`)}
                     </div>
                     <div className="flex flex-wrap gap-1">
-                      {roles.map((role: any, index: number) => (
+                      {roles.map((role, idx) => (
                         <Badge
-                          key={index}
+                          key={idx}
                           className={
                             role.gender === "male"
                               ? "bg-slate-700"
@@ -400,19 +399,16 @@ export default function PageFilm() {
 
             {activeSection === "Casting" && (
               <div className="pt-5 flex flex-wrap gap-2">
-                {filmData.credits.casting
-                  .map((actor: any, index: number) => (
-                    <Badge
-                      key={index}
-                      className={
-                        actor.gender === "male"
-                          ? "bg-slate-700"
-                          : "bg-violet-800"
-                      }
-                    >
-                      {actor.name}
-                    </Badge>
-                  ))}
+                {filmData.credits.casting.map((actor, index) => (
+                  <Badge
+                    key={index}
+                    className={
+                      actor.gender === "male" ? "bg-slate-700" : "bg-violet-800"
+                    }
+                  >
+                    {actor.name}
+                  </Badge>
+                ))}
               </div>
             )}
 
@@ -440,8 +436,8 @@ export default function PageFilm() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {filmData.awards
-                      .filter((award: any) => award.is_winner)
-                      .map((award: any, index: number) => (
+                      .filter((award) => award.is_winner)
+                      .map((award, index) => (
                         <Badge key={index} className="bg-gray-800">
                           🏆 {award.award_name} ({award.festival_name})
                         </Badge>
@@ -467,12 +463,10 @@ export default function PageFilm() {
                     <Accordion type="single" collapsible className="w-full">
                       {Object.entries(
                         groupByCriteria(
-                          filmData.awards.filter(
-                            (award: any) => !award.is_winner
-                          ),
+                          filmData.awards.filter((award) => !award.is_winner),
                           "festival_name"
                         )
-                      ).map(([festival_name, awards]: any[], index: number) => (
+                      ).map(([festival_name, awards], index) => (
                         <AccordionItem value={`item-${index}`} key={index}>
                           <AccordionTrigger>
                             <div className="flex gap-2">
@@ -484,8 +478,8 @@ export default function PageFilm() {
                           </AccordionTrigger>
                           <AccordionContent>
                             <div className="flex flex-wrap gap-2">
-                              {awards.map((award: any, index: number) => (
-                                <Badge className="bg-gray-800" key={index}>
+                              {awards.map((award, idx) => (
+                                <Badge className="bg-gray-800" key={idx}>
                                   {award.award_name}
                                 </Badge>
                               ))}

@@ -1,0 +1,39 @@
+name: Frontend Checks
+
+on:
+  pull_request:
+  push:
+    branches: [main, Webdev]
+
+jobs:
+  frontend-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: "./frontend/pnpm-lock.yaml"
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: pnpm install
+
+      # - name: Run ESLint
+      #   working-directory: ./frontend
+      #   run: pnpm run lint
+
+      # - name: Run TypeScript checks
+      #   working-directory: ./frontend
+      #   run: pnpm run type-check
+
+      # - name: Run tests
+      #   working-directory: ./frontend
+      #   run: pnpm test

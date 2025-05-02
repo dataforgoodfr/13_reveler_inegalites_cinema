@@ -1,15 +1,14 @@
 from sqlalchemy.orm import Session
 from backend.repositories import festival_repository, festival_award_repository, award_nomination_repository, film_repository
 from backend.use_cases import get_film_details
+from backend.services import festival_metrics_calculator
 
 class GetFestivalDetails:
     def __init__(self, db: Session):
         self.db = db
 
     def execute(self, festival_id: int) -> dict:
-        print("festival_id: ", festival_id)
         festival = festival_repository.get_festival(self.db, festival_id)
-        print(festival)
         if not festival:
             return None
 
@@ -45,6 +44,12 @@ class GetFestivalDetails:
                 "name": award.name,
                 "nominations": nomination_data
             })
+        
+        # female_re = festival_metrics_calculator.calculate_female_representation_in_nominated_films(self.db, festival_id)
+        # if female_re:
+        #     print("female_representation: ", female_re)
+            
+        festival_metrics_calculator.calculate_female_representation_in_winner_price(self.db, festival_id)
             
         # Static festival-level metrics (TODO: add dynamic calculation later)
         festival_metrics = {

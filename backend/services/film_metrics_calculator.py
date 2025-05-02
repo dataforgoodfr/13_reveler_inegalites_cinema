@@ -29,6 +29,7 @@ class FilmMetricsCalculator:
             return None
         return round((len(female_actors) / len(actor_credits)) * 100, 2)
 
+<<<<<<< HEAD
 
     def calculate_female_screen_time_in_trailer(self) -> float | None:
         return 30
@@ -44,3 +45,5 @@ class FilmMetricsCalculator:
 
     def calculate_non_white_visible_ratio_on_poster(self) -> float | None:
         return 5
+=======
+>>>>>>> 5d343f716f8aa1906c080274910ba34df3246138
