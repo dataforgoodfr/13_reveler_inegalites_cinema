@@ -41,8 +41,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_BACKEND }}
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_FRONTEND }}
+            ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.IMAGE_NAME_BACKEND }}
+            ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.IMAGE_NAME_BACKEND }}
 
       - name: Build and push Backend
         uses: docker/build-push-action@v4
@@ -50,7 +50,7 @@ jobs:
           context: .
           file: ./backend/Dockerfile.prod
           push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/13_reveler_inegalites_cinema/${{ env.IMAGE_NAME_BACKEND }}:latest
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}:latest
 
       - name: Build and push Frontend
         uses: docker/build-push-action@v4
