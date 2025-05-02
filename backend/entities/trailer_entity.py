@@ -4,7 +4,7 @@ class TrailerEntity:
 
     @property
     def characters(self):
-        return self._model.characters
+        return self._model.characters if self._model else None
 
     def female_screen_time(self) -> float | None:
         if not self.characters:
