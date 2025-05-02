@@ -45,6 +45,12 @@ class GetFestivalDetails:
                 "name": award.name,
                 "nominations": nomination_data
             })
+
+        # female_re = festival_metrics_calculator.calculate_female_representation_in_nominated_films(self.db, festival_id)
+        # if female_re:
+        #     print("female_representation: ", female_re)
+            
+        festival_metrics_calculator.calculate_female_representation_in_winner_price(self.db, festival_id)
             
         # Static festival-level metrics (TODO: add dynamic calculation later)
         festival_metrics = {
