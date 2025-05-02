@@ -42,11 +42,8 @@ def find_or_create_film(session: Session, original_name: str) -> Film:
         film = create_film(session, data)
     return film
 
-def find_film(session: Session, visa_number: str | int) -> Film | None:
-    film = session.execute(
-        select(Film).where(Film.visa_number == str(visa_number))
-    ).first()
-    return film
+def find_film_by_visa(session: Session, visa_number: str | int) -> Film | None:
+    return session.query(Film).filter_by(visa_number=str(visa_number)).first()
 
 def get_individual_directors_for_film(session: Session, film_id: int) -> list[str]:
     # Fetch the 'director' role
