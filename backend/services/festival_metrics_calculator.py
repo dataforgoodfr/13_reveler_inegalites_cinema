@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, distinct, extract
 from database.models import (
     AwardNomination,
     FestivalAward,
@@ -8,73 +8,76 @@ from database.models import (
     Role,
 )
 
-def calculate_female_representation_in_nominated_films(session: Session, festival_id: int) -> float | None:
-    # Get all nominated film IDs for this festival
-    nominated_film_ids = (
-        session.query(AwardNomination.film_id)
+def calculate_female_representation_in_nominated_films(session: Session, festival_id: int, year: int) -> float:
+    """Calculates the percentage of nominated films with ≥1 female director in a specific year.
+    """
+    # Get nominated films for this festival/year
+    nominated_films = (
+        session.query(distinct(AwardNomination.film_id))
         .join(FestivalAward, FestivalAward.id == AwardNomination.award_id)
-        .filter(FestivalAward.festival_id == festival_id)
-        .distinct()
+        .filter(
+            FestivalAward.festival_id == festival_id,
+            extract('year', AwardNomination.date) == year
+        )
         .subquery()
     )
+
+    total_films_count = session.query(func.count()).select_from(nominated_films).scalar()
+
+    if not total_films_count:
+        return 0.0
     
-    # Query for nominated films, individual directors genders
-    individual_representation = (
-        session.query(CreditHolder.gender)
-        .join(FilmCredit, FilmCredit.credit_holder_id == CreditHolder.id)
+    female_directed_count = (
+        session.query(distinct(FilmCredit.film_id))
+        .join(CreditHolder, CreditHolder.id == FilmCredit.credit_holder_id)
         .join(Role, Role.id == FilmCredit.role_id)
         .filter(
-            FilmCredit.film_id.in_(nominated_film_ids),
+            FilmCredit.film_id.in_(session.query(nominated_films.c.film_id)),
             Role.name == "director",
-            CreditHolder.type == "Individual"
+            CreditHolder.type == "Individual",
+            func.lower(CreditHolder.gender) == "female"
         )
-        .all()
+        .count()
     )
 
-    total_representation = len(individual_representation)
+    return round(female_directed_count / total_films_count, 2)
 
-    # Avoid division by zero
-    if total_representation == 0:
-        return 0.0
-
-    female_directors = sum(1 for (gender,) in individual_representation if gender and gender.lower() == "female")
-
-    return round(female_directors / total_representation, 2)
-
-def calculate_female_representation_in_winner_price(session: Session, festival_id: int) -> float | None :
-    # Get all the winned awards film IDs for a festival
-    film_id_winned_awards = (
+def calculate_female_representation_in_winner_price(session: Session, festival_id: int, year: int) -> float:
+    """Calculates percentage of awards given to films with ≥1 female director in a specific year.
+    """
+    # Get all award wins for this festival/year
+    award_wins = (
         session.query(AwardNomination.film_id)
         .join(FestivalAward, FestivalAward.id == AwardNomination.award_id)
         .filter(
             FestivalAward.festival_id == festival_id,
             AwardNomination.is_winner == True,
-        )
-        .subquery()
-    )
-    
-
-    # Query for winned awards films, individual directors genders
-    individual_representation = (
-        session.query(CreditHolder.gender)
-        .join(FilmCredit)
-        .join(Role)
-        .filter(
-            FilmCredit.film_id.in_(film_id_winned_awards),
-            Role.name == "director",
-            CreditHolder.type == "Individual"
+            extract('year', AwardNomination.date) == year
         )
         .all()
     )
-    print(individual_representation)
-    total_representation = len(individual_representation)
-
-    # Avoid division by zero
-    if total_representation == 0:
+    
+    if not award_wins:
         return 0.0
-
-    female_directors = sum(1 for (gender,) in individual_representation if gender and gender.lower() == "female")
-    print("female_directors", female_directors)
-    print("total_representation", total_representation)
-
-    return round(female_directors / total_representation, 2)
+    
+    winning_film_ids = {f[0] for f in award_wins}
+    
+    # Get films with female directors
+    female_directed_films = (
+        session.query(distinct(FilmCredit.film_id))
+        .join(CreditHolder, CreditHolder.id == FilmCredit.credit_holder_id)
+        .join(Role, Role.id == FilmCredit.role_id)
+        .filter(
+            FilmCredit.film_id.in_(winning_film_ids),
+            Role.name == "director", 
+            CreditHolder.type == "Individual",
+            func.lower(CreditHolder.gender) == "female"
+        )
+        .all()
+    )
+    female_directed_ids = {f[0] for f in female_directed_films}
+    
+    # Count qualifying awards
+    qualifying_awards = sum(1 for film_id, in award_wins if film_id in female_directed_ids)
+    
+    return round(qualifying_awards / len(award_wins), 2)
