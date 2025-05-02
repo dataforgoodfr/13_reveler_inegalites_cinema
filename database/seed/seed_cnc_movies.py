@@ -23,7 +23,7 @@ def seed_cnc_movies():
         with session.begin():  # starts a transaction, will rollback on error
             for _, row in tqdm(data.iterrows(), total=len(data), desc="Seeding CNC films"):
                 visa_number = row["visa_number"]
-                if film_repository.find_film(session, visa_number) is not None:
+                if film_repository.find_film_by_visa(session, visa_number) is not None:
                     continue  # Skip if already seeded
 
                 film_data = {
@@ -49,19 +49,15 @@ def seed_cnc_movies():
 
                 # Adding the distributors to the film credits
                 for distributor_type, role_name in [
-                    ("paying_distributors", "paying_distributor"),
-                    ("free_distributors", "free_distributor")
+                    ("paying_distributors", "distribution"),
+                    ("free_distributors", "distribution")
                 ]:
                     distributors = row.get(distributor_type) or []
-                    role = role_repository.find_or_create_role(session, role_name)
+                    role = role_repository.find_or_create_role(session, name=role_name)
 
                     for distributor_name in distributors:
-                        credit_holder_data = {
-                            "legal_name": distributor_name,
-                            "type": "Company"
-                        }
-                        holder = credit_holder_repository.find_or_create_credit_holder(session, credit_holder_data)
-                        film_credit_repository.create_film_credit(session, film.id, role.id, holder.id)
+                        holder = credit_holder_repository.find_or_create_credit_holder(session, full_name=distributor_name, type="Company")
+                        film_credit_repository.find_or_create_film_credit(session, film.id, role.id, holder.id)
             session.commit()
             print(f"Seeded {len(data)} films.")
     except Exception as e:
