@@ -1,31 +1,36 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Image from "next/image";
-import { Button } from "../ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "../ui/dialog";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "../ui/drawer";
+import { Carousel, CarouselContent, CarouselDots, CarouselItem } from "../ui/carousel";
 
 const TrailerAnalysisDialog = ({
+  open,
+  setOpen,
   filmName,
   releaseDate,
   trailerUrl,
   femaleScreenTimeInTrailer,
-  nonWhiteScreenTimeInTrailer,
+  nonWhiteScreenTimeInTrailer
 }: {
+  open: boolean;
+  setOpen: (open: boolean) => void;
   filmName: string;
   releaseDate: string;
-  trailerUrl: string;
-  femaleScreenTimeInTrailer: number;
-  nonWhiteScreenTimeInTrailer: number;
+  trailerUrl?: string;
+  femaleScreenTimeInTrailer?: number;
+  nonWhiteScreenTimeInTrailer?: number;
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [duration, setDuration] = useState(0);
+  const isMobile: boolean = useMediaQuery("(max-width: 768px)");
 
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
@@ -42,18 +47,70 @@ const TrailerAnalysisDialog = ({
     return [minPart, secPart].filter(Boolean).join(" ");
   };
 
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerContent
+          className="border-0 text-white h-full"
+          style={{
+            backgroundColor: "rgb(30,30,30)"
+          }}
+        >
+          <DrawerHeader className="items-center text-center p-5 h-full">
+            <DrawerTitle className="font-bold text-white">
+              {filmName} Bande Annonce ({releaseDate.split("-")[0]})
+            </DrawerTitle>
+            <Carousel className="w-full h-full">
+              <CarouselContent className="h-full">
+                <CarouselItem>
+                <div className="flex flex-col items-center h-full gap-5">
+                  <span>Durée de la bande annonce: </span>
+                  <span className="text-violet-500 font-semibold">
+                    {formatTime(duration)}
+                  </span>
+                  <video
+                    className="w-4/5 border-3 border-white"
+                    ref={videoRef}
+                    onLoadedMetadata={handleLoadedMetadata}
+                    src={trailerUrl}
+                    controls
+                  >
+                    Votre navigateur ne supporte pas la lecture de vidéos.
+                  </video>
+                </div>
+                </CarouselItem>
+                <CarouselItem>
+                  <div className="font-bold gap-50 text-left">
+                    <div>
+                      <div>
+                        <span>Temps d&apos;écran des personnages perçus comme </span>
+                        <span className="text-violet-500">femmes</span>
+                      </div>
+                      <span className="text-violet-500">
+                        {femaleScreenTimeInTrailer ? formatTime(femaleScreenTimeInTrailer) : "NC"}
+                      </span>
+                    </div>
+                    <div>
+                      <div>
+                        <span>Temps d&apos;écran des personnages perçus comme </span>
+                        <span className="text-violet-500">non blancs</span>
+                      </div>
+                      <span className="text-violet-500">
+                        {nonWhiteScreenTimeInTrailer ? formatTime(nonWhiteScreenTimeInTrailer) : "NC"}
+                      </span>
+                    </div>
+                  </div>
+                </CarouselItem>
+              </CarouselContent>
+              <CarouselDots className="absolute bottom-0 w-full" />
+            </Carousel>
+          </DrawerHeader>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="icon" style={{ opacity: 0.8 }}>
-          <Image
-            src="/video_search.svg"
-            alt="Rechercher"
-            width={24}
-            height={24}
-          />
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
         className="border-0 text-white"
         style={{
@@ -88,7 +145,7 @@ const TrailerAnalysisDialog = ({
                   <span className="text-violet-500">femmes</span>
                 </div>
                 <span className="text-violet-500">
-                  {formatTime(femaleScreenTimeInTrailer)}
+                  {femaleScreenTimeInTrailer ? formatTime(femaleScreenTimeInTrailer) : "NC"}
                 </span>
               </div>
               <div>
@@ -97,7 +154,7 @@ const TrailerAnalysisDialog = ({
                   <span className="text-violet-500">non blancs</span>
                 </div>
                 <span className="text-violet-500">
-                  {formatTime(nonWhiteScreenTimeInTrailer)}
+                  {nonWhiteScreenTimeInTrailer ? formatTime(nonWhiteScreenTimeInTrailer) : "NC"}
                 </span>
               </div>
             </div>
