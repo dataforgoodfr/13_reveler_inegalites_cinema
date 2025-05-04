@@ -1,7 +1,6 @@
 "use client";
 
 import { toast } from "sonner";
-import { Button } from "../ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,11 +8,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "../ui/dialog";
 import Image from "next/image";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "../ui/drawer";
 
-const ShareDialog = ({ imageSource }: { imageSource: string }) => {
+const ShareDialog = ({
+  open,
+  setOpen,
+  imageSource
+}: {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  imageSource: string;
+}) => {
   const shareUrl = window?.location.href;
   const shareText = "Découvrez ce film incroyable !";
 
@@ -52,14 +60,74 @@ const ShareDialog = ({ imageSource }: { imageSource: string }) => {
 
     window.open(shareLink, "_blank");
   };
+  const isMobile: boolean = useMediaQuery("(max-width: 768px)");
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerContent
+          className="border-0 text-white"
+          style={{
+            backgroundColor: "rgb(30,30,30)",
+          }}
+        >
+          <DrawerHeader className="items-center text-center p-5 h-full">
+          <DrawerTitle className="font-bold text-white">Partager le film</DrawerTitle>
+          <DrawerDescription>
+            <Image
+              loader={() => imageSource}
+              style={{ height: "fit-content" }}
+              src={imageSource}
+              alt="Affiche"
+              width={257.45}
+              height={0}
+            />
+          </DrawerDescription>
+          <DrawerFooter className="flex flex-row justify-between">
+            <div
+              className="flex flex-col items-center flex-1 text-xs text-center cursor-pointer relative"
+              onClick={copyLink}
+            >
+              <Image src="/copy_link.svg" alt="Copier le lien" height={48} width={48}/>
+              <span>Copier le lien</span>
+            </div>
+            <div
+              className="flex flex-col items-center flex-1 text-xs text-center cursor-pointer relative"
+              onClick={() => openSocialShare("mail")}
+            >
+              <Image src="/mail.svg" alt="Mail" height={48} width={48}/>
+              <span>Mail</span>
+            </div>
+            <div
+              className="flex flex-col items-center flex-1 text-xs text-center cursor-pointer relative"
+              onClick={() => openSocialShare("instagram")}
+            >
+              <Image src="/instagram.svg" alt="Instagram" height={48} width={48}/>
+              <span>Instagram</span>
+            </div>
+            <div
+              className="flex flex-col items-center flex-1 text-xs text-center cursor-pointer relative"
+              onClick={() => openSocialShare("twitter")}
+            >
+              <Image src="/twitter.svg" alt="Twitter" height={48} width={48}/>
+              <span>Twitter</span>
+            </div>
+            <div
+              className="flex flex-col items-center flex-1 text-xs text-center cursor-pointer relative"
+              onClick={() => openSocialShare("whatsapp")}
+            >
+              <Image src="/whatsapp.svg" alt="WhatsApp" height={48} width={48}/>
+              <span>WhatsApp</span>
+            </div>
+          </DrawerFooter>
+        </DrawerHeader>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="icon" style={{ opacity: 0.8 }}>
-          <Image src="/share.svg" alt="Rechercher" width={24} height={24} />
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
         className="sm:max-w-[425px] border-0 text-white"
         style={{ backgroundColor: "rgb(30,30,30)" }}
@@ -76,40 +144,40 @@ const ShareDialog = ({ imageSource }: { imageSource: string }) => {
               height={0}
             />
           </DialogDescription>
-          <DialogFooter className="flex justify-between">
+          <DialogFooter className="flex flex-row justify-between">
             <div
               className="flex flex-col items-center flex-1 text-xs text-center cursor-pointer relative"
               onClick={copyLink}
             >
-              <Image src="/copy_link.svg" alt="Copier le lien" fill/>
+              <Image src="/copy_link.svg" alt="Copier le lien" height={48} width={48}/>
               <span>Copier le lien</span>
             </div>
             <div
               className="flex flex-col items-center flex-1 text-xs text-center cursor-pointer relative"
               onClick={() => openSocialShare("mail")}
             >
-              <Image src="/mail.svg" alt="Mail" fill/>
+              <Image src="/mail.svg" alt="Mail" height={48} width={48}/>
               <span>Mail</span>
             </div>
             <div
               className="flex flex-col items-center flex-1 text-xs text-center cursor-pointer relative"
               onClick={() => openSocialShare("instagram")}
             >
-              <Image src="/instagram.svg" alt="Instagram" fill/>
+              <Image src="/instagram.svg" alt="Instagram" height={48} width={48}/>
               <span>Instagram</span>
             </div>
             <div
               className="flex flex-col items-center flex-1 text-xs text-center cursor-pointer relative"
               onClick={() => openSocialShare("twitter")}
             >
-              <Image src="/twitter.svg" alt="Twitter" fill/>
+              <Image src="/twitter.svg" alt="Twitter" height={48} width={48}/>
               <span>Twitter</span>
             </div>
             <div
               className="flex flex-col items-center flex-1 text-xs text-center cursor-pointer relative"
               onClick={() => openSocialShare("whatsapp")}
             >
-              <Image src="/whatsapp.svg" alt="WhatsApp" fill/>
+              <Image src="/whatsapp.svg" alt="WhatsApp" height={48} width={48}/>
               <span>WhatsApp</span>
             </div>
           </DialogFooter>
