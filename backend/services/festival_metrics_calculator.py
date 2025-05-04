@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func, distinct, extract
+from sqlalchemy import func, distinct, extract, cast, String
 from database.models import (
     AwardNomination,
     FestivalAward,
@@ -8,22 +8,21 @@ from database.models import (
     Role,
 )
 
-def calculate_female_representation_in_nominated_films(session: Session, festival_id: int, year: int) -> float:
+def calculate_female_representation_in_nominated_films(session: Session, festival_id: int, year: str) -> float:
     """Calculates the percentage of nominated films with ≥1 female director in a specific year.
     """
     # Get nominated films for this festival/year
     nominated_films = (
-        session.query(distinct(AwardNomination.film_id))
+        session.query(distinct(AwardNomination.film_id).label("film_id"))
         .join(FestivalAward, FestivalAward.id == AwardNomination.award_id)
         .filter(
             FestivalAward.festival_id == festival_id,
-            extract('year', AwardNomination.date) == year
+            cast(extract('year', AwardNomination.date), String) == year
         )
         .subquery()
     )
 
     total_films_count = session.query(func.count()).select_from(nominated_films).scalar()
-
     if not total_films_count:
         return 0.0
     
@@ -42,7 +41,7 @@ def calculate_female_representation_in_nominated_films(session: Session, festiva
 
     return round(female_directed_count / total_films_count, 2)
 
-def calculate_female_representation_in_winner_price(session: Session, festival_id: int, year: int) -> float:
+def calculate_female_representation_in_winner_price(session: Session, festival_id: int, year: str) -> float:
     """Calculates percentage of awards given to films with ≥1 female director in a specific year.
     """
     # Get all award wins for this festival/year
@@ -52,7 +51,7 @@ def calculate_female_representation_in_winner_price(session: Session, festival_i
         .filter(
             FestivalAward.festival_id == festival_id,
             AwardNomination.is_winner == True,
-            extract('year', AwardNomination.date) == year
+            cast(extract('year', AwardNomination.date), String) == year
         )
         .all()
     )
@@ -79,5 +78,5 @@ def calculate_female_representation_in_winner_price(session: Session, festival_i
     
     # Count qualifying awards
     qualifying_awards = sum(1 for film_id, in award_wins if film_id in female_directed_ids)
-    
+
     return round(qualifying_awards / len(award_wins), 2)

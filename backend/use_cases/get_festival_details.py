@@ -1,15 +1,14 @@
 from sqlalchemy.orm import Session
 from backend.repositories import festival_repository, festival_award_repository, award_nomination_repository, film_repository
 from backend.use_cases import get_film_details
+from backend.services import festival_metrics_calculator
 
 class GetFestivalDetails:
     def __init__(self, db: Session):
         self.db = db
 
-    def execute(self, festival_id: int) -> dict:
-        print("festival_id: ", festival_id)
+    def execute(self, festival_id: int, year: str) -> dict:
         festival = festival_repository.get_festival(self.db, festival_id)
-        print(festival)
         if not festival:
             return None
 
@@ -46,20 +45,13 @@ class GetFestivalDetails:
                 "nominations": nomination_data
             })
 
-        # female_re = festival_metrics_calculator.calculate_female_representation_in_nominated_films(self.db, festival_id)
-        # if female_re:
-        #     print("female_representation: ", female_re)
-            
-        festival_metrics_calculator.calculate_female_representation_in_winner_price(self.db, festival_id)
+        nf = festival_metrics_calculator.calculate_female_representation_in_nominated_films(self.db, festival_id, year)
+        wp = festival_metrics_calculator.calculate_female_representation_in_winner_price(self.db, festival_id, year)
             
         # Static festival-level metrics (TODO: add dynamic calculation later)
         festival_metrics = {
-            "parity_comparison": {
-                "place": 143,
-                "total": 300
-            },
-            "prizes_awarded_to_women": 35,
-            "produced_by_women": 29
+            "produced_by_women": nf,
+            "prizes_awarded_to_women": wp
         }
 
         return {
