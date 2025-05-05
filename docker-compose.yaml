@@ -22,6 +22,8 @@ services:
     build:
       context: .
       dockerfile: ./backend/Dockerfile
+      args:
+        - ENV=development
     volumes:
       - .:/backend
       - backend-poetry-cache:/root/.cache/pypoetry
