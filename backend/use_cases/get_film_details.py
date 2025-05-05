@@ -1,5 +1,5 @@
-from sqlalchemy.orm import Session
-from database.models import Film
+from sqlalchemy.orm import Session, selectinload
+from database.models import Film, FilmCredit, AwardNomination, FestivalAward, FilmCountryBudgetAllocation
 from backend.services.film_metrics_calculator import FilmMetricsCalculator
 from backend.entities.credit_holder_entity import CreditHolderEntity
 from backend.entities.trailer_entity import TrailerEntity
@@ -10,7 +10,27 @@ class GetFilmDetails:
         self.db = db
 
     def execute(self, film_id: int) -> dict:
-        film = self.db.query(Film).filter(Film.id == film_id).first()
+        # Eagerly load the film with its related data
+        film = self.db.query(Film).options(
+            # Film credits with roles and credit holders
+            selectinload(Film.film_credits)
+                .selectinload(FilmCredit.role),
+            selectinload(Film.film_credits)
+                .selectinload(FilmCredit.credit_holder),
+
+            # Award nominations with award and festival
+            selectinload(Film.award_nominations)
+                .selectinload(AwardNomination.festival_award)
+                .selectinload(FestivalAward.festival),
+
+            # Country budget allocations with related country and allocation
+            selectinload(Film.country_budget_allocations)
+                .selectinload(FilmCountryBudgetAllocation.country),
+
+            # Genres (typically many-to-many)
+            selectinload(Film.genres)
+        ).get(film_id)
+
         if not film:
             return None
 
