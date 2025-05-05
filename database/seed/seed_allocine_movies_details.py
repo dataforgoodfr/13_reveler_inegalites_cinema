@@ -28,6 +28,10 @@ def seed():
             if not film:
                 continue
 
+            # Skip if already enriched
+            if film.release_date is not None and film.duration_minutes is not None:
+                continue
+
             # Update film basic info
             film.release_date = parse_release_date(row['release_date'])
             film.duration_minutes = parse_duration(row['duration'])
@@ -114,7 +118,13 @@ def seed():
                         credit_holder_id=credit_holder.id
                     )
 
-        session.commit()
+            # Commit the session for each film
+            try:
+                session.commit()
+            except Exception as e:
+                print(f"Error on film {row.get('visa_number')}: {e}")
+                session.rollback()
+        
         session.close()
 
 if __name__ == '__main__':
