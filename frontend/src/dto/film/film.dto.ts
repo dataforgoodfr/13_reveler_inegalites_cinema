@@ -16,6 +16,5 @@ export type Film = {
   credits: Credits;
   awards: Award[];
   trailer_url?: string;
-  first_language: string;
   cnc_agrement_year: number;
 };
