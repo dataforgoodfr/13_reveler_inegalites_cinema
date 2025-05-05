@@ -13,7 +13,13 @@ def split_full_name(full_name: str) -> tuple:
         return (parts[0], parts[-1])
 
 def guess_gender(first_name: str) -> str:
-    return _gender_detector.get_gender(first_name)
+    gender = _gender_detector.get_gender(first_name)
+    if gender in ['male', 'mostly_male']:
+        return 'male'
+    elif gender in ['female', 'mostly_female']:
+        return 'female'
+    else:
+        return 'unknown'
 
 def remove_extra_spaces(s: str) -> str:
     if not isinstance(s, str):
