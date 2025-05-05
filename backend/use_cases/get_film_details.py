@@ -34,10 +34,9 @@ class GetFilmDetails:
         if not film:
             return None
 
-        # TODO: after demo, remove first_language, it will be replaced by list of countries_sorted_by_budget
         film_attributes_displayed = [
             "id", "original_name", "release_date",
-            "first_language", "parity_bonus", "cnc_agrement_year", "budget"
+            "parity_bonus", "cnc_agrement_year", "budget"
         ]
 
         # Get the film basic details
