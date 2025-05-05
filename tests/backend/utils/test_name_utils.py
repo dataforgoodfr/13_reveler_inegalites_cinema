@@ -23,13 +23,21 @@ class TestSplitFullName:
 class TestGuessGender:
     def test_male(self):
         assert guess_gender("John") == "male"
+        assert guess_gender("Hervé") == "male"
 
     def test_female(self):
         assert guess_gender("Emily") == "female"
+        assert guess_gender("Frédérique") == "female"
 
-    def test_ambiguous(self):
-        assert guess_gender("Taylor") in ["mostly_male", "andy"]
-        assert guess_gender("Frédérique") in ["female", "mostly_female", "andy"]
+    def test_mostly(self):
+        assert guess_gender("Taylor") == "male"
+        assert guess_gender("Camille") == "female"
+    
+    def test_andy(self):
+        assert guess_gender("Pauley") == "unknown"
+
+    def test_unknown(self):
+        assert guess_gender("Kio") == "unknown"
 
 class TestRemoveExtraSpaces:
     @pytest.mark.parametrize("input_str, expected", [
