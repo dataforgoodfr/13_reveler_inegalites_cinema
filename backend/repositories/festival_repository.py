@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from database.models import Festival
+from database.models import Festival, AwardNomination, FestivalAward
 
 def find_or_create_festival(session: Session, country_id: int, name: str, description: str, image_base64: str) -> Festival:
     festival = session.query(Festival).filter_by(
