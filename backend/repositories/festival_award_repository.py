@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import extract, cast, String
+from sqlalchemy import extract
 from database.models import FestivalAward, AwardNomination
 from typing import List
 
@@ -23,14 +23,14 @@ def get_festival_awards_by_festival_id(session: Session, festival_id: int) -> Li
     return session.query(FestivalAward).filter_by(festival_id=festival_id).all()
 
 
-def get_festival_awards_by_id_year(session: Session, festival_id: int, year: str) -> List[FestivalAward]:
+def get_festival_awards_by_id_year(session: Session, festival_id: int, year: int) -> List[FestivalAward]:
     """
     Returns a list of awards associated with a given festival and a given year.
     Only includes awards that have at least one nomination in the specified year.
     """
     subquery = (
         session.query(AwardNomination.award_id)
-        .filter(cast(extract('year', AwardNomination.date), String) == year)
+        .filter(extract('year', AwardNomination.date) == year)
         .subquery()
     )
 
