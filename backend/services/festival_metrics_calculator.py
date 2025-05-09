@@ -50,7 +50,7 @@ def calculate_female_representation_in_winner_price(session: Session, festival_i
         .join(FestivalAward, FestivalAward.id == AwardNomination.award_id)
         .filter(
             FestivalAward.festival_id == festival_id,
-            AwardNomination.is_winner == True,
+            AwardNomination.is_winner is True,
             cast(extract('year', AwardNomination.date), String) == year
         )
         .all()
