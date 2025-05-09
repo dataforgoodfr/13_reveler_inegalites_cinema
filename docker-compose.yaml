@@ -28,9 +28,14 @@ services:
     ports:
       - "5001:5001"
       - "8888:8888" # Expose Jupyter's port - dev mode only
+    env_file:
+      - .env
     environment:
       - PYTHONUNBUFFERED=1 # Ensures unbuffered output (useful for logging)
       - DATABASE_URL=postgresql+psycopg://postgres:postgres@db:5432/ric_db
+      - METABASE_SITE_URL
+      - METABASE_SECRET_KEY
+      - METABASE_DASHBOARD_ID
     depends_on:
       - db
 
