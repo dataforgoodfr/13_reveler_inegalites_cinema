@@ -113,13 +113,13 @@ const Navbar = ({
         </div>
       ) : (
         <nav
-          className={`text-white fixed w-full z-10 ${
+          className={`text-white absolute w-full z-10 ${
             isOpen ? "flex flex-col h-full bg-zinc-800" : ""
           } md:bg-transparent`}
         >
-          {pathname === "/" && !isOpen && (
+          {["/", "/statistics"].includes(pathname) && !isOpen && (
             <div
-              className="absolute mx-16"
+              className="absolute mx-16 cursor-pointer"
               style={{
                 width: "230px",
                 paddingTop: "20px",
@@ -136,23 +136,23 @@ const Navbar = ({
               {/* Menu desktop */}
               <div className="hidden md:block">
                 <div className="ml-10 flex items-center space-x-4">
-                  <Link href="/" className="px-3 py-2 rounded-md">
+                  <Link href="/" className="px-3 py-2 rounded-md cursor-pointer">
                     Accueil
                   </Link>
-                  <Link href="/statistics" className="px-3 py-2 rounded-md">
+                  <Link href="/statistics" className="px-3 py-2 rounded-md cursor-pointer">
                     Statistiques
                   </Link>
-                  <Link href="/about" className="px-3 py-2 rounded-md">
+                  <Link href="/about" className="px-3 py-2 rounded-md cursor-pointer">
                     À propos
                   </Link>
                   <button
-                    className="px-3 py-2 rounded-md"
+                    className="px-3 py-2 rounded-md cursor-pointer"
                     onClick={() => setIsSearching(!isSearching)}
                   >
                     <Image src="/search.svg" alt="Rechercher" height={36} width={36} />
                   </button>
                   <Link href="/dashboard" className="px-3 py-2 rounded-md">
-                    <Button>Donnez nous votre avis 💬</Button>
+                    <Button className="cursor-pointer">Donnez nous votre avis 💬</Button>
                   </Link>
                 </div>
               </div>
@@ -203,21 +203,21 @@ const Navbar = ({
               <div className="px-2 pt-2 pb-3 space-y-1 h-full flex flex-col justify-center items-center">
                 <Link
                   href="/"
-                  className="block hover:bg-gray-700 px-3 py-2 rounded-md"
+                  className="block hover:bg-gray-700 px-3 py-2 rounded-md cursor-pointer"
                   onClick={toggleMenu}
                 >
                   Accueil
                 </Link>
                 <Link
                   href="/statistics"
-                  className="block hover:bg-gray-700 px-3 py-2 rounded-md"
+                  className="block hover:bg-gray-700 px-3 py-2 rounded-md cursor-pointer"
                   onClick={toggleMenu}
                 >
                   Statistiques
                 </Link>
                 <Link
                   href="/about"
-                  className="block hover:bg-gray-700 px-3 py-2 rounded-md"
+                  className="block hover:bg-gray-700 px-3 py-2 rounded-md cursor-pointer"
                   onClick={toggleMenu}
                 >
                   À propos
@@ -229,7 +229,7 @@ const Navbar = ({
                   className="block px-3 py-2 rounded-md"
                   onClick={toggleMenu}
                 >
-                  <Button className="w-full bg-white text-black hover:text-white">
+                  <Button className="w-full bg-white text-black hover:text-white cursor-pointer">
                     Donnez nous votre avis 💬
                   </Button>
                 </Link>
