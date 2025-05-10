@@ -112,7 +112,7 @@ const TrailerAnalysisDialog = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
-        className="border-0 text-white"
+        className="border-0 text-white max-h-[90vh]"
         style={{
           backgroundColor: "rgb(30,30,30)",
           width: "800px",

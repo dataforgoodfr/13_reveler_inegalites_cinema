@@ -76,7 +76,7 @@ const ShareDialog = ({
           <DrawerDescription>
             <Image
               loader={() => imageSource}
-              style={{ height: "fit-content" }}
+              style={{ height: "fit-content", maxHeight: "50vh", objectFit: "contain" }}
               src={imageSource}
               alt="Affiche"
               width={257.45}
@@ -137,7 +137,7 @@ const ShareDialog = ({
           <DialogDescription>
             <Image
               loader={() => imageSource}
-              style={{ height: "fit-content" }}
+              style={{ height: "fit-content", maxHeight: "50vh", objectFit: "contain" }}
               src={imageSource}
               alt="Affiche"
               width={257.45}
