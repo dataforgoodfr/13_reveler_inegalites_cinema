@@ -92,17 +92,18 @@ export default function PageFilm() {
   }
 
   return (
-    <main className="p-20 bg-zinc-800 text-white min-h-screen">
-      <div className="flex flex-col items-center md:items-start md:flex-row gap-10">
-        <div className="flex flex-col gap-10 w-1/4">
-          <Image
+    <main className="p-5 pt-20 bg-zinc-800 text-white min-h-screen">
+      <div className="flex flex-col md:items-center md:items-start md:flex-row gap-10">
+        <div className="flex flex-col gap-10 w-full md:w-1/4">
+          {festivalData.image_base64 && <Image
             loader={() => festivalData.image_base64}
             style={{ height: "fit-content" }}
             src={festivalData.image_base64.trim()}
             alt="Affiche"
             width={300}
             height={0}
-          />
+          />}
+          <h1 className="md:hidden text-4xl font-bold">{festivalData.name}</h1>
           <Card className="bg-gray-950 border-0">
             <CardHeader>
               <CardDescription className="text-white">
@@ -111,8 +112,8 @@ export default function PageFilm() {
             </CardHeader>
           </Card>
         </div>
-        <div className="w-3/4">
-          <h1 className="text-4xl font-bold mb-4">{festivalData.name}</h1>
+        <div className="md:w-3/4">
+          <h1 className="hidden md:block text-4xl font-bold mb-4">{festivalData.name}</h1>
           <div>
             <p>Année de l&apos;édition</p>
             <Select onValueChange={(value: string) => setSelectedYear(parseInt(value))}>
@@ -140,9 +141,9 @@ export default function PageFilm() {
           </div>
           {selectedYear && (
             <>
-              <div className="flex gap-5 py-5">
+              <div className="flex flex-col md:flex-row gap-5 py-5">
                 <Card
-                  className="md:w-1/2"
+                  className="w-full md:w-1/2"
                   style={{
                     borderColor: "rgba(51, 51, 51, 1)",
                     backgroundColor: "rgba(30, 30, 30, 0.8)",
@@ -161,7 +162,7 @@ export default function PageFilm() {
                   </CardHeader>
                 </Card>
                 <Card
-                  className="md:w-1/2"
+                  className="w-full md:w-1/2"
                   style={{
                     borderColor: "rgba(51, 51, 51, 1)",
                     backgroundColor: "rgba(30, 30, 30, 0.8)",
@@ -185,10 +186,10 @@ export default function PageFilm() {
                 <Select
                   onValueChange={(value: string) => setSelectedAward(parseInt(value))}
                 >
-                  <SelectTrigger className="w-[250px] bg-white text-black wordbreak">
+                  <SelectTrigger className="w-full md:w-[250px] bg-white text-black wordbreak">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="w-[250px] wordbreak">
+                  <SelectContent className="w-full md:w-[250px] wordbreak">
                     <SelectGroup>
                       {awardsData
                         .map((award: Award) => {
@@ -284,7 +285,7 @@ export default function PageFilm() {
                                 backgroundColor: "rgba(0, 0, 0, 0.5)",
                               }}
                             ></div>
-                            <div className="z-1 mt-4 flex flex-row gap-10">
+                            <div className="z-1 mt-4 flex flex-row gap-10 overflow-x-auto">
                               <Image
                                 loader={() => film.poster_image_base64}
                                 style={{ height: "fit-content" }}
@@ -293,7 +294,7 @@ export default function PageFilm() {
                                 width={150}
                                 height={0}
                               />
-                              <div className="text-white w-full">
+                              <div className="text-white w-full overflow-x-auto">
                                 <Link href={`/films/${film.id}`}>
                                   <strong className="text-2xl">
                                     {film.original_name}
@@ -302,12 +303,12 @@ export default function PageFilm() {
                                 <p>
                                   Réalisé par <strong>{film.director.join(', ')}</strong>
                                 </p>
-                                <div className="flex flex-col md:flex-row gap-5">
+                                <div className="flex flex-row gap-5 max-w-full overflow-x-auto">
                                   {film.female_representation_in_key_roles ||
                                   film.female_representation_in_casting ? (
                                     <>
                                       <Card
-                                        className="w-1/2"
+                                        className="min-w-[160px] w-[220px] md:w-1/2"
                                         style={{
                                           borderColor: "rgba(51, 51, 51, 1)",
                                           backgroundColor:
@@ -329,7 +330,7 @@ export default function PageFilm() {
                                         </CardHeader>
                                       </Card>
                                       <Card
-                                        className="w-1/2"
+                                        className="min-w-[160px] w-[220px] md:w-1/2"
                                         style={{
                                           borderColor: "rgba(51, 51, 51, 1)",
                                           backgroundColor:

@@ -149,7 +149,7 @@ const Navbar = ({
                     className="px-3 py-2 rounded-md"
                     onClick={() => setIsSearching(!isSearching)}
                   >
-                    <Image src="/search.svg" alt="Rechercher" fill />
+                    <Image src="/search.svg" alt="Rechercher" height={36} width={36} />
                   </button>
                   <Link href="/dashboard" className="px-3 py-2 rounded-md">
                     <Button>Donnez nous votre avis 💬</Button>
