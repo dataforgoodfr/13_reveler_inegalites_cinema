@@ -1,4 +1,4 @@
 export type Metrics = {
-  prizes_awarded_to_women: number;
-  produced_by_women: number;
+  female_representation_in_nominated_films: number;
+  female_representation_in_winner_price: number;
 }

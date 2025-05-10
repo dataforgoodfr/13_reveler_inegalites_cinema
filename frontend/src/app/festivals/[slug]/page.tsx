@@ -17,13 +17,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Award } from "@/dto/festival/award.dto";
-import { Festival } from "@/dto/festival/festival.dto";
 import { FestivalApiResponse } from "@/dto/festival/festival-api-response.dto";
 import { Nomination } from "@/dto/festival/nomination.dto";
 import Link from "next/link";
 import Image from "next/image";
 import { API_URL } from "@/utils/api-url";
+import { ReducedAward } from "@/dto/festival/reduced-award.dto";
 
 // Ceci est un composant de page avec une route dynamique
 // Le [slug] dans le nom du dossier sera disponible comme paramètre
@@ -31,8 +30,9 @@ export default function PageFilm() {
   // useParams est un hook qui permet d'accéder aux paramètres dynamiques de l'URL
   const params = useParams();
   const slug = params?.slug; // Contient la valeur dynamique de l'URL (ex: pour /films/avatar, slug = "avatar")
-  const [festivalData, setFestivalData] = useState<Festival | null>(null);
-  const [awardsData, setAwardsData] = useState<Award[]>([]);
+  const [festivalData, setFestivalData] = useState<FestivalApiResponse | null>(
+    null
+  );
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [selectedAward, setSelectedAward] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,8 +40,17 @@ export default function PageFilm() {
   const [activeSection, setActiveSection] = useState("Gagnants");
 
   useEffect(() => {
-    const url = `${API_URL}/festivals/${slug}`;
+    const baseUrl = `${API_URL}/festivals/${slug}`;
+    const queryParams = new URLSearchParams();
 
+    if (selectedYear !== null) {
+      queryParams.append("year", selectedYear.toString());
+    }
+    if (selectedAward !== null) {
+      queryParams.append("award", selectedAward.toString());
+    }
+
+    const url = `${baseUrl}?${queryParams.toString()}`;
     fetch(url)
       .then((response) => {
         if (response.ok) {
@@ -51,8 +60,9 @@ export default function PageFilm() {
         }
       })
       .then((value: FestivalApiResponse) => {
-        setAwardsData(value.festival.awards);
-        setFestivalData(value.festival.festival);
+        setFestivalData(value);
+        setSelectedYear(value.year);
+        setSelectedAward(value.award.award_id);
         setIsLoading(false);
       })
       .catch((error) => {
@@ -60,24 +70,9 @@ export default function PageFilm() {
         setHasError(true);
         setIsLoading(false);
       });
-  }, [slug]);
+  }, [selectedAward, selectedYear, slug]);
 
-  function getFilteredNominations() {
-    const currentSelectedYear = selectedYear;
-    const currentSelectedAward = selectedAward;
-    if (!currentSelectedAward || !currentSelectedYear) {
-      return [];
-    }
-    return awardsData
-      .filter((award: Award) => award.award_id === currentSelectedAward)
-      .flatMap((award: Award) => award.nominations)
-      .filter(
-        (nomination: Nomination) =>
-          new Date(nomination.date).getFullYear() == currentSelectedYear
-      );
-  }
-
-  if (isLoading || !festivalData || !awardsData) {
+  if (isLoading || !festivalData) {
     return (
       <main className="p-20 bg-transparent text-white flex justify-center items-center">
         <p>Chargement...</p>
@@ -97,51 +92,52 @@ export default function PageFilm() {
     <main className="p-5 pt-20 bg-zinc-800 text-white min-h-screen">
       <div className="flex flex-col md:items-center md:items-start md:flex-row gap-10">
         <div className="flex flex-col gap-10 w-full md:w-1/4">
-          {festivalData.image_base64 && <Image
-            loader={() => festivalData.image_base64}
-            style={{ height: "fit-content" }}
-            src={festivalData.image_base64.trim()}
-            alt="Affiche"
-            width={300}
-            height={0}
-          />}
-          <h1 className="md:hidden text-4xl font-bold">{festivalData.name}</h1>
+          {festivalData.festival.image_base64 && (
+            <Image
+              loader={() => festivalData.festival.image_base64}
+              style={{ height: "fit-content" }}
+              src={festivalData.festival.image_base64.trim()}
+              alt="Affiche"
+              width={300}
+              height={0}
+            />
+          )}
+          <h1 className="md:hidden text-4xl font-bold">
+            {festivalData.festival.name}
+          </h1>
           <Card className="bg-gray-950 border-0">
             <CardHeader>
               <CardDescription className="text-white">
-                {festivalData.description}
+                {festivalData.festival.description}
               </CardDescription>
             </CardHeader>
           </Card>
         </div>
         <div className="md:w-3/4">
-          <h1 className="hidden md:block text-4xl font-bold mb-4">{festivalData.name}</h1>
+          <h1 className="hidden md:block text-4xl font-bold mb-4">
+            {festivalData.festival.name}
+          </h1>
           <div>
             <p>Année de l&apos;édition</p>
             <Select
-              onValueChange={(value: string) =>
-                setSelectedYear(parseInt(value))
-              }
+              value={selectedYear ? selectedYear.toString() : undefined}
+              onValueChange={(value: string) => {
+                setSelectedYear(parseInt(value));
+                setSelectedAward(null);
+              }}
             >
               <SelectTrigger className="w-[180px] bg-white text-black">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  {[
-                    ...new Set<number>(
-                      awardsData
-                        .flatMap((award: Award) => award.nominations)
-                        .map((nomination: Nomination) =>
-                          new Date(nomination.date).getFullYear()
-                        )
-                        .sort()
-                    ),
-                  ].map((year: number, index: number) => (
-                    <SelectItem key={index} value={year.toString()}>
-                      {year}
-                    </SelectItem>
-                  ))}
+                  {festivalData.available_years.map(
+                    (year: number, index: number) => (
+                      <SelectItem key={index} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    )
+                  )}
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -158,9 +154,9 @@ export default function PageFilm() {
                 >
                   <CardHeader>
                     <CardTitle className="text-2xl text-violet-300">
-                      {typeof festivalData.festival_metrics
-                        .prizes_awarded_to_women == "number"
-                        ? `${festivalData.festival_metrics.prizes_awarded_to_women} %`
+                      {typeof festivalData.festival.festival_metrics
+                        .female_representation_in_winner_price == "number"
+                        ? `${festivalData.festival.festival_metrics.female_representation_in_winner_price} %`
                         : "NC"}
                     </CardTitle>
                     <CardDescription className="text-white">
@@ -178,9 +174,9 @@ export default function PageFilm() {
                 >
                   <CardHeader>
                     <CardTitle className="text-2xl text-violet-300">
-                      {typeof festivalData.festival_metrics.produced_by_women ==
-                      "number"
-                        ? `${festivalData.festival_metrics.produced_by_women} %`
+                      {typeof festivalData.festival.festival_metrics
+                        .female_representation_in_nominated_films == "number"
+                        ? `${festivalData.festival.festival_metrics.female_representation_in_nominated_films} %`
                         : "NC"}
                     </CardTitle>
                     <CardDescription className="text-white">
@@ -193,6 +189,7 @@ export default function PageFilm() {
               <div>
                 <p>Récompense</p>
                 <Select
+                  value={selectedAward ? selectedAward.toString() : undefined}
                   onValueChange={(value: string) =>
                     setSelectedAward(parseInt(value))
                   }
@@ -202,26 +199,16 @@ export default function PageFilm() {
                   </SelectTrigger>
                   <SelectContent className="w-full md:w-[250px] wordbreak">
                     <SelectGroup>
-                      {awardsData
-                        .map((award: Award) => {
-                          return {
-                            ...award,
-                            nominations: award.nominations.filter(
-                              (nomination: Nomination) =>
-                                new Date(nomination.date).getFullYear() ===
-                                selectedYear
-                            ),
-                          };
-                        })
-                        .filter((award: Award) => award.nominations.length > 0)
-                        .map((award: Award, index: number) => (
+                      {festivalData.available_awards.map(
+                        (award: ReducedAward, index: number) => (
                           <SelectItem
                             key={index}
                             value={award.award_id.toString()}
                           >
                             {award.name}
                           </SelectItem>
-                        ))}
+                        )
+                      )}
                     </SelectGroup>
                   </SelectContent>
                 </Select>
@@ -246,7 +233,7 @@ export default function PageFilm() {
                   </Menubar>
 
                   <div className="flex flex-col gap-5">
-                    {getFilteredNominations().filter(
+                    {festivalData.award.nominations.filter(
                       (nomination: Nomination) =>
                         nomination.is_winner === (activeSection === "Gagnants")
                     ).length === 0 ? (
@@ -265,7 +252,7 @@ export default function PageFilm() {
                         </CardHeader>
                       </Card>
                     ) : (
-                      getFilteredNominations()
+                      festivalData.award.nominations
                         .filter(
                           (nomination: Nomination) =>
                             nomination.is_winner ===
