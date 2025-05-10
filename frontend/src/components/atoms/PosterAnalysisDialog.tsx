@@ -131,7 +131,7 @@ const PosterAnalysisDialog = ({
                     >
                       <Image
                         loader={() => imageSource}
-                        style={{ height: "fit-content" }}
+                        style={{ height: "fit-content", objectFit: "cover", maxHeight: "50vh" }}
                         src={imageSource}
                         alt="Affiche"
                         width={300}
@@ -159,7 +159,7 @@ const PosterAnalysisDialog = ({
                     >
                       <Image
                         loader={() => imageSource}
-                        style={{ height: "fit-content" }}
+                        style={{ height: "fit-content", objectFit: "cover", maxHeight: "50vh" }}
                         src={imageSource}
                         alt="Affiche"
                         width={300}
