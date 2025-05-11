@@ -24,17 +24,10 @@ ENV POETRY_NO_INTERACTION=1 \
     POETRY_CACHE_DIR=/tmp/poetry_cache
 
 # Set the working directory in the container
-WORKDIR /backend
+WORKDIR /app
 
 # Copy the working directory contents into the container
-COPY pyproject.toml poetry.lock /backend/
-
-# one of entrypoint-development.sh or entrypoint-production.sh
-# will be copied to /backend/entrypoint.sh
-COPY backend/entrypoint-$ENV.sh /backend/entrypoint.sh
-
-# make the entrypoint script executable
-RUN chmod +x /backend/entrypoint.sh
+COPY pyproject.toml poetry.lock /app/
 
 # Install the dependencies using Poetry
 RUN if [ $ENV = 'production' ] ; then poetry install --no-root --without dev; else poetry install --no-root; fi; \
@@ -54,16 +47,16 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-ENV VIRTUAL_ENV=/backend/.venv \
-    PATH="/backend/.venv/bin:$PATH"
+ENV VIRTUAL_ENV=/app/.venv 
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
-COPY --from=builder /backend/entrypoint.sh /backend/entrypoint.sh
 
-COPY ./backend /backend/
-COPY ./database /database/
+COPY ./backend /app/backend/
+COPY ./database /app/database/
+
+RUN chmod +x /app/backend/entrypoint.sh
 
 # Expose the port the backend runs on (adjust the port as needed)
 EXPOSE 5001
 
-ENTRYPOINT [ "/bin/sh", "-c", "/backend/entrypoint.sh" ]
+ENTRYPOINT [ "/bin/bash", "-c", "/app/backend/entrypoint.sh" ]

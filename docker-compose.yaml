@@ -21,16 +21,19 @@ services:
   backend:
     build:
       context: .
-      dockerfile: ./backend/Dockerfile
+      dockerfile: backend/Dockerfile
       args:
+        # to build a production image, uncomment the following line
+        # use ENV=production
         - ENV=development
     volumes:
-      - .:/backend
-      - backend-poetry-cache:/root/.cache/pypoetry
+      - ./backend:/app/backend
     ports:
       - "5001:5001"
       - "8888:8888" # Expose Jupyter's port - dev mode only
     environment:
+      # uncomment the following line to run in production mode
+      # - ENV=production
       - PYTHONUNBUFFERED=1 # Ensures unbuffered output (useful for logging)
       - DATABASE_URL=postgresql+psycopg://postgres:postgres@db:5432/ric_db
     depends_on:
