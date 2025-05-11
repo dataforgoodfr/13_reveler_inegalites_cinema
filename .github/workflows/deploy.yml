@@ -33,7 +33,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
+          username: ${{ github.repository_owner }}
           password: ${{ secrets.D4GTECH_TOKEN }}
 
       - name: Extract metadata (tags, labels) for Docker
@@ -60,31 +60,41 @@ jobs:
           push: true
           tags: ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.IMAGE_NAME_FRONTEND }}:latest
 
-      # - name: Install SSH key
-      #   uses: shimataro/ssh-key-action@v2
-      #   with:
-      #     key: ${{ secrets.SSH_PRIVATE_KEY }}
-      #     known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+      - name: Create application directory
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            mkdir -p /opt/ric
 
-      # - name: Copy docker-compose.prod.yml
-      #   env:
-      #     SSH_HOST: ${{ secrets.PROD_SSH_HOST }}
-      #     SSH_USER: ${{ secrets.PROD_SSH_USER }}
-      #   run: |
-      #     scp docker-compose.prod.yml $SSH_USER@$SSH_HOST:/opt/ric/docker-compose.yml
+      - name: Copy files via SSH
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          source: "docker-compose.prod.yml"
+          target: "/opt/ric"
 
-      # - name: Deploy to production
-      #   env:
-      #     SSH_HOST: ${{ secrets.PROD_SSH_HOST }}
-      #     SSH_USER: ${{ secrets.PROD_SSH_USER }}
-      #   run: |
-      #     ssh $SSH_USER@$SSH_HOST << 'EOF'
-      #       cd /opt/ric
-      #       export DOCKERHUB_USERNAME=${{ env.DOCKERHUB_USERNAME }}
-      #       export POSTGRES_USER=${{ secrets.POSTGRES_USER }}
-      #       export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-      #       export POSTGRES_DB=${{ secrets.POSTGRES_DB }}
-      #       docker compose pull
-      #       docker compose up -d --force-recreate
-      #       docker system prune -f
-      #     EOF
+      - name: Deploy application via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd /opt/ric
+            export ALLOWED_ORIGINS=${{ env.ALLOWED_ORIGINS }}
+            export BACKEND_PORT=${{ env.BACKEND_PORT }}
+            export FRONTEND_PORT=${{ env.FRONTEND_PORT }}
+            export NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}
+            export DATABASE_URL=${{ secrets.DATABASE_URL }}
+            mv docker-compose.prod.yml docker-compose.yml
+            docker-compose pull
+            docker-compose down
+            docker-compose up -d --build --remove-orphans
