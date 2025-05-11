@@ -43,6 +43,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { API_URL } from "@/utils/api-url";
 
 // Ceci est un composant de page avec une route dynamique
 // Le [slug] dans le nom du dossier sera disponible comme paramètre
@@ -60,7 +61,8 @@ export default function PageFilm() {
   const [openPosterDialog, setOpenPosterDialog] = useState(false);
 
   useEffect(() => {
-    const url = `http://localhost:5001/films/${slug}`;
+    const url = `${API_URL}/films/${slug}`;
+
     fetch(url)
       .then((response) => {
         if (response.ok) {

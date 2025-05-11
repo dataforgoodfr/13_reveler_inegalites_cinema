@@ -23,6 +23,7 @@ import { FestivalApiResponse } from "@/dto/festival/festival-api-response.dto";
 import { Nomination } from "@/dto/festival/nomination.dto";
 import Link from "next/link";
 import Image from "next/image";
+import { API_URL } from "@/utils/api-url";
 
 // Ceci est un composant de page avec une route dynamique
 // Le [slug] dans le nom du dossier sera disponible comme paramètre
@@ -39,7 +40,8 @@ export default function PageFilm() {
   const [activeSection, setActiveSection] = useState("Gagnants");
 
   useEffect(() => {
-    const url = `http://localhost:5001/festivals/${slug}`;
+    const url = `${API_URL}/festivals/${slug}`;
+
     fetch(url)
       .then((response) => {
         if (response.ok) {
@@ -116,7 +118,11 @@ export default function PageFilm() {
           <h1 className="hidden md:block text-4xl font-bold mb-4">{festivalData.name}</h1>
           <div>
             <p>Année de l&apos;édition</p>
-            <Select onValueChange={(value: string) => setSelectedYear(parseInt(value))}>
+            <Select
+              onValueChange={(value: string) =>
+                setSelectedYear(parseInt(value))
+              }
+            >
               <SelectTrigger className="w-[180px] bg-white text-black">
                 <SelectValue />
               </SelectTrigger>
@@ -128,7 +134,8 @@ export default function PageFilm() {
                         .flatMap((award: Award) => award.nominations)
                         .map((nomination: Nomination) =>
                           new Date(nomination.date).getFullYear()
-                        ).sort()
+                        )
+                        .sort()
                     ),
                   ].map((year: number, index: number) => (
                     <SelectItem key={index} value={year.toString()}>
@@ -151,7 +158,8 @@ export default function PageFilm() {
                 >
                   <CardHeader>
                     <CardTitle className="text-2xl text-violet-300">
-                      {typeof festivalData.festival_metrics.prizes_awarded_to_women == "number"
+                      {typeof festivalData.festival_metrics
+                        .prizes_awarded_to_women == "number"
                         ? `${festivalData.festival_metrics.prizes_awarded_to_women} %`
                         : "NC"}
                     </CardTitle>
@@ -170,7 +178,8 @@ export default function PageFilm() {
                 >
                   <CardHeader>
                     <CardTitle className="text-2xl text-violet-300">
-                      {typeof festivalData.festival_metrics.produced_by_women == "number"
+                      {typeof festivalData.festival_metrics.produced_by_women ==
+                      "number"
                         ? `${festivalData.festival_metrics.produced_by_women} %`
                         : "NC"}
                     </CardTitle>
@@ -184,7 +193,9 @@ export default function PageFilm() {
               <div>
                 <p>Récompense</p>
                 <Select
-                  onValueChange={(value: string) => setSelectedAward(parseInt(value))}
+                  onValueChange={(value: string) =>
+                    setSelectedAward(parseInt(value))
+                  }
                 >
                   <SelectTrigger className="w-full md:w-[250px] bg-white text-black wordbreak">
                     <SelectValue />
@@ -301,7 +312,8 @@ export default function PageFilm() {
                                   </strong>
                                 </Link>
                                 <p>
-                                  Réalisé par <strong>{film.director.join(', ')}</strong>
+                                  Réalisé par{" "}
+                                  <strong>{film.director.join(", ")}</strong>
                                 </p>
                                 <div className="flex flex-row gap-5 max-w-full overflow-x-auto">
                                   {film.female_representation_in_key_roles ||
