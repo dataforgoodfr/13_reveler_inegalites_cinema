@@ -31,7 +31,7 @@ Pour lancer la base de données avec le backend:
    - Seeder les données Allociné :  
    `poetry run python -m database.seed.seed_allocine_movies_details`
 
-   - Seeder les récompenses de films :  
+   - Seeder les récompenses de films (il est nécessaire de seeder les infos CNC et allociné avant):  
    `poetry run python -m database.seed.seed_film_awards`
 
 * OPTION 2 - seeder un sample de données pour 5 films

@@ -20,6 +20,7 @@ def seed_film_awards(filename):
             rows = list(csv.DictReader(csvfile))
             for row in tqdm(rows, total=len(rows), desc="Processing"):
                 film_title = row['title']
+                film_director = row['director']
                 country_name = row['country']
                 festival_name = row['festival']
                 year = int(row['year'])
@@ -28,7 +29,9 @@ def seed_film_awards(filename):
 
                 country = country_repository.find_or_create_country(session, country_name)
 
-                film = film_repository.get_or_create_film_by_similarity_pg_trgm(session, film_title)
+                film = film_repository.find_most_similar_film_by_director(session, film_title, film_director)
+                if not film:
+                    continue
 
                 # Contribution of a country to a film (100% by default)
                 allocation_null = float(100)
