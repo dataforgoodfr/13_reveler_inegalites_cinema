@@ -92,7 +92,7 @@ class GetFestivalDetails:
    
     def _get_festival_data(self, festival: Festival, year: str):
         female_representation_in_nominated_films = festival_metrics_calculator.calculate_female_representation_in_nominated_films(self.db, festival.id, year)
-        female_representation_in_winner_price = festival_metrics_calculator.calculate_female_representation_in_winner_price(self.db, festival.id, year)
+        female_representation_in_award_winning_films = festival_metrics_calculator.calculate_female_representation_in_award_winning_films(self.db, festival.id, year)
 
         return {
             "id": festival.id,
@@ -102,6 +102,6 @@ class GetFestivalDetails:
             "image_base64": festival.image_base64 if festival.image_base64 else None,
             "festival_metrics": {
                 "female_representation_in_nominated_films": female_representation_in_nominated_films,
-                "female_representation_in_winner_price": female_representation_in_winner_price
+                "female_representation_in_award_winning_films": female_representation_in_award_winning_films
             }
         }

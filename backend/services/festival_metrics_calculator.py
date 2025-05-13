@@ -41,7 +41,7 @@ def calculate_female_representation_in_nominated_films(session: Session, festiva
 
     return round(female_directed_count / total_films_count, 2) * 100
 
-def calculate_female_representation_in_winner_price(session: Session, festival_id: int, year: str) -> float:
+def calculate_female_representation_in_award_winning_films(session: Session, festival_id: int, year: str) -> float:
     """Calculates percentage of awards given to films with ≥1 female director in a specific year.
     """
     # Get all award wins for this festival/year
