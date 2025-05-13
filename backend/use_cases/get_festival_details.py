@@ -26,12 +26,10 @@ class GetFestivalDetails:
                 return {"error": "No award nomination found for this festival"}
 
         # Get awards for that year
-        print("year1")
-        print(year)
         festival_awards = festival_award_repository.get_festival_awards_by_id_year(self.db, festival.id, year)
         if not festival_awards:
             return {"error": f"No awards found for year {year}"}
-        print("t2")
+        
         # Determine specific award
         selected_award = None
         if award_id:
@@ -40,7 +38,6 @@ class GetFestivalDetails:
                 return {"error": f"Award ID {award_id} not found for year {year}"}
         else:
             selected_award = festival_awards[0]
-        print("t3")
 
         # Get nomination data for selected award
         nomination_data = self._get_nomination_data(selected_award.id)
@@ -49,7 +46,6 @@ class GetFestivalDetails:
             "name": selected_award.name,
             "nominations": nomination_data
         }
-        print("t4")
         # Get festival data
         festival_data = self._get_festival_data(festival, str(year))
 
