@@ -155,8 +155,8 @@ export default function PageFilm() {
                   <CardHeader>
                     <CardTitle className="text-2xl text-violet-300">
                       {typeof festivalData.festival.festival_metrics
-                        .female_representation_in_winner_price == "number"
-                        ? `${festivalData.festival.festival_metrics.female_representation_in_winner_price} %`
+                        .female_representation_in_award_winning_films == "number"
+                        ? `${festivalData.festival.festival_metrics.female_representation_in_award_winning_films} %`
                         : "NC"}
                     </CardTitle>
                     <CardDescription className="text-white">
