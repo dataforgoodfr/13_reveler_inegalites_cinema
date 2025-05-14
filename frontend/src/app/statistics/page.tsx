@@ -1,5 +1,6 @@
 "use client";
 
+import { API_URL } from "@/utils/api-url";
 import { useEffect, useState } from "react";
 
 export default function StatisticsPage() {
@@ -8,7 +9,7 @@ export default function StatisticsPage() {
   const [iFrameUrl, setIFrameUrl] = useState('');
 
   useEffect(() => {
-    const url = 'http://localhost:5001/metabase/iframe-url';
+    const url = `${API_URL}/metabase/iframe-url`;
     fetch(url)
       .then((response) => {
         if (response.ok) {

@@ -7,6 +7,7 @@ import { Input } from "../ui/input";
 import { usePathname } from "next/navigation";
 import { SearchFilmResultDto } from "@/dto/film/search-film-result.dto";
 import Image from "next/image";
+import { API_URL } from "@/utils/api-url";
 
 const Navbar = ({
   children,
@@ -28,7 +29,7 @@ const Navbar = ({
     setSearchQuery(query);
     if (query) {
       try {
-        const url = `http://localhost:5001/search?q=${query}`;
+        const url = `${API_URL}/search?q=${query}`;
         const response = await fetch(url); // Default mode (CORS enabled on backend)
 
         if (!response.ok) {
