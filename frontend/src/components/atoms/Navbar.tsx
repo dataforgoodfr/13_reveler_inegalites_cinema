@@ -226,7 +226,7 @@ const Navbar = ({
               </div>
               <div className="px-2 pb-3">
                 <Link
-                  href="/form"
+                  href="/"
                   className="block px-3 py-2 rounded-md"
                   onClick={toggleMenu}
                 >
