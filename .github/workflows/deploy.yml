@@ -68,7 +68,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "docker-compose.prod.yml"
+          source: "docker-compose.prod.yaml"
           target: "/opt/ric"
 
       - name: Deploy application via SSH
@@ -84,7 +84,7 @@ jobs:
             export FRONTEND_PORT=${{ env.FRONTEND_PORT }}
             export NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}
             export DATABASE_URL=${{ secrets.DATABASE_URL }}
-            mv docker-compose.prod.yml docker-compose.yml
+            mv docker-compose.prod.yaml docker-compose.yml
             docker-compose pull
             docker-compose down
             docker-compose up -d --build --remove-orphans
