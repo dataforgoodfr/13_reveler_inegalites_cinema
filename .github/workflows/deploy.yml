@@ -84,7 +84,9 @@ jobs:
             export FRONTEND_PORT=${{ env.FRONTEND_PORT }}
             export NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}
             export DATABASE_URL=${{ secrets.DATABASE_URL }}
+            export DOCKERHUB_USERNAME=${{ env.REGISTRY }}/${{ github.repository }}
+            echo ${{secrets.D4GTECH_TOKEN}} | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
             mv docker-compose.prod.yaml docker-compose.yml
-            docker-compose pull
-            docker-compose down
-            docker-compose up -d --build --remove-orphans
+            docker compose pull
+            docker compose down
+            docker compose up -d --build --remove-orphans
