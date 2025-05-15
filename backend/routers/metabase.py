@@ -27,5 +27,5 @@ def get_fixed_metabase_iframe_url():
     }
 
     token = jwt.encode(payload, METABASE_SECRET_KEY, algorithm="HS256")
-    iframe_url = f"{METABASE_SITE_URL}/embed/dashboard/{token}#bordered=true&titled=true"
+    iframe_url = f"{METABASE_SITE_URL}/embed/dashboard/{token}#theme=night&background=false&bordered=false&titled=false"
     return {"iframe_url": iframe_url}
