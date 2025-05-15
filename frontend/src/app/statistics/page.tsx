@@ -46,6 +46,7 @@ export default function StatisticsPage() {
   return (
     <main className="flex flex-col items-center justify-center bg-gray-950 text-white">
       <div className="p-10 pt-40 w-full">
+        <h1 className="pl-5 text-4xl font-bold">Statistiques</h1>
         <iframe
           src={iFrameUrl}
           width="100%"
