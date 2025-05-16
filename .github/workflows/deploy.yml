@@ -79,13 +79,15 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /opt/ric
-            export ALLOWED_ORIGINS=${{ vars.ALLOWED_ORIGINS }}
-            export BACKEND_PORT=${{ vars.BACKEND_PORT }}
-            export FRONTEND_PORT=${{ vars.FRONTEND_PORT }}
-            export NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
-            export DATABASE_URL=${{ secrets.DATABASE_URL }}
-            export DOCKERHUB_USERNAME=${{ env.REGISTRY }}/${{ github.repository }}
-            echo ${{secrets.D4GTECH_TOKEN}} | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+            # ⚠️ Create .env file dynamically with correct values
+            echo "ALLOWED_ORIGINS=${{ vars.ALLOWED_ORIGINS }}" > .env
+            echo "BACKEND_PORT=${{ vars.BACKEND_PORT }}" >> .env
+            echo "FRONTEND_PORT=${{ vars.FRONTEND_PORT }}" >> .env
+            echo "NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}" >> .env
+            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+            echo "DOCKERHUB_USERNAME=${{ env.REGISTRY }}/${{ github.repository }}" >> .env
+
+            echo ${{ secrets.D4GTECH_TOKEN }} | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
             mv docker-compose.prod.yaml docker-compose.yml
             docker compose pull
             docker compose down
