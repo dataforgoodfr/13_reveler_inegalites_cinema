@@ -16,7 +16,7 @@ pandas = "^2.2.3"
 fastapi = "^0.115.11"
 uvicorn = "^0.34.0"
 sqlalchemy = "^2.0.38"
-psycopg = "^3.2.5"
+psycopg = {extras = ["binary"], version = "^3.2.9"}
 alembic = "^1.15.1"
 python-dotenv = "^1.0.1"
 beautifulsoup4 = "^4.13.3"

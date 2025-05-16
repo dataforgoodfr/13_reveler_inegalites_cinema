@@ -11,7 +11,7 @@ WORKDIR /backend
 
 COPY ./pyproject.toml ./poetry.lock ./
 
-RUN poetry export -f requirements.txt --without-hashes --output requirements.txt
+RUN poetry export -f requirements.txt --without-hashes --extras "binary" --output requirements.txt
 
 COPY . .
 
