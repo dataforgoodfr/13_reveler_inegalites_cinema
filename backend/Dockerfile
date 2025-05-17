@@ -1,23 +1,62 @@
-# Use the official Python 3.9 image as the base image
-FROM python:3.10
+# TODO: upgrade to python:3.12 or python:3.13 
+# 3.10 contains security vulnerabilities
+FROM python:3.10 AS builder
+
+# set it to 'development' or 'production' in docker-compose.yml
+# default is 'production'
+# to override, modify the docker-compose.yml file
+# or pass --build-arg ENV=development
+# ex of docker-compose.yml:
+# build:
+#   context: .
+#   dockerfile: backend/Dockerfile
+#   args:
+#     ENV=development
+ARG ENV=production
 
 # Install Poetry
 RUN pip install poetry
 
 # Disable venvs for Docker
-ENV POETRY_VIRTUALENVS_CREATE=false
+ENV POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_IN_PROJECT=1 \
+    POETRY_VIRTUALENVS_CREATE=1 \
+    POETRY_CACHE_DIR=/tmp/poetry_cache
 
 # Set the working directory in the container
-WORKDIR /backend
+WORKDIR /app
 
 # Copy the working directory contents into the container
-COPY . /backend
+COPY pyproject.toml poetry.lock /app/
 
 # Install the dependencies using Poetry
-RUN poetry install
+RUN if [ $ENV = 'production' ] ; then poetry install --no-root --without dev; else poetry install --no-root; fi; \
+       rm -rf /root/.cache/pip \
+    && rm -rf $POETRY_CACHE_DIR
+
+# TODO: upgrade to python:3.12 or python:3.13
+# 3.10 contains security vulnerabilities
+FROM python:3.10-slim AS runtime
+
+# install required system packages for psycopg2
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libpq-dev \
+    libffi-dev \
+    libssl-dev \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV VIRTUAL_ENV=/app/.venv 
+
+COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+
+COPY ./backend /app/backend/
+COPY ./database /app/database/
+
+RUN chmod +x /app/backend/entrypoint.sh
 
 # Expose the port the backend runs on (adjust the port as needed)
 EXPOSE 5001
 
-# Command to run your backend (adjust with your specific entry point)
-CMD ["poetry", "run", "uvicorn", "backend.main:backend", "--host", "0.0.0.0", "--port", "5001", "--reload"]
+ENTRYPOINT [ "/bin/bash", "-c", "/app/backend/entrypoint.sh" ]
