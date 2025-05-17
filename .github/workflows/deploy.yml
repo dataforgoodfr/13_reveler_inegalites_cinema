@@ -59,6 +59,8 @@ jobs:
           context: ./frontend
           file: ./frontend/Dockerfile.prod
           push: true
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
           tags: ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.IMAGE_NAME_FRONTEND }}:latest
           labels: ${{ steps.meta.outputs.labels }}
 
