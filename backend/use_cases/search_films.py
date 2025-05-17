@@ -22,7 +22,7 @@ class SearchFilms:
                 "id": film.id,
                 "title": film.original_name,
                 "image": film.poster[0].image_base64 if film.poster else None,
-                "year": film.release_date.year,
+                "year": film.release_date.year if film.release_date else None,
                 "directors": film_repository.get_individual_directors_for_film(self.db, film.id)
             }
             for film in films
