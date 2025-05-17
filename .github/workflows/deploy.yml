@@ -94,6 +94,9 @@ jobs:
             echo "NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}" >> .env
             echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
             echo "DOCKERHUB_USERNAME=${{ env.REGISTRY }}/${{ github.repository }}" >> .env
+            echo "METADATA_URL=${{ secrets.METADATA_URL }}" >> .env
+            echo "METABASE_SECRET_KEY=${{ secrets.METABASE_SECRET_KEY }}" >> .env
+            echo "METABASE_DASHBOARD_ID=${{ secrets.METABASE_DASHBOARD_ID }}" >> .env
 
             echo ${{ secrets.D4GTECH_TOKEN }} | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
             mv docker-compose.prod.yaml docker-compose.yml
