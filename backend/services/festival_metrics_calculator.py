@@ -50,7 +50,7 @@ def calculate_female_representation_in_award_winning_films(session: Session, fes
         .join(FestivalAward, FestivalAward.id == AwardNomination.award_id)
         .filter(
             FestivalAward.festival_id == festival_id,
-            AwardNomination.is_winner is True,
+            AwardNomination.is_winner == True,
             cast(extract('year', AwardNomination.date), String) == year
         )
         .all()
