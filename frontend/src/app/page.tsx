@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -20,7 +21,9 @@ export default function Home() {
               <span className="text-violet-500">femmes</span>
             </span>
           </div>
-          <Button className="bg-violet-500">En savoir plus</Button>
+          <Link href="/statistics">
+            <Button className="bg-violet-500">Voir les statistiques</Button>
+          </Link>
         </div>
       </main>
     </>

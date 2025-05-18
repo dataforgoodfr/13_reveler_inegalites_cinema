@@ -152,7 +152,7 @@ const Navbar = ({
                   >
                     <Image src="/search.svg" alt="Rechercher" height={36} width={36} />
                   </button>
-                  <Link href="/dashboard" className="px-3 py-2 rounded-md">
+                  <Link href="/" className="px-3 py-2 rounded-md">
                     <Button className="cursor-pointer">Donnez nous votre avis 💬</Button>
                   </Link>
                 </div>
@@ -226,7 +226,7 @@ const Navbar = ({
               </div>
               <div className="px-2 pb-3">
                 <Link
-                  href="/dashboard"
+                  href="/"
                   className="block px-3 py-2 rounded-md"
                   onClick={toggleMenu}
                 >
