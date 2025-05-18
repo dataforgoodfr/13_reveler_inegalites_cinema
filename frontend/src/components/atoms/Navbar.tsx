@@ -86,14 +86,20 @@ const Navbar = ({
                       }} // Réinitialiser la recherche après un clic
                     >
                       <div className="flex text-white hover:text-black relative">
-                        <Image
-                          loader={() => film.image}
-                          src={film.image}
-                          alt={film.title}
-                          className="w-16 h-24 object-cover rounded-md mr-2"
-                          width={32}
-                          height={48}
-                        />
+                        {film.image && film.image !== "" ? (
+                          <Image
+                            loader={() => film.image}
+                            src={film.image}
+                            alt={film.title}
+                            className="w-16 h-24 object-cover rounded-md mr-2"
+                            width={32}
+                            height={48}
+                          />
+                        ) : (
+                          <div className="w-16 h-24 flex items-center justify-center bg-zinc-800 text-white text-xs rounded-md mr-2">
+                            Affiche non disponible
+                          </div>
+                        )}
                         <div className="flex flex-col">
                           <span>
                             <strong className="text-xl">{film.title}</strong> (
@@ -137,23 +143,39 @@ const Navbar = ({
               {/* Menu desktop */}
               <div className="hidden md:block">
                 <div className="ml-10 flex items-center space-x-4">
-                  <Link href="/" className="px-3 py-2 rounded-md cursor-pointer">
+                  <Link
+                    href="/"
+                    className="px-3 py-2 rounded-md cursor-pointer"
+                  >
                     Accueil
                   </Link>
-                  <Link href="/statistics" className="px-3 py-2 rounded-md cursor-pointer">
+                  <Link
+                    href="/statistics"
+                    className="px-3 py-2 rounded-md cursor-pointer"
+                  >
                     Statistiques
                   </Link>
-                  <Link href="/about" className="px-3 py-2 rounded-md cursor-pointer">
+                  <Link
+                    href="/about"
+                    className="px-3 py-2 rounded-md cursor-pointer"
+                  >
                     À propos
                   </Link>
                   <button
                     className="px-3 py-2 rounded-md cursor-pointer"
                     onClick={() => setIsSearching(!isSearching)}
                   >
-                    <Image src="/search.svg" alt="Rechercher" height={36} width={36} />
+                    <Image
+                      src="/search.svg"
+                      alt="Rechercher"
+                      height={36}
+                      width={36}
+                    />
                   </button>
                   <Link href="/" className="px-3 py-2 rounded-md">
-                    <Button className="cursor-pointer">Donnez nous votre avis 💬</Button>
+                    <Button className="cursor-pointer">
+                      Donnez nous votre avis 💬
+                    </Button>
                   </Link>
                 </div>
               </div>

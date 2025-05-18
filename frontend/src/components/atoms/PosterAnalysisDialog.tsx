@@ -25,6 +25,8 @@ const PosterAnalysisDialog = ({
   nonWhiteVisibleRatioOnPoster?: number;
 }) => {
   const isMobile: boolean = useMediaQuery("(max-width: 768px)");
+  const safeImageSource =
+    imageSource && imageSource !== "" ? imageSource : undefined;
 
   if (isMobile) {
     return (
@@ -47,16 +49,28 @@ const PosterAnalysisDialog = ({
                       className="relative w[300px]"
                       style={{
                         backgroundColor: "rgba(30, 30, 30, 0.8)",
+                        width: 300,
+                        height: 380,
+                        minHeight: 380,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
                     >
-                      <Image
-                        loader={() => imageSource}
-                        style={{ height: "fit-content" }}
-                        src={imageSource}
-                        alt="Affiche"
-                        width={300}
-                        height={0}
-                      />
+                      {safeImageSource ? (
+                        <Image
+                          loader={() => safeImageSource}
+                          style={{ height: "fit-content" }}
+                          src={safeImageSource}
+                          alt="Affiche"
+                          width={300}
+                          height={0}
+                        />
+                      ) : (
+                        <span className="text-white">
+                          Affiche non disponible
+                        </span>
+                      )}
                       <div className="absolute inset-0 bg-black/60"></div>
                       <div className="absolute bottom-0 flex flex-col p-2 text-left font-bold break-words w-full">
                         <span className="text-violet-500 text-6xl">
@@ -77,16 +91,28 @@ const PosterAnalysisDialog = ({
                       className="relative w[300px]"
                       style={{
                         backgroundColor: "rgba(30, 30, 30, 0.8)",
+                        width: 300,
+                        height: 380,
+                        minHeight: 380,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
                     >
-                      <Image
-                        loader={() => imageSource}
-                        style={{ height: "fit-content" }}
-                        src={imageSource}
-                        alt="Affiche"
-                        width={300}
-                        height={0}
-                      />
+                      {safeImageSource ? (
+                        <Image
+                          loader={() => safeImageSource}
+                          style={{ height: "fit-content" }}
+                          src={safeImageSource}
+                          alt="Affiche"
+                          width={300}
+                          height={0}
+                        />
+                      ) : (
+                        <span className="text-white">
+                          Affiche non disponible
+                        </span>
+                      )}
                       <div className="absolute inset-0 bg-black/60"></div>
                       <div className="absolute bottom-0 flex flex-col p-2 text-left font-bold break-words w-full">
                         <span className="text-violet-500 text-6xl">
@@ -127,16 +153,32 @@ const PosterAnalysisDialog = ({
                       className="relative"
                       style={{
                         backgroundColor: "rgba(30, 30, 30, 0.8)",
+                        width: 300,
+                        height: 380,
+                        minHeight: 380,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
                     >
-                      <Image
-                        loader={() => imageSource}
-                        style={{ height: "fit-content", objectFit: "cover", maxHeight: "50vh" }}
-                        src={imageSource}
-                        alt="Affiche"
-                        width={300}
-                        height={0}
-                      />
+                      {safeImageSource ? (
+                        <Image
+                          loader={() => safeImageSource}
+                          style={{
+                            height: "fit-content",
+                            objectFit: "cover",
+                            maxHeight: "50vh",
+                          }}
+                          src={safeImageSource}
+                          alt="Affiche"
+                          width={300}
+                          height={0}
+                        />
+                      ) : (
+                        <span className="text-white">
+                          Affiche non disponible
+                        </span>
+                      )}
                       <div className="absolute inset-0 bg-black/60"></div>
                       <div className="absolute bottom-0 flex flex-col p-2">
                         <span className="text-violet-500 text-left text-6xl font-bold">
@@ -155,16 +197,32 @@ const PosterAnalysisDialog = ({
                       className="relative"
                       style={{
                         backgroundColor: "rgba(30, 30, 30, 0.8)",
+                        width: 300,
+                        height: 380,
+                        minHeight: 380,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
                     >
-                      <Image
-                        loader={() => imageSource}
-                        style={{ height: "fit-content", objectFit: "cover", maxHeight: "50vh" }}
-                        src={imageSource}
-                        alt="Affiche"
-                        width={300}
-                        height={0}
-                      />
+                      {safeImageSource ? (
+                        <Image
+                          loader={() => safeImageSource}
+                          style={{
+                            height: "fit-content",
+                            objectFit: "cover",
+                            maxHeight: "50vh",
+                          }}
+                          src={safeImageSource}
+                          alt="Affiche"
+                          width={300}
+                          height={0}
+                        />
+                      ) : (
+                        <span className="text-white">
+                          Affiche non disponible
+                        </span>
+                      )}
                       <div className="absolute inset-0 bg-black/60"></div>
                       <div className="absolute bottom-0 flex flex-col p-2">
                         <span className="text-violet-500 text-left text-6xl font-bold">
