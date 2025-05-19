@@ -46,15 +46,7 @@ const PosterAnalysisDialog = ({
                 <CarouselItem>
                   <div className="w-full flex justify-center">
                     <div
-                      className="relative w[300px]"
-                      style={{
-                        backgroundColor: "rgba(30, 30, 30, 0.8)",
-                        width: 300,
-                        height: 380,
-                        minHeight: 380,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                      className="relative flex items-center justify-center bg-[rgba(30, 30, 30, 0.8)] w-[300px] h-[380px] min-h-[380px]"
                       }}
                     >
                       {safeImageSource ? (
