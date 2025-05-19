@@ -104,7 +104,7 @@ export default function PageFilm() {
             />
           ) : (
             <div
-              className="flex items-center justify-center bg-zinc-800 text-white text-center rounded-lg mb-4"
+              className="flex items-center justify-center bg-zinc-800 text-white text-center rounded-lg mb-4 w-[300px] h-[380px] min-h-[380px]"
               style={{ width: 300, height: 380, minHeight: 380 }}
             >
               <span>Affiche non disponible</span>
