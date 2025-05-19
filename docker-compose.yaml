@@ -32,7 +32,8 @@ services:
       - .env
     environment:
       - PYTHONUNBUFFERED=1 # Ensures unbuffered output (useful for logging)
-      - DATABASE_URL=postgresql+psycopg://postgres:postgres@db:5432/ric_db
+      - DATABASE_URL
+      - ALLOWED_ORIGINS
       - METABASE_SITE_URL
       - METABASE_SECRET_KEY
       - METABASE_DASHBOARD_ID
@@ -49,8 +50,8 @@ services:
       - ./frontend:/app
       - frontend-node-modules:/app/node_modules
     environment:
-      - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://localhost:5001
+      - ENV
+      - NEXT_PUBLIC_API_URL
     depends_on:
       - backend
 
