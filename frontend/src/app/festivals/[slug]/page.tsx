@@ -92,7 +92,8 @@ export default function PageFilm() {
     <main className="p-5 pt-20 bg-zinc-800 text-white min-h-screen">
       <div className="flex flex-col md:items-center md:items-start md:flex-row gap-10">
         <div className="flex flex-col gap-10 w-full md:w-1/4">
-          {festivalData.festival.image_base64 && (
+          {festivalData.festival.image_base64 &&
+          festivalData.festival.image_base64.trim() !== "" ? (
             <Image
               loader={() => festivalData.festival.image_base64}
               style={{ height: "fit-content" }}
@@ -101,6 +102,13 @@ export default function PageFilm() {
               width={300}
               height={0}
             />
+          ) : (
+            <div
+              className="flex items-center justify-center bg-zinc-800 text-white text-center rounded-lg mb-4 w-[300px] h-[380px] min-h-[380px]"
+              style={{ width: 300, height: 380, minHeight: 380 }}
+            >
+              <span>Affiche non disponible</span>
+            </div>
           )}
           <h1 className="md:hidden text-4xl font-bold">
             {festivalData.festival.name}
@@ -155,7 +163,8 @@ export default function PageFilm() {
                   <CardHeader>
                     <CardTitle className="text-2xl text-violet-300">
                       {typeof festivalData.festival.festival_metrics
-                        .female_representation_in_award_winning_films == "number"
+                        .female_representation_in_award_winning_films ==
+                      "number"
                         ? `${festivalData.festival.festival_metrics.female_representation_in_award_winning_films} %`
                         : "NC"}
                     </CardTitle>
@@ -270,13 +279,41 @@ export default function PageFilm() {
                             <div
                               className="absolute inset-0"
                               style={{
-                                backgroundImage: `url(${film.poster_image_base64})`,
-                                backgroundSize: "cover",
-                                backgroundPosition: "center",
-                                backgroundRepeat: "no-repeat",
+                                backgroundImage:
+                                  film.poster_image_base64 &&
+                                  film.poster_image_base64.trim() !== ""
+                                    ? `url(${film.poster_image_base64})`
+                                    : undefined,
+                                backgroundSize:
+                                  film.poster_image_base64 &&
+                                  film.poster_image_base64.trim() !== ""
+                                    ? "cover"
+                                    : undefined,
+                                backgroundPosition:
+                                  film.poster_image_base64 &&
+                                  film.poster_image_base64.trim() !== ""
+                                    ? "center"
+                                    : undefined,
+                                backgroundRepeat:
+                                  film.poster_image_base64 &&
+                                  film.poster_image_base64.trim() !== ""
+                                    ? "no-repeat"
+                                    : undefined,
                                 zIndex: 0,
+                                backgroundColor:
+                                  !film.poster_image_base64 ||
+                                  film.poster_image_base64.trim() === ""
+                                    ? "#27272a"
+                                    : undefined,
                               }}
-                            ></div>
+                            >
+                              {!film.poster_image_base64 ||
+                              film.poster_image_base64.trim() === "" ? (
+                                <div className="flex items-center justify-center h-full text-white text-center">
+                                  Affiche non disponible
+                                </div>
+                              ) : null}
+                            </div>
                             <div
                               className="absolute inset-0"
                               style={{
@@ -284,14 +321,23 @@ export default function PageFilm() {
                               }}
                             ></div>
                             <div className="z-1 mt-4 flex flex-row gap-10 overflow-x-auto">
-                              <Image
-                                loader={() => film.poster_image_base64}
-                                style={{ height: "fit-content" }}
-                                src={film.poster_image_base64.trim()}
-                                alt="Affiche"
-                                width={150}
-                                height={0}
-                              />
+                              {film.poster_image_base64 &&
+                              film.poster_image_base64.trim() !== "" ? (
+                                <Image
+                                  loader={() => film.poster_image_base64}
+                                  style={{ height: "fit-content" }}
+                                  src={film.poster_image_base64.trim()}
+                                  alt="Affiche"
+                                  width={150}
+                                  height={0}
+                                />
+                              ) : (
+                                <div
+                                  className="flex items-center justify-center bg-zinc-800 text-white text-center rounded-lg w-[150px] h-[200px] min-h-[200px]"
+                                >
+                                  <span>Affiche non disponible</span>
+                                </div>
+                              )}
                               <div className="text-white w-full overflow-x-auto">
                                 <Link href={`/films/${film.id}`}>
                                   <strong className="text-2xl">
@@ -383,8 +429,3 @@ export default function PageFilm() {
     </main>
   );
 }
-
-// Note: Dans Next.js 13+ avec le répertoire app :
-// - Les fichiers nommés page.tsx dans un dossier deviennent automatiquement des routes
-// - Le dossier [slug] crée un segment de route dynamique
-// - Le paramètre sera accessible via le hook useParams()
