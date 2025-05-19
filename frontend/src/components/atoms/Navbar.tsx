@@ -134,7 +134,7 @@ const Navbar = ({
             >
               <Link href="/" className="font-bold text-xl">
                 Observatoire de l’inclusion et de l’équité dans l’industrie du
-                cinéma
+                cinéma, par le Collectif 50/50 et Data For Good
               </Link>
             </div>
           )}

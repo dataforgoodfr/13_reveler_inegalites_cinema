@@ -8,7 +8,7 @@ export default function Home() {
         className="background-image"
         style={
           {
-            "--background-image-url": `url('/home.jpeg')`,
+            "--background-image-url": `url('/home.jpg')`,
           } as React.CSSProperties
         }
       ></div>
@@ -16,8 +16,8 @@ export default function Home() {
         <div className=" animate-slide-up">
           <div className="pt-30 pb-5">
             <span className="text-6xl font-bold w-3/4">
-              <span className="text-violet-500">27%</span>
-              <span> des réalisateurs actifs ces 10 dernières années sont des </span>
+              <span className="text-violet-500">29%</span>
+              <span> des réalisateur·rices actifs·ves ces 10 dernières années sont des </span>
               <span className="text-violet-500">femmes</span>
             </span>
           </div>

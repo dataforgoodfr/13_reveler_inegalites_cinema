@@ -32,7 +32,7 @@ export default function PageAbout() {
         className="background-image"
         style={
           {
-            "--background-image-url": `url('/home.jpeg')`,
+            "--background-image-url": `url('/home.jpg')`,
           } as React.CSSProperties
         }
       ></div>
