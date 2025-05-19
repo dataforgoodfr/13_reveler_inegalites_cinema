@@ -38,7 +38,7 @@ const Navbar = ({
         }
 
         const data: SearchFilmResultDto[] = await response.json();
-        setFilteredFilms(data.map(dat => {return {...dat, directors: ['alexandre de la patellière']}}));
+        setFilteredFilms(data);
       } catch (error) {
         console.error("Erreur lors de la recherche :", error);
       }
