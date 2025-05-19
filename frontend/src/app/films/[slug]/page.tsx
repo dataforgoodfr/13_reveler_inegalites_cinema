@@ -215,7 +215,7 @@ export default function PageFilm() {
               style={{ opacity: 0.8 }}
               onClick={() => setOpenShareDialog(true)}
             >
-              <Image src="/share.svg" alt="Rechercher" width={24} height={24} />
+              <Image src="/share.svg" alt="Partager" width={24} height={24} />
             </Button>
           </div>
           <div className="flex absolute md:hidden flex-col gap-2 bottom-2 right-2 text-black">
