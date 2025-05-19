@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation";
 import { SearchFilmResultDto } from "@/dto/film/search-film-result.dto";
 import Image from "next/image";
 import { API_URL } from "@/utils/api-url";
+import { nameToUpperCase } from "@/utils/name-to-uppercase";
 
 const Navbar = ({
   children,
@@ -36,8 +37,8 @@ const Navbar = ({
           throw new Error(`Erreur HTTP ! statut : ${response.status}`);
         }
 
-        const data = await response.json();
-        setFilteredFilms(data);
+        const data: SearchFilmResultDto[] = await response.json();
+        setFilteredFilms(data.map(dat => {return {...dat, directors: ['alexandre de la patellière']}}));
       } catch (error) {
         console.error("Erreur lors de la recherche :", error);
       }
@@ -114,7 +115,7 @@ const Navbar = ({
                           </span>
                           <span>
                             Réalisé par{" "}
-                            <strong>{film.directors.join(", ")}</strong>
+                            <strong>{film.directors.map(nameToUpperCase).join(", ")}</strong>
                           </span>
                         </div>
                       </div>
