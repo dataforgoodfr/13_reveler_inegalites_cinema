@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func, distinct, extract, cast, String
+from sqlalchemy import func, distinct, extract, cast, String, true
 from database.models import (
     AwardNomination,
     FestivalAward,
@@ -50,7 +50,7 @@ def calculate_female_representation_in_award_winning_films(session: Session, fes
         .join(FestivalAward, FestivalAward.id == AwardNomination.award_id)
         .filter(
             FestivalAward.festival_id == festival_id,
-            AwardNomination.is_winner is True,
+            AwardNomination.is_winner.is_(true()),
             cast(extract('year', AwardNomination.date), String) == year
         )
         .all()

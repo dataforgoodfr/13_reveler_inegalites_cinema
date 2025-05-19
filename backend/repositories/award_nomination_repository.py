@@ -17,11 +17,14 @@ def find_or_create_award_nomination(session: Session, film_id: int, award_id: in
         session.flush()
     return nomination
 
-def get_award_nominations_by_award_id(session: Session, award_id: int) -> List[AwardNomination]:
+def get_award_nominations_by_award_id(session: Session, award_id: int, year: int) -> List[AwardNomination]:
     """
     Returns a list of nominations associated with a given festival award.
     """
-    return session.query(AwardNomination).filter_by(award_id=award_id).all()
+    return session.query(AwardNomination).filter(
+        AwardNomination.award_id == award_id,
+        extract('year', AwardNomination.date) == year
+    ).all()
 
 def get_years_with_awards(session: Session, festival_id: int) -> List[int]:
     """Get the list of years where the festival has at least one award."""

@@ -40,7 +40,7 @@ class GetFestivalDetails:
             selected_award = festival_awards[0]
 
         # Get nomination data for selected award
-        nomination_data = self._get_nomination_data(selected_award.id)
+        nomination_data = self._get_nomination_data(selected_award.id, year)
         award_data = {
             "award_id": selected_award.id,
             "name": selected_award.name,
@@ -66,8 +66,8 @@ class GetFestivalDetails:
             "available_awards": available_awards
         }
 
-    def _get_nomination_data(self, award_id: int):
-        nominations = award_nomination_repository.get_award_nominations_by_award_id(self.db, award_id)
+    def _get_nomination_data(self, award_id: int, year: int):
+        nominations = award_nomination_repository.get_award_nominations_by_award_id(self.db, award_id, year)
         nomination_data = []
         for nomination in nominations:
             film = get_film_details.GetFilmDetails(self.db).execute(nomination.film_id)
@@ -79,8 +79,7 @@ class GetFestivalDetails:
                 "director": film_repository.get_individual_directors_for_film(self.db, film["id"]),
                 "female_representation_in_key_roles": film["metrics"]["female_representation_in_key_roles"],
                 "female_representation_in_casting": film["metrics"]["female_representation_in_casting"],
-            } 
-            
+            }
             nomination_data.append({
                 "nomination_id": nomination.id,
                 "date": nomination.date.isoformat() if nomination.date else None,
