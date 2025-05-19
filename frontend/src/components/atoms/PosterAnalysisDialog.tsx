@@ -131,9 +131,6 @@ const PosterAnalysisDialog = ({
                       className="relative"
                       style={{
                         backgroundColor: "rgba(30, 30, 30, 0.8)",
-                        width: 300,
-                        height: 380,
-                        minHeight: 380,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -153,9 +150,13 @@ const PosterAnalysisDialog = ({
                           height={0}
                         />
                       ) : (
-                        <span className="text-white">
-                          Affiche non disponible
-                        </span>
+                        <Image
+                          style={{ height: "fit-content" }}
+                          src="/placeholder_image.svg"
+                          alt="Image indisponible"
+                          width={300}
+                          height={0}
+                        />
                       )}
                       <div className="absolute inset-0 bg-black/60"></div>
                       <div className="absolute bottom-0 flex flex-col p-2">
@@ -175,9 +176,6 @@ const PosterAnalysisDialog = ({
                       className="relative"
                       style={{
                         backgroundColor: "rgba(30, 30, 30, 0.8)",
-                        width: 300,
-                        height: 380,
-                        minHeight: 380,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -197,9 +195,13 @@ const PosterAnalysisDialog = ({
                           height={0}
                         />
                       ) : (
-                        <span className="text-white">
-                          Affiche non disponible
-                        </span>
+                        <Image
+                          style={{ height: "fit-content" }}
+                          src="/placeholder_image.svg"
+                          alt="Image indisponible"
+                          width={300}
+                          height={0}
+                        />
                       )}
                       <div className="absolute inset-0 bg-black/60"></div>
                       <div className="absolute bottom-0 flex flex-col p-2">

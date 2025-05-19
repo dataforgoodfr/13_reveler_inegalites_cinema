@@ -61,6 +61,7 @@ const ShareDialog = ({
     window.open(shareLink, "_blank");
   };
   const isMobile: boolean = useMediaQuery("(max-width: 768px)");
+  const safeImageSource = imageSource && imageSource !== "" ? imageSource : undefined;
 
   if (isMobile) {
     return (
@@ -74,14 +75,24 @@ const ShareDialog = ({
           <DrawerHeader className="items-center text-center p-5 h-full">
           <DrawerTitle className="font-bold text-white">Partager le film</DrawerTitle>
           <DrawerDescription>
-            <Image
-              loader={() => imageSource}
-              style={{ height: "fit-content", maxHeight: "50vh", objectFit: "contain" }}
-              src={imageSource}
-              alt="Affiche"
-              width={257.45}
-              height={0}
-            />
+            {safeImageSource ? (
+              <Image
+                loader={() => imageSource}
+                style={{ height: "fit-content", maxHeight: "50vh", objectFit: "contain" }}
+                src={imageSource}
+                alt="Affiche"
+                width={257.45}
+                height={0}
+              />
+            ) : (
+              <Image
+                style={{ height: "fit-content" }}
+                src="/placeholder_image.svg"
+                alt="Image indisponible"
+                width={257.45}
+                height={0}
+              />
+            )}
           </DrawerDescription>
           <DrawerFooter className="flex flex-row justify-between">
             <div
@@ -135,14 +146,24 @@ const ShareDialog = ({
         <DialogHeader className="items-center text-center">
           <DialogTitle>Partager le film</DialogTitle>
           <DialogDescription>
-            <Image
-              loader={() => imageSource}
-              style={{ height: "fit-content", maxHeight: "50vh", objectFit: "contain" }}
-              src={imageSource}
-              alt="Affiche"
-              width={257.45}
-              height={0}
-            />
+            {safeImageSource ? (
+              <Image
+                loader={() => imageSource}
+                style={{ height: "fit-content", maxHeight: "50vh", objectFit: "contain" }}
+                src={imageSource}
+                alt="Affiche"
+                width={257.45}
+                height={0}
+              />
+            ) : (
+              <Image
+                style={{ height: "fit-content" }}
+                src="/placeholder_image.svg"
+                alt="Image indisponible"
+                width={257.45}
+                height={0}
+              />
+            )}
           </DialogDescription>
           <DialogFooter className="flex flex-row justify-between">
             <div

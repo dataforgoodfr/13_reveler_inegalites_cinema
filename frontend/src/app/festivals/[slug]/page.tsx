@@ -103,23 +103,27 @@ export default function PageFilm() {
               height={0}
             />
           ) : (
-            <div
-              className="flex items-center justify-center bg-zinc-800 text-white text-center rounded-lg mb-4 w-[300px] h-[380px] min-h-[380px]"
-              style={{ width: 300, height: 380, minHeight: 380 }}
-            >
-              <span>Affiche non disponible</span>
-            </div>
+            <Image
+              style={{ height: "fit-content" }}
+              src="/placeholder_image.svg"
+              alt="Image indisponible"
+              width={300}
+              height={0}
+            />
           )}
           <h1 className="md:hidden text-4xl font-bold">
             {festivalData.festival.name}
           </h1>
-          <Card className="bg-gray-950 border-0">
-            <CardHeader>
-              <CardDescription className="text-white">
-                {festivalData.festival.description}
-              </CardDescription>
-            </CardHeader>
-          </Card>
+
+          {festivalData.festival.description && 
+            <Card className="bg-gray-950 border-0">
+              <CardHeader>
+                <CardDescription className="text-white">
+                  {festivalData.festival.description}
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          }
         </div>
         <div className="md:w-3/4">
           <h1 className="hidden md:block text-4xl font-bold mb-4">
@@ -283,36 +287,14 @@ export default function PageFilm() {
                                   film.poster_image_base64 &&
                                   film.poster_image_base64.trim() !== ""
                                     ? `url(${film.poster_image_base64})`
-                                    : undefined,
-                                backgroundSize:
-                                  film.poster_image_base64 &&
-                                  film.poster_image_base64.trim() !== ""
-                                    ? "cover"
-                                    : undefined,
-                                backgroundPosition:
-                                  film.poster_image_base64 &&
-                                  film.poster_image_base64.trim() !== ""
-                                    ? "center"
-                                    : undefined,
-                                backgroundRepeat:
-                                  film.poster_image_base64 &&
-                                  film.poster_image_base64.trim() !== ""
-                                    ? "no-repeat"
-                                    : undefined,
+                                    : "url(/placeholder_image.svg)",
+                                backgroundSize: "cover",
+                                backgroundPosition: "center",
+                                backgroundRepeat: "no-repeat",
                                 zIndex: 0,
-                                backgroundColor:
-                                  !film.poster_image_base64 ||
-                                  film.poster_image_base64.trim() === ""
-                                    ? "#27272a"
-                                    : undefined,
+                                backgroundColor: "#27272a"
                               }}
                             >
-                              {!film.poster_image_base64 ||
-                              film.poster_image_base64.trim() === "" ? (
-                                <div className="flex items-center justify-center h-full text-white text-center">
-                                  Affiche non disponible
-                                </div>
-                              ) : null}
                             </div>
                             <div
                               className="absolute inset-0"
@@ -332,11 +314,13 @@ export default function PageFilm() {
                                   height={0}
                                 />
                               ) : (
-                                <div
-                                  className="flex items-center justify-center bg-zinc-800 text-white text-center rounded-lg w-[150px] h-[200px] min-h-[200px]"
-                                >
-                                  <span>Affiche non disponible</span>
-                                </div>
+                                <Image
+                                  style={{ height: "fit-content" }}
+                                  src="/placeholder_image.svg"
+                                  alt="Image indisponible"
+                                  width={150}
+                                  height={0}
+                                />
                               )}
                               <div className="text-white w-full overflow-x-auto">
                                 <Link href={`/films/${film.id}`}>
