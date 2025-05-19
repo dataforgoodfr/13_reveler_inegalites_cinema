@@ -96,8 +96,15 @@ const Navbar = ({
                             height={48}
                           />
                         ) : (
-                          <div className="w-16 h-24 flex items-center justify-center bg-zinc-800 text-white text-xs rounded-md mr-2">
-                            Affiche non disponible
+                          <div
+                            className="relative w-16 h-24 rounded-md mr-2"
+                            style={{backgroundColor: '#d0d0d0'}}
+                          >
+                            <Image
+                              src="/placeholder_image.svg"
+                              alt="Image indisponible"
+                              fill
+                            />
                           </div>
                         )}
                         <div className="flex flex-col">

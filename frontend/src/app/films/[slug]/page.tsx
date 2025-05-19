@@ -146,12 +146,13 @@ export default function PageFilm() {
               height={0}
             />
           ) : (
-            <div
-              className="flex items-center justify-center bg-zinc-800 text-white text-center rounded-lg"
-              style={{ width: 257.45, height: 380, minHeight: 380 }}
-            >
-              <span>Affiche non disponible</span>
-            </div>
+            <Image
+              style={{ height: "fit-content" }}
+              src="/placeholder_image.svg"
+              alt="Image indisponible"
+              width={257.45}
+              height={0}
+            />
           )}
           <PosterAnalysisDialog
             open={openPosterDialog}
