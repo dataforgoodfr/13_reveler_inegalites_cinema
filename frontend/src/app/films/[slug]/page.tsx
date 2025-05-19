@@ -44,6 +44,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { API_URL } from "@/utils/api-url";
+import { nameToUpperCase } from "@/utils/name-to-uppercase";
 
 // Ceci est un composant de page avec une route dynamique
 // Le [slug] dans le nom du dossier sera disponible comme paramètre
@@ -317,7 +318,7 @@ export default function PageFilm() {
               {filmData.credits?.key_roles
                 ? filmData.credits.key_roles
                     .filter((c: Credit) => c.role === "director")
-                    .map((c: Credit) => c.name)
+                    .map((c: Credit) => !c.name ? '' : c.name.split(' ').map(nameToUpperCase).join(' '))
                     .join(", ")
                 : "NC"}
             </span>
@@ -588,7 +589,7 @@ export default function PageFilm() {
                                   : "bg-violet-800"
                               }
                             >
-                              {role.name}
+                              {nameToUpperCase(role.name)}
                             </Badge>
                           ))}
                         </div>
@@ -616,7 +617,7 @@ export default function PageFilm() {
                             : "bg-violet-800"
                         }
                       >
-                        {actor.name}
+                        {nameToUpperCase(actor.name)}
                       </Badge>
                     )
                   )}

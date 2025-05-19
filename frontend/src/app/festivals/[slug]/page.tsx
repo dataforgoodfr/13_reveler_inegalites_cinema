@@ -23,6 +23,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { API_URL } from "@/utils/api-url";
 import { ReducedAward } from "@/dto/festival/reduced-award.dto";
+import { nameToUpperCase } from "@/utils/name-to-uppercase";
 
 // Ceci est un composant de page avec une route dynamique
 // Le [slug] dans le nom du dossier sera disponible comme paramètre
@@ -330,7 +331,7 @@ export default function PageFilm() {
                                 </Link>
                                 <p>
                                   Réalisé par{" "}
-                                  <strong>{film.director.join(", ")}</strong>
+                                  <strong>{film.director.map(nameToUpperCase).join(", ")}</strong>
                                 </p>
                                 <div className="flex flex-row gap-5 max-w-full overflow-x-auto">
                                   {film.female_representation_in_key_roles ||
