@@ -99,7 +99,7 @@ const Navbar = ({
                         ) : (
                           <div
                             className="relative w-16 h-24 rounded-md mr-2"
-                            style={{backgroundColor: '#d0d0d0'}}
+                            style={{ backgroundColor: "#d0d0d0" }}
                           >
                             <Image
                               src="/placeholder_image.svg"
@@ -115,7 +115,9 @@ const Navbar = ({
                           </span>
                           <span>
                             Réalisé par{" "}
-                            <strong>{film.directors.map(nameToUpperCase).join(", ")}</strong>
+                            <strong>
+                              {film.directors.map(nameToUpperCase).join(", ")}
+                            </strong>
                           </span>
                         </div>
                       </div>
@@ -133,16 +135,10 @@ const Navbar = ({
           } md:bg-transparent`}
         >
           {["/", "/statistics"].includes(pathname) && !isOpen && (
-            <div
-              className="absolute mx-16 cursor-pointer"
-              style={{
-                width: "230px",
-                paddingTop: "20px",
-              }}
-            >
+            <div className="absolute mx-16 cursor-pointer md:w-96 w-56 pt-6">
               <Link href="/" className="font-bold text-xl">
-                Observatoire de l’inclusion et de l’équité dans l’industrie du
-                cinéma, par le Collectif 50/50 et Data For Good
+                Observatoire des inégalités dans le cinéma, par le Collectif
+                50/50 et Data For Good
               </Link>
             </div>
           )}
