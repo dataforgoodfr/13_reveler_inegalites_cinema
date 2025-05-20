@@ -14,10 +14,14 @@ export default function Home() {
       ></div>
       <main className="container mx-auto px-4 py-16 flex flex-col items-center justify-center text-center text-white">
         <div className=" animate-slide-up">
-          <div className="pt-30 pb-5">
-            <span className="text-6xl font-bold w-3/4">
+          <div className="mt-30 mb-12">
+            <span className="text-5xl md:text-6xl font-bold w-3/4">
               <span className="text-violet-500">29%</span>
-              <span> des réalisateur·rices actifs·ves ces 10 dernières années sont des </span>
+              <span>
+                {" "}
+                des réalisateur·rices actifs·ves ces 10 dernières années sont
+                des{" "}
+              </span>
               <span className="text-violet-500">femmes</span>
             </span>
           </div>
