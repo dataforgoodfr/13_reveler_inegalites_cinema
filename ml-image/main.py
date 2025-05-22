@@ -1,10 +1,13 @@
 import argparse
+import cv2
+import os
+import pandas as pd
+import pickle as pkl
+import torch
+
 from datetime import datetime
 from loguru import logger
-import torch
-import cv2
 from tqdm import tqdm
-import pandas as pd
 
 from scripts import faces_clustering as faces_clus
 from scripts import filter_detections as filter_det
@@ -25,6 +28,7 @@ def load_data(source):
         data = utils.get_data_from_file(source, filetype="trailer")
         source_type = "path"
     return data, source_type
+
 
 def compute_constants(frames, mode: str = "trailer", sharpness_factor: float = 42.0, sharpness_factor_cla: float = 7.3, aspect_ratio: float = 2.478) -> tuple:
     # Compute constants for whole pipeline
@@ -80,6 +84,7 @@ def filter_detections_poster(detections, total_area, min_area, min_conf):
 
     return filtered_detections
 
+
 def filter_detections_clustering(detections, effective_area, min_area, max_area, min_conf, min_sharpness, max_z, min_mouth_opening):
     # Filter detections
 
@@ -101,6 +106,7 @@ def filter_detections_clustering(detections, effective_area, min_area, max_area,
 
     return filtered_detections
 
+
 def filter_detections_classifications(detections, min_conf, min_sharpness, max_z, min_mouth_opening):
     # Filter detections
 
@@ -117,7 +123,10 @@ def filter_detections_classifications(detections, min_conf, min_sharpness, max_z
 
     return filtered_detections
 
-def classify_faces(filtered_detections, batch_size: int, device: str, mode: str = "trailer", gender_conf_threshold: float = 1.2, age_conf_threshold: float = 1.05, ethnicity_conf_threshold: float = 1.1):
+
+def classify_faces(
+        filtered_detections, batch_size: int, device: str, mode: str = "trailer", gender_conf_threshold: float = 1.2, age_conf_threshold: float = 1.05, ethnicity_conf_threshold: float = 1.1
+        ) -> tuple[dict, list]:
     # Classify all filtered faces
 
     classifier = vision_classifiers.VisionClassifier(device=device)
@@ -145,6 +154,7 @@ def classify_faces(filtered_detections, batch_size: int, device: str, mode: str 
     
     return filtered_detections, flattened_faces
 
+
 def embed_faces(flattened_faces, batch_size, device):
     # Embed faces
 
@@ -153,6 +163,7 @@ def embed_faces(flattened_faces, batch_size, device):
         batch_size=batch_size, detected_faces=flattened_faces)
 
     return embedded_faces
+
 
 def cluster_faces(embedded_faces, model, threshold, classified_faces, method, fps, effective_area):
     # Cluster faces and aggregate predictions for each character
@@ -164,7 +175,10 @@ def cluster_faces(embedded_faces, model, threshold, classified_faces, method, fp
 
     return aggregated_estimations
 
-def main(source, num_cpu, batch_size, min_area, max_area, min_conf, min_conf_cla, min_sharpness, min_sharpness_cla, max_z, max_z_cla, min_mouth_opening, min_mouth_opening_cla, cluster_model, cluster_threshold, agr_method) -> None:
+
+def main(
+        source, movie_id, num_cpu, batch_size, min_area, max_area, min_conf, min_conf_cla, min_sharpness, min_sharpness_cla, max_z, max_z_cla, min_mouth_opening, min_mouth_opening_cla, cluster_model, cluster_threshold, agr_method, store_video, video_path
+        ) -> None:
     start_time = datetime.now()
 
     # Load data
@@ -224,6 +238,11 @@ def main(source, num_cpu, batch_size, min_area, max_area, min_conf, min_conf_cla
             face["occupied_area"] = occupied_area
             print(f"Character {id} with predicted gender: {face['gender']}, age: {face['age']}, ethnicity: {face['ethnicity']} representing {occupied_area:.2%} of the image")
 
+        # Store poster predictions in .pkl file
+        with open(f'stored_predictions/{movie_id}_poster_predictions.pkl', 'wb') as outfile :
+            pkl.dump(linked_detections, outfile)
+        outfile.close()
+
         # Draw predictions on poster
         utils.draw_predictions_on_poster(poster, linked_detections)
         print("Poster with predictions saved", datetime.now() - start_time)
@@ -263,17 +282,26 @@ def main(source, num_cpu, batch_size, min_area, max_area, min_conf, min_conf_cla
         embedded_faces, model=cluster_model, threshold=cluster_threshold, classified_faces=classified_faces, method=agr_method, fps=fps, effective_area=effective_area)
     print("Faces clustered", datetime.now() - start_time)
 
+    # Store trailer predictions in .pkl file
+    with open(f'stored_predictions/{movie_id}_trailer_predictions.pkl', 'wb') as outfile :
+        pkl.dump(aggregated_estimations, outfile)
+    outfile.close()
+
     # Store predictions on video
-    utils.store_predictions_on_video(
-        frames, aggregated_estimations, classified_faces, fps=fps, output_name='predictions_trailer.avi')  # TODO add video name
-    print("Video with predictions saved", datetime.now() - start_time)
+    if store_video :
+        utils.store_predictions_on_video(
+            frames, aggregated_estimations, classified_faces, fps=fps, output_name=f'{video_path}.avi')  # TODO add video name
+        print("Video with predictions saved", datetime.now() - start_time)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "source", type=str, help="Lien vers la fiche film allociné, chemin vers"
+        "--source", type=str, help="Lien vers la fiche film allociné, chemin vers"
         " le fichier vidéo ou vers un fichier csv pour traiter une liste de"
         " films.")
+    parser.add_argument("--column_id", type=str, default="visa_number",
+                        help="Column to use to get the identifier to save prediction outputs")
     parser.add_argument("--num_cpu", type=int, default=8,
                         help="Number of CPU threads to use")
     parser.add_argument("--batch_size", type=int, default=64,
@@ -304,24 +332,34 @@ if __name__ == '__main__':
                         default=0.92, help="Threshold for clustering faces")
     parser.add_argument("--agr_method", type=str, default="majority",
                         help="Method for aggregating predictions")
+    parser.add_argument("--store_video", action=argparse.BooleanOptionalAction,
+                        default=False, help="Store trailer with video predictions")
+    parser.add_argument("--video_path", type=str, default="stored_videos/",
+                        help="Path to store trailers with video predictions")
+    
 
     args = parser.parse_args()
-
+    os.makedirs("stored_videos", exist_ok=True)
+    os.makedirs("stored_predictions", exist_ok=True)
     # Check if the source is a url or a file
     if args.source[:4] == "http":
         logger.info("Source is a url.")
-
+        movie_id = input('Enter filename under which to store predictions (without extension) :')
         main(
-            args.source, args.num_cpu, args.batch_size, args.min_area, args.max_area, args.min_conf, args.min_conf_cla, args.min_sharpness, args.min_sharpness_cla,
-            args.max_z, args.max_z_cla, args.min_mouth_opening, args.min_mouth_opening_cla, args.cluster_model, args.cluster_threshold, args.agr_method)
+            args.source, movie_id, args.num_cpu, args.batch_size, args.min_area, args.max_area, args.min_conf, args.min_conf_cla, args.min_sharpness, args.min_sharpness_cla,
+            args.max_z, args.max_z_cla, args.min_mouth_opening, args.min_mouth_opening_cla, args.cluster_model, args.cluster_threshold, args.agr_method,
+            args.store_video, args.video_path,
+        )
 
     elif args.source[-4:] == ".csv":
         df = pd.read_csv(args.source)
         logger.info(f"Found {len(df)} films to analyze in the source csv.")
         for _, row in tqdm(df.iterrows(), total=len(df)):
             main(
-                row.allocine_url, args.num_cpu, args.batch_size, args.min_area, args.max_area, args.min_conf, args.min_conf_cla, args.min_sharpness, args.min_sharpness_cla,
-                args.max_z, args.max_z_cla, args.min_mouth_opening, args.min_mouth_opening_cla, args.cluster_model, args.cluster_threshold, args.agr_method)
+                row.allocine_url, row[args.column_id], args.num_cpu, args.batch_size, args.min_area, args.max_area, args.min_conf, args.min_conf_cla, args.min_sharpness, args.min_sharpness_cla,
+                args.max_z, args.max_z_cla, args.min_mouth_opening, args.min_mouth_opening_cla, args.cluster_model, args.cluster_threshold, args.agr_method,
+                args.store_video, args.video_path,
+            )
         logger.success(f"All films from {args.source} have been analyzed.")
     else:
         raise ValueError("Source must be a url or a file")
