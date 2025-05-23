@@ -176,6 +176,87 @@ def cluster_faces(embedded_faces, model, threshold, classified_faces, method, fp
     return aggregated_estimations
 
 
+def gather_and_save_predictions(source:pd.DataFrame) -> None :
+    """
+    Function to aggregate trailer and poster predictions in one large .csv file for later database insertion.
+    """
+    path_to_outputs = 'stored_predictions'
+    poster_predictions = [os.path.join(path_to_outputs, item) for item in os.listdir(path_to_outputs) if 'poster' in item]
+    trailer_predictions = [os.path.join(path_to_outputs, item) for item in os.listdir(path_to_outputs) if 'trailer' in item]
+    dict_poster_predictions = {
+        'visa_number' : [], 
+        'allocine_url' : [], 
+        'gender' : [], 
+        'age_min' : [], 
+        'age_max' : [], 
+        'ethnicity' : [], 
+        'poster_percentage' : []
+        }
+    dict_trailer_predictions = {
+        'visa_number' : [], 
+        'allocine_url' : [], 
+        'gender' : [], 
+        'age_min' : [], 
+        'age_max' : [], 
+        'ethnicity' : [], 
+        'time_on_screen' : [], 
+        'average_size_on_screen' : []
+        }
+    for prediction in poster_predictions :
+        with open(prediction, 'rb') as infile :
+            data = pkl.load(infile)
+        infile.close()
+        visa_number = int(prediction.split('/')[1].split('_')[0])
+        allocine_url = source[source.visa_number == visa_number].iloc[0]['allocine_url']
+        for char in data :
+            dict_poster_predictions = format_prediction_results('poster', char, allocine_url, visa_number, dict_poster_predictions)
+    df_posters = pd.DataFrame(dict_poster_predictions)
+    df_posters.to_csv('predictions_on_posters.csv', index=False)
+
+    for prediction in trailer_predictions :
+        with open(prediction, 'rb') as infile :
+            data = pkl.load(infile)
+        infile.close()
+        visa_number = int(prediction.split('/')[1].split('_')[0])
+        allocine_url = source[source.visa_number == visa_number].iloc[0]['allocine_url']
+        for char in data :
+            dict_trailer_predictions = format_prediction_results('trailer', char, allocine_url, visa_number, dict_trailer_predictions)
+    df_trailers = pd.DataFrame(dict_trailer_predictions)
+    df_trailers.to_csv('predictions_on_trailers.csv', index=False)
+
+
+def format_prediction_results(
+        mode:str, character_data:dict, allocine_url:str, visa_number:int, dict_predictions:dict
+        ) -> dict:
+    if any([item == 'unknown' for item in [character_data['age'], character_data['gender'], character_data['ethnicity']]]) :
+        dict_predictions['visa_number'].append(visa_number)
+        dict_predictions['allocine_url'].append(allocine_url)
+        dict_predictions['gender'].append('unknown')
+        dict_predictions['age_min'].append(0)
+        dict_predictions['age_max'].append(0)
+        dict_predictions['ethnicity'].append('unknown')
+        match mode :
+            case 'poster' :
+                dict_predictions['poster_percentage'].append(0.0)
+            case 'trailer' :
+                dict_predictions['time_on_screen'].append(0)
+                dict_predictions['average_size_on_screen'].append(0)
+    else :   
+        dict_predictions['visa_number'].append(visa_number)
+        dict_predictions['allocine_url'].append(allocine_url)
+        dict_predictions['gender'].append(character_data['gender'])
+        dict_predictions['age_min'].append(character_data['age'].split('-')[0])
+        dict_predictions['age_max'].append(character_data['age'].split('-')[1])
+        dict_predictions['ethnicity'].append(character_data['ethnicity'])
+        match mode :
+            case 'poster' :
+                dict_predictions['poster_percentage'].append(character_data['occupied_area'])
+            case 'trailer' :
+                dict_predictions['time_on_screen'].append(character_data['occurence'])
+                dict_predictions['average_size_on_screen'].append(character_data['area occupied'])
+    return dict_predictions
+
+
 def main(
         source, movie_id, num_cpu, batch_size, min_area, max_area, min_conf, min_conf_cla, min_sharpness, min_sharpness_cla, max_z, max_z_cla, min_mouth_opening, min_mouth_opening_cla, cluster_model, cluster_threshold, agr_method, store_video, video_path
         ) -> None:
@@ -361,5 +442,6 @@ if __name__ == '__main__':
                 args.store_video, args.video_path,
             )
         logger.success(f"All films from {args.source} have been analyzed.")
+        gather_and_save_predictions(df)
     else:
         raise ValueError("Source must be a url or a file")
