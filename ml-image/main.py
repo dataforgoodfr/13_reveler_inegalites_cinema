@@ -14,6 +14,7 @@ from scripts import filter_detections as filter_det
 from scripts import utils
 from scripts import vision_classifiers
 from scripts import vision_detection
+from scripts import evaluation_annotation 
 
 
 def load_data(source):
@@ -264,7 +265,7 @@ def format_prediction_results(
 
 
 def main(
-        source, movie_id, num_cpu, batch_size, min_area, max_area, min_conf, min_conf_cla, min_sharpness, min_sharpness_cla, max_z, max_z_cla, min_mouth_opening, min_mouth_opening_cla, cluster_model, cluster_threshold, agr_method, store_video, video_path
+        source, movie_id, num_cpu, batch_size, min_area, max_area, min_conf, min_conf_cla, min_sharpness, min_sharpness_cla, max_z, max_z_cla, min_mouth_opening, min_mouth_opening_cla, cluster_model, cluster_threshold, agr_method, store_video, video_path, mode = 'evaluate'
         ) -> None:
     start_time = datetime.now()
 
@@ -374,12 +375,19 @@ def main(
         pkl.dump(aggregated_estimations, outfile)
     outfile.close()
 
-    # Store predictions on video
-    if store_video :
-        utils.store_predictions_on_video(
-            frames, aggregated_estimations, classified_faces, fps=fps, output_name=f'{video_path}.avi')  # TODO add video name
-        print("Video with predictions saved", datetime.now() - start_time)
+    match mode:
+        case 'evaluate':
+            score_tot, score_kept_frames = evaluation_annotation.evaluate_trailer_whole_pipeline(trailer_path, aggregated_estimations)
+            print(f"Score for {trailer_path}: {score_tot:.2f} if including non kept frames, {score_kept_frames:.2f} if only kept frames")
+            return score_tot, score_kept_frames
+        case _:
+            # Store predictions on video
+            if store_video :
+                utils.store_predictions_on_video(
+                    frames, aggregated_estimations, classified_faces, fps=fps, output_name=f'{video_path}.avi')  # TODO add video name
+                print("Video with predictions saved", datetime.now() - start_time)
 
+            return aggregated_estimations
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -429,10 +437,10 @@ if __name__ == '__main__':
     os.makedirs("stored_videos", exist_ok=True)
     os.makedirs("stored_predictions", exist_ok=True)
     # Check if the source is a url or a file
-    if args.source[:4] == "http":
-        logger.info("Source is a url.")
+    if args.source[:4] == "http" or args.source[-4:] == ".mp4":
+        logger.info("Source is a url or mp4 file.")
         movie_id = input('Enter filename under which to store predictions (without extension) :')
-        main(
+        predictions = main(
             args.source, movie_id, args.num_cpu, args.batch_size, args.min_area, args.max_area, args.min_conf, args.min_conf_cla, args.min_sharpness, args.min_sharpness_cla,
             args.max_z, args.max_z_cla, args.min_mouth_opening, args.min_mouth_opening_cla, args.cluster_model, args.cluster_threshold, args.agr_method,
             args.store_video, args.video_path,
@@ -442,7 +450,7 @@ if __name__ == '__main__':
         df = pd.read_csv(args.source)
         logger.info(f"Found {len(df)} films to analyze in the source csv.")
         for _, row in tqdm(df.iterrows(), total=len(df)):
-            main(
+            predictions = main(
                 row.allocine_url, row[args.column_id], args.num_cpu, args.batch_size, args.min_area, args.max_area, args.min_conf, args.min_conf_cla, args.min_sharpness, args.min_sharpness_cla,
                 args.max_z, args.max_z_cla, args.min_mouth_opening, args.min_mouth_opening_cla, args.cluster_model, args.cluster_threshold, args.agr_method,
                 args.store_video, args.video_path,

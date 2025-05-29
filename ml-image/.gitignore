@@ -1,5 +1,6 @@
 models/*
 example/*
 grid_search_generator.py
-main_grid.py
 grid_search.json
+gridsearch.py
+scripts/evaluation_trailers/*

@@ -105,10 +105,13 @@ class FacesClustering:
                         occurence = len(persons)/fps
                         area_occupied = float(sum([np.abs(x1 - x2) * np.abs(y1 - y2)
                                                    for (x1, y1, x2, y2) in [person["bbox"] for person in persons]])/(total_area*len(persons)))
-                        persons_id = [person["person_id"]
+                        frames_id = [person["frame_id"]
                                       for person in persons]
+                        persons_bboxes = [person["bbox"]
+                                        for person in persons]
+                        frames_to_bboxes = dict(zip(frames_id, persons_bboxes))
                         aggregated_persons.append({"age": aggregated_age, "gender": aggregated_gender, "ethnicity": aggregated_ethnicity,
-                                                   "occurence": occurence, "area occupied": area_occupied, "label": final_label, "persons_id": persons_id})
+                                                   "occurence": occurence, "area occupied": area_occupied, "label": final_label, "frames_bboxes": frames_to_bboxes})
                         print(f"Character {final_label} : {occurence:.2f} seconds on screen, {len(persons) / total_persons * 100:.2f}% of the total, age: {aggregated_age}, gender: {aggregated_gender}, ethnicity: {aggregated_ethnicity}")
                     case _:
                         raise ValueError(f"Method  {method} not supported")

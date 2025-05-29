@@ -7,7 +7,7 @@ import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
-from scripts.utils import ImageDataset
+from .utils import ImageDataset
 
 
 class VisionDetection:
@@ -47,8 +47,12 @@ class VisionDetection:
         if len(images.shape) != 4:  # Ensure batch format: [N, H, W, C]
             raise ValueError("Input images must have shape [H, W, C] or [N, H, W, C]")
 
+        def bgr_to_rgb(image):
+            return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
         # Define transformations
         frames_transform = transforms.Compose([
+            transforms.Lambda(lambda img: bgr_to_rgb(img)),
             transforms.ToTensor(),
             # Resize for YOLO model
             transforms.Resize((self.H_resized, self.W_resized)),
@@ -89,6 +93,7 @@ class VisionDetection:
         # Rescaling factors determination
         scale_x = W_original / self.W_resized
         scale_y = H_original / self.H_resized
+
         detections = []
         for k, area in enumerate(areas_of_interest):
             for i in range(len(area.boxes)):

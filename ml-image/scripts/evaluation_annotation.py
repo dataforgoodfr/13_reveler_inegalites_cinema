@@ -3,16 +3,15 @@ import numpy as np
 import os
 import pickle as pkl
 import psutil
-import vision_classifiers
-import vision_detection
+from .vision_classifiers import VisionClassifier
+from .vision_detection import VisionDetection
 
 from copy import deepcopy
 from PIL import Image, ImageDraw, ImageFont
-from utils import frame_capture
-
+from .utils import frame_capture
 
 def get_frames(trailer_path: str) -> None:
-    frames = frame_capture(trailer_path)
+    (frames, fps) = frame_capture(trailer_path)
     height, width, _ = frames[0].shape
     for i in range(len(frames)):
         frame = frames[i]
@@ -32,19 +31,19 @@ def get_frames(trailer_path: str) -> None:
     video.release()
 
 
-def get_vision_modules() -> tuple[vision_detection.VisionDetection, vision_classifiers.VisionClassifier]:
-    visiondetector = vision_detection.VisionDetection()
-    visionclassifier = vision_classifiers.VisionClassifier()
+def get_vision_modules() -> tuple[VisionDetection, VisionClassifier]:
+    visiondetector = VisionDetection()
+    visionclassifier = VisionClassifier()
     return visiondetector, visionclassifier
 
 
 def sample_frames(indices: list, trailer_path: str) -> tuple[list, list]:
-    frames = frame_capture(trailer_path)
+    (frames, fps) = frame_capture(trailer_path)
     subframes = frames[indices, :, :, :]
     return subframes
 
 
-def get_faces(subframes: np.ndarray, vision_detector: vision_detection.VisionDetection) -> list:
+def get_faces(subframes: np.ndarray, vision_detector: VisionDetection) -> list:
     detections = vision_detector.crop_areas_of_interest(
         images=subframes, H_original=subframes.shape[1], W_original=subframes.shape[2])
     return detections
@@ -196,7 +195,7 @@ def evaluate_trailer(trailer_directory: str, evaluation_type: str = 'binary') ->
 
         frame_scores.extend(score_evaluation(
             frame_annotations, evaluation_type))
-    return np.mean(frame_scores)
+    return np.mean(frame_scores[0,:]), np.mean(frame_scores[1,:])
 
 
 def score_evaluation(frame_annotations: dict, evaluation_type: str = 'binary') -> list:
@@ -220,26 +219,62 @@ def score_evaluation(frame_annotations: dict, evaluation_type: str = 'binary') -
     rev_ethnicity_labels = {
         ethnicity_labels[key]: key for key in sorted(ethnicity_labels)}
 
-    annotation_scores = []
+    annotation_scores = np.zeros((0, 2))
     keys = ['age', 'gender', 'ethnicity']
     feat_dicts = [rev_age_labels, rev_gender_labels, rev_ethnicity_labels]
     for annotation in frame_annotations.values():
-        score = 0
+        score_tot = 0
+        score_kept_frames = 0
         for key, feat_dict in zip(keys, feat_dicts, strict=False):
-            if annotation[key] == annotation[f'predicted_{key}']:
-                score += 0
-            else:
+            if f'predicted_{key}' not in annotation:
+                score_tot += 1
+            elif annotation[key] != annotation[f'predicted_{key}']:
                 match evaluation_type:
                     case 'binary':
-                        score += 1
+                        score_kept_frames += 1
+                        score_tot += 1
                     case _:
                         annot_idx = feat_dict[annotation[key]]
-                        score += 1 - \
+                        score_kept_frames += 1 - \
+                            annotation[f'predicted_{key}_confs'][annot_idx]
+                        score_tot += 1 - \
                             annotation[f'predicted_{key}_confs'][annot_idx]
 
-        annotation_scores.append(score / len(keys))
+        annotation_scores = np.append(annotation_scores, [[score_tot / len(keys), score_kept_frames / len(keys)]], axis=0) 
     return annotation_scores
 
+def evaluate_trailer_whole_pipeline(trailer_path: str, predictions, evaluation_type: str = 'binary') -> float:
+    trailer_path_no_ext = trailer_path[:-4]
+    with open(f'{trailer_path_no_ext}_annotated.pkl', 'rb') as infile:
+        annotations = pkl.load(infile)
+    infile.close()
+    indices = sorted([int(key.split('_')[1]) for key in annotations])
+    frame_scores = np.zeros((0,2))
+    for i in indices:
+        frame_annotations = annotations[f'frame_{i}']
+        frame_predictions = [pred for pred in predictions if i in pred['frames_bboxes'].keys()]
+        annotated_centroids = [frame_annotations[k]['face_centroid']
+                               for k in range(len(frame_annotations))]
+        matches = {}
+        for j in range(len(frame_predictions)):
+            x1, y1, x2, y2 = frame_predictions[j]['frames_bboxes'][i]
+            det_centroid = ((x2 + x1) / 2, (y2 + y1) / 2)
+            dists = [np.abs(det_centroid[0] - annotated_centroids[k][0]) + np.abs(det_centroid[1] - annotated_centroids[k][1])
+                     for k in range(len(annotated_centroids))]
+            mindist, mindist_id = min(dists), np.argmin(dists)
+            if mindist < 3:
+                matches[j] = mindist_id
+
+        for j in matches:
+            frame_annotations[matches[j]
+                              ]['predicted_age'] = frame_predictions[j]['age']
+            frame_annotations[matches[j]
+                              ]['predicted_gender'] = frame_predictions[j]['gender']
+            frame_annotations[matches[j]
+                              ]['predicted_ethnicity'] = frame_predictions[j]['ethnicity']
+        frame_scores = np.append(frame_scores, score_evaluation(
+            frame_annotations, evaluation_type), axis=0)
+    return np.mean(frame_scores[:,0]), np.mean(frame_scores[:,1])
 
 def save_displayed_annotations(trailer_directory: str) -> None:
     trailer_path = os.path.join(
@@ -250,7 +285,7 @@ def save_displayed_annotations(trailer_directory: str) -> None:
         annotations = pkl.load(infile)
     infile.close()
     frames_indices = [int(key.split('_')[1]) for key in annotations]
-    frames = frame_capture(f'{trailer_path}.mp4')
+    (frames, fps) = frame_capture(f'{trailer_path}.mp4')
     for index in frames_indices:
         frame_annotations = annotations[f'frame_{index}']
         frame = frames[index]

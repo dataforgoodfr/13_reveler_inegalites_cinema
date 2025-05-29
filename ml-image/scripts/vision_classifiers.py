@@ -2,7 +2,7 @@ import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms, models
 
-from scripts.utils import ImageDataset
+from .utils import ImageDataset
 
 # https://github.com/alihassanml/Yolo11-Face-Emotion-Detection
 # Face emotion detection ?
