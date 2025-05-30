@@ -176,9 +176,9 @@ const Navbar = ({
                       width={36}
                     />
                   </button>
-                  <Link href="/" className="px-3 py-2 rounded-md">
+                  <Link href="mailto:collectif5050x2020@gmail.com?subject=Toolbox%2050%2F50" className="px-3 py-2 rounded-md">
                     <Button className="cursor-pointer">
-                      Donnez nous votre avis 💬
+                      Donnez-nous votre avis 💬
                     </Button>
                   </Link>
                 </div>
