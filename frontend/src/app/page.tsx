@@ -26,7 +26,7 @@ export default function Home() {
             </span>
           </div>
           <Link href="/statistics">
-            <Button className="bg-violet-500">Voir les statistiques</Button>
+            <Button className="bg-violet-500 cursor-pointer">Voir les statistiques</Button>
           </Link>
         </div>
       </main>
