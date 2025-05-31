@@ -160,10 +160,10 @@ export default function PageFilm() {
             setOpen={setOpenPosterDialog}
             imageSource={filmData.poster_image_base64}
             femaleVisibleRatioOnPoster={
-              filmData.metrics?.female_visible_ratio_on_poster ?? 0
+              filmData.metrics?.female_visible_ratio_on_poster
             }
             nonWhiteVisibleRatioOnPoster={
-              filmData.metrics?.non_white_visible_ratio_on_poster ?? 0
+              filmData.metrics?.non_white_visible_ratio_on_poster
             }
           />
           <TrailerAnalysisDialog
@@ -173,10 +173,10 @@ export default function PageFilm() {
             releaseDate={filmData.release_date}
             trailerUrl={filmData.trailer_url ?? ""}
             femaleScreenTimeInTrailer={
-              filmData.metrics?.female_screen_time_in_trailer ?? 0
+              filmData.metrics?.female_screen_time_in_trailer
             }
             nonWhiteScreenTimeInTrailer={
-              filmData.metrics?.non_white_screen_time_in_trailer ?? 0
+              filmData.metrics?.non_white_screen_time_in_trailer
             }
           />
           <ShareDialog
