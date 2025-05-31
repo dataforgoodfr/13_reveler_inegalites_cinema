@@ -12,6 +12,7 @@ import {
 import Image from "next/image";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "../ui/drawer";
+import { CheckIcon } from "lucide-react";
 
 const ShareDialog = ({
   open,
@@ -27,13 +28,7 @@ const ShareDialog = ({
 
   const copyLink = () => {
     navigator.clipboard.writeText(shareUrl);
-    toast("Lien copié dans le presse-papier !", {
-      description: "Sunday, December 03, 2023 at 9:00 AM",
-      action: {
-        label: "Undo",
-        onClick: () => console.log("Undo"),
-      },
-    });
+    toast(<div className="flex items-center"><CheckIcon/>Lien copié dans le presse-papier !</div>);
   };
 
   const openSocialShare = (platform: string) => {
