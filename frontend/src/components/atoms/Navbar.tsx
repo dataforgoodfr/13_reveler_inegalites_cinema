@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -9,6 +9,8 @@ import { SearchFilmResultDto } from "@/dto/film/search-film-result.dto";
 import Image from "next/image";
 import { API_URL } from "@/utils/api-url";
 import { nameToUpperCase } from "@/utils/name-to-uppercase";
+
+const ABORT_MESSAGE = "A new search was made before the backend could respond";
 
 const Navbar = ({
   children,
@@ -20,30 +22,40 @@ const Navbar = ({
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState(""); // État pour l'input de recherche
   const [filteredFilms, setFilteredFilms] = useState<SearchFilmResultDto[]>([]); // État pour les résultats filtrés
+  const abortControllerRef = useRef<AbortController>(null);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
 
+  const isAbortError = (error: unknown) => {
+    return typeof error === 'object' && error && 'reason' in error && error.reason === ABORT_MESSAGE;
+  }
+
   const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value.toLowerCase();
     setSearchQuery(query);
-    if (query) {
-      try {
-        const url = `${API_URL}/search?q=${query}`;
-        const response = await fetch(url); // Default mode (CORS enabled on backend)
-
-        if (!response.ok) {
-          throw new Error(`Erreur HTTP ! statut : ${response.status}`);
-        }
-
-        const data: SearchFilmResultDto[] = await response.json();
-        setFilteredFilms(data);
-      } catch (error) {
-        console.error("Erreur lors de la recherche :", error);
-      }
-    } else {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort({reason: ABORT_MESSAGE});
+    }
+    if (!query) {
       setFilteredFilms([]);
+      return;
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    try {
+      const url = `${API_URL}/search?q=${query}`;
+      const response = await fetch(url, {signal: controller.signal});
+
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP ! statut : ${response.status}`);
+      }
+      const data: SearchFilmResultDto[] = await response.json();
+      setFilteredFilms(data);
+    } catch (error) {
+      if (isAbortError(error)) return;
+      console.error("Erreur lors de la recherche :", error);
     }
   };
 
