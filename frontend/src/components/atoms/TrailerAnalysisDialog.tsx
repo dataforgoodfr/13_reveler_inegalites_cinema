@@ -102,8 +102,7 @@ const TrailerAnalysisDialog = ({
                         <span className="text-violet-500">femmes</span>
                       </div>
                       <span className="text-violet-500">
-                        {typeof femaleScreenTimeInTrailer === "number" &&
-                        femaleScreenTimeInTrailer > 0
+                        {typeof femaleScreenTimeInTrailer === "number"
                           ? formatTime(femaleScreenTimeInTrailer)
                           : "NC"}
                       </span>
@@ -116,8 +115,7 @@ const TrailerAnalysisDialog = ({
                         <span className="text-violet-500">non blancs</span>
                       </div>
                       <span className="text-violet-500">
-                        {typeof nonWhiteScreenTimeInTrailer === "number" &&
-                        nonWhiteScreenTimeInTrailer > 0
+                        {typeof nonWhiteScreenTimeInTrailer === "number"
                           ? formatTime(nonWhiteScreenTimeInTrailer)
                           : "NC"}
                       </span>
@@ -175,8 +173,7 @@ const TrailerAnalysisDialog = ({
                   <span className="text-violet-500">femmes</span>
                 </div>
                 <span className="text-violet-500">
-                  {typeof femaleScreenTimeInTrailer === "number" &&
-                  femaleScreenTimeInTrailer > 0
+                  {typeof femaleScreenTimeInTrailer === "number"
                     ? formatTime(femaleScreenTimeInTrailer)
                     : "NC"}
                 </span>
@@ -187,8 +184,7 @@ const TrailerAnalysisDialog = ({
                   <span className="text-violet-500">non blancs</span>
                 </div>
                 <span className="text-violet-500">
-                  {typeof nonWhiteScreenTimeInTrailer === "number" &&
-                  nonWhiteScreenTimeInTrailer > 0
+                  {typeof nonWhiteScreenTimeInTrailer === "number"
                     ? formatTime(nonWhiteScreenTimeInTrailer)
                     : "NC"}
                 </span>
