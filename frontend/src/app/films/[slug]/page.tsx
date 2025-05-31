@@ -383,7 +383,7 @@ export default function PageFilm() {
               <DialogHeader>
                 <DialogTitle>Bonus parité du CNC</DialogTitle>
                 <DialogDescription className="text-white">
-                  Ce bonus de 15% sur le soutien cinéma mobilisé s’adresse aux
+                  Créé en 2019, ce bonus de 15% sur le soutien cinéma mobilisé s’adresse aux
                   films d’initiative française dont les équipes sont paritaires
                   au sein de leurs principaux postes d’encadrement, que la
                   réalisation soit entre les mains d’un homme ou d’une femme.
