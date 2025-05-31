@@ -50,7 +50,7 @@ class GetFilmDetails:
         if film.duration_minutes is not None:
             hours = film.duration_minutes // 60
             minutes = film.duration_minutes % 60
-            film_data["duration"] = f"{hours}h{minutes}"
+            film_data["duration"] = f"{hours}h{minutes:02d}"
         else:
             film_data["duration"] = None
 
