@@ -325,9 +325,8 @@ export default function PageFilm() {
           </h2>
           <p className="text-sm mb-2">
             {filmData.release_date
-              ? getDate(filmData.release_date)
-              : "Date inconnue"}
-            {"   en salle   "}
+              ? `Sorti le ${getDate(filmData.release_date)} en salle | `
+              : "Date inconnue | "}
             {filmData.duration || "Durée inconnue"}
           </p>
           <p className="text-sm mb-2">
