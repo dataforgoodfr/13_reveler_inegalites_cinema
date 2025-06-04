@@ -3,10 +3,10 @@ from tqdm import tqdm
 from database.database import SessionLocal
 from backend.repositories import (
     film_repository,
-    film_prediction_repository  # <-- Ce repo doit gérer les prédictions
+    #film_trailer_repository  
 )
 
-
+#Importation des résultats de la ML squr trailer dans la bdd
 
 def seed_trailer_predictions():
     df = pd.read_csv("database/data/predictions_on_trailers.csv")
@@ -15,14 +15,13 @@ def seed_trailer_predictions():
     try:
         with session.begin():
             for _, row in tqdm(df.iterrows(), total=len(df), desc="Seeding trailer demographics"):
-                allocine_id = row["allocine_id"]
-                film = film_repository.find_film_by_allocine_id(session, allocine_id)
-                if film is None:
-                    continue
+                visa_number = row["visa_number"]
+                if film_repository.find_film_by_visa(session, visa_number) is not None:
+                    continue  # Skip if already seeded
 
                 prediction_data = {
-                    "film_id": film.id,
-                    "source": "trailer",
+                    "visa_number": row["visa_number"],
+                    "allocine_id": row["allocine_id"],
                     "gender": row["gender"],
                     "age_min": row["age_min"],
                     "age_max": row["age_max"],
@@ -31,7 +30,7 @@ def seed_trailer_predictions():
                     "average_size_on_screen": row["average_size_on_screen"]
                 }
 
-                film_prediction_repository.create_or_update_demographic(session, prediction_data)
+                #film_prediction_repository.create_or_update_prediction(session, prediction_data)
             session.commit()
             print(f"Seeded {len(df)} trailer predictions.")
     except Exception as e:

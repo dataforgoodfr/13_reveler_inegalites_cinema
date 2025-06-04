@@ -3,7 +3,7 @@ from tqdm import tqdm
 from database.database import SessionLocal
 from backend.repositories import (
     film_repository,
-    film_prediction_repository  # <-- Le même repo utilisé
+    #film_poster_characters_repository  
 )
 
 def seed_poster_predictions():
@@ -13,14 +13,13 @@ def seed_poster_predictions():
     try:
         with session.begin():
             for _, row in tqdm(df.iterrows(), total=len(df), desc="Seeding poster predictions"):
-                allocine_id = row["allocine_id"]
-                film = film_repository.find_film_by_allocine_id(session, allocine_id)
-                if film is None:
-                    continue
+                visa_number = row["visa_number"]
+                if film_repository.find_film_by_visa(session, visa_number) is not None:
+                    continue  # Skip if already seeded
 
                 predictions_data = {
-                    "film_id": film.id,
-                    "source": "poster",
+                    "visa_number": row["visa_number"],
+                    "allocine_id": row["allocine_id"],
                     "gender": row["gender"],
                     "age_min": row["age_min"],
                     "age_max": row["age_max"],
@@ -28,7 +27,7 @@ def seed_poster_predictions():
                     "poster_percentage": row["poster_percentage"]
                 }
 
-                film_prediction_repository.create_or_update_predictions(session, predictions_data)
+                #film_poster_characters_repository .create_or_update_predictions(session, predictions_data)
             session.commit()
             print(f"Seeded {len(df)} poster predictions.")
     except Exception as e:
