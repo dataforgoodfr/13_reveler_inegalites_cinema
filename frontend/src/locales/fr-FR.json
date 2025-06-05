@@ -33,8 +33,6 @@
     "post_production_supervisor": "Superviseur·euse post-production",
     "script_supervisor": "Scripte",
     "stunt_coordinator": "Chef·fe Cascadeur·euse",
-    "production_company": "Société de production",
-    "distribution_company": "Société de distribution",
     "dialogue_editor": "Monteur·euse dialogue",
     "sound_editor": "Monteur·euse son",
     "unit_production_manager": "Régisseur·euse général",
@@ -44,6 +42,7 @@
     "gaffer": "Chef·fe électricien·ne",
     "mixing_engineer": "Mixage",
     "visual_effects_supervisor": "Superviseur·euse des effets visuels",
-    "co_producer": "Coproducteur·rice"
+    "co_producer": "Coproducteur·rice",
+    "production_manager": "Directeur·rice de production"
   }
 }
