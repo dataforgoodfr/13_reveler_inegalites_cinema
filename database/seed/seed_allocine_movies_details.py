@@ -33,6 +33,7 @@ def seed():
                 continue
 
             # Update film basic info
+            film.allocine_id = row['allocine_id']
             film.release_date = parse_release_date(row['release_date'])
             film.duration_minutes = parse_duration(row['duration'])
 
