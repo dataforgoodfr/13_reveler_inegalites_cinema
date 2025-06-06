@@ -49,8 +49,8 @@ def seed_cnc_movies():
 
                 # Adding the distributors to the film credits
                 for distributor_type, role_name in [
-                    ("paying_distributors", "distribution"),
-                    ("free_distributors", "distribution")
+                    ("paying_distributors", "paying_broadcaster"),
+                    ("free_distributors", "free_broadcaster"),
                 ]:
                     distributors = row.get(distributor_type) or []
                     role = role_repository.find_or_create_role(session, name=role_name)

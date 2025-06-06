@@ -200,4 +200,6 @@ ROLES = [
     { "allocine_name": "Superviseur montage dialogues", "name": "dialogue_editing_supervisor", "key_role": False, "inclusive_name": "Superviseur·euse montage dialogues" },
     { "allocine_name": "Directeur de la photographie des effets visuels", "name": "vfx_dop", "key_role": False, "inclusive_name": "Directeur·rice de la photographie des effets visuels" },
     { "allocine_name": "Images animalières", "name": "wildlife_cinematography", "key_role": False, "inclusive_name": "Images animalières" },
+    { "allocine_name": "", "name": "free_broadcaster", "key_role": False, "inclusive_name": "Chaîne/plateforme de diffusion gratuite" },
+    { "allocine_name": "", "name": "paying_broadcaster", "key_role": False, "inclusive_name": "Chaîne/plateforme de diffusion payante" },
 ]
