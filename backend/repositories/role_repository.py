@@ -35,7 +35,8 @@ def find_or_create_role(session: Session, name: str = None, allocine_name: str =
         role = Role(
             name=matched_data.get("name").lower(),
             allocine_name=matched_data.get("allocine_name"),
-            is_key_role=matched_data.get("key_role", False)
+            is_key_role=matched_data.get("key_role", False),
+            inclusive_name=matched_data.get("inclusive_name", None),
         )
 
         session.add(role)
