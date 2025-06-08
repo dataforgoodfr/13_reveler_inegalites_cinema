@@ -11,14 +11,6 @@ import {
 } from "@/components/ui/card";
 import { Menubar, MenubarMenu, MenubarTrigger } from "@/components/ui/menubar";
 import { useParams } from "next/navigation";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -45,6 +37,7 @@ import {
 } from "@/components/ui/drawer";
 import { API_URL } from "@/utils/api-url";
 import { nameToUpperCase } from "@/utils/name-to-uppercase";
+import CncDialog from "@/components/atoms/CncDialog";
 
 // Ceci est un composant de page avec une route dynamique
 // Le [slug] dans le nom du dossier sera disponible comme paramètre
@@ -60,6 +53,7 @@ export default function PageFilm() {
   const [openTrailerDialog, setOpenTrailerDialog] = useState(false);
   const [openShareDialog, setOpenShareDialog] = useState(false);
   const [openPosterDialog, setOpenPosterDialog] = useState(false);
+  const [openCncDialog, setOpenCncDialog] = useState(false);
 
   useEffect(() => {
     const url = `${API_URL}/films/${slug}`;
@@ -346,50 +340,32 @@ export default function PageFilm() {
               <span className="text-white">Genres non renseignés</span>
             )}
           </div>
-          <Dialog>
-            {filmData.parity_bonus ? (
+          {filmData.parity_bonus ? (
               <Button className="bg-green-200 hover:bg-green-200 text-green-950 rounded-full">
                 Bonus parité du CNC
-                <DialogTrigger asChild>
+                <div className="cursor-pointer" onClick={() => setOpenCncDialog(!openCncDialog)}>
                   <Image
                     src="/info.svg"
                     alt="Rechercher"
                     width={24}
                     height={24}
                   />
-                </DialogTrigger>
+                </div>
               </Button>
             ) : (
               <Button className="bg-red-200 hover:bg-red-200 text-red-950 rounded-full">
                 Film non éligible au bonus parité du CNC
-                <DialogTrigger asChild>
+                <div className="cursor-pointer" onClick={() => setOpenCncDialog(!openCncDialog)}>
                   <Image
                     src="/info.svg"
                     alt="Rechercher"
                     width={24}
                     height={24}
                   />
-                </DialogTrigger>
+                </div>
               </Button>
             )}
-            <DialogContent
-              className="sm:max-w-[425px] text-white"
-              style={{
-                borderColor: "rgba(51, 51, 51, 1)",
-                backgroundColor: "rgba(30, 30, 30)",
-              }}
-            >
-              <DialogHeader>
-                <DialogTitle>Bonus parité du CNC</DialogTitle>
-                <DialogDescription className="text-white">
-                  Créé en 2019, ce bonus de 15% sur le soutien cinéma mobilisé s’adresse aux
-                  films d’initiative française dont les équipes sont paritaires
-                  au sein de leurs principaux postes d’encadrement, que la
-                  réalisation soit entre les mains d’un homme ou d’une femme.
-                </DialogDescription>
-              </DialogHeader>
-            </DialogContent>
-          </Dialog>
+          <CncDialog open={openCncDialog} setOpen={setOpenCncDialog}/>
           <div className="mt-8">
             <Menubar className="w-full md:w-fit text-black overflow-y-hidden">
               <MenubarMenu>
