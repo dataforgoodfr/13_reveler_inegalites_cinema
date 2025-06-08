@@ -38,6 +38,9 @@ import {
 import { API_URL } from "@/utils/api-url";
 import { nameToUpperCase } from "@/utils/name-to-uppercase";
 import CncDialog from "@/components/atoms/CncDialog";
+import FrameSearch from "@/icons/frame_search";
+import VideoSearch from "@/icons/video_search";
+import Share from "@/icons/share";
 
 // Ceci est un composant de page avec une route dynamique
 // Le [slug] dans le nom du dossier sera disponible comme paramètre
@@ -185,12 +188,7 @@ export default function PageFilm() {
               style={{ opacity: 0.8 }}
               onClick={() => setOpenPosterDialog(true)}
             >
-              <Image
-                src="/frame_search.svg"
-                alt="Rechercher"
-                width={24}
-                height={24}
-              />
+              <FrameSearch size={24} color="black" />
             </Button>
             <Button
               variant="outline"
@@ -198,12 +196,7 @@ export default function PageFilm() {
               style={{ opacity: 0.8 }}
               onClick={() => setOpenTrailerDialog(true)}
             >
-              <Image
-                src="/video_search.svg"
-                alt="Rechercher"
-                width={24}
-                height={24}
-              />
+              <VideoSearch size={24} color="black" />
             </Button>
             <Button
               variant="outline"
@@ -211,7 +204,7 @@ export default function PageFilm() {
               style={{ opacity: 0.8 }}
               onClick={() => setOpenShareDialog(true)}
             >
-              <Image src="/share.svg" alt="Partager" width={24} height={24} />
+              <Share size={24} color="black" />
             </Button>
           </div>
           <div className="flex absolute md:hidden flex-col gap-2 bottom-2 right-2 text-black">
@@ -225,69 +218,36 @@ export default function PageFilm() {
                 <DrawerContent className="bg-[#1D1F20] text-white">
                   <DrawerTitle />
                   <DrawerDescription />
-                  <div className="p-10 flex flex-col gap-2">
+                  <div className="p-10 flex flex-col gap-10">
                     <div
-                      className="flex gap-2"
+                      className="flex items-center gap-5"
                       onClick={() => {
                         setOpenPosterDialog(true);
                         setOpenDrawer(false);
                       }}
                     >
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        style={{ opacity: 0.8 }}
-                      >
-                        <Image
-                          src="/frame_search.svg"
-                          alt="Rechercher"
-                          width={24}
-                          height={24}
-                        />
-                      </Button>
-                      <span>Analyser l&apos;affiche du film</span>
+                      <FrameSearch size={30}/>
+                      <span className="text-xl">Analyser l&apos;affiche du film</span>
                     </div>
                     <div
-                      className="flex gap-2"
+                      className="flex items-center gap-5"
                       onClick={() => {
                         setOpenTrailerDialog(true);
                         setOpenDrawer(false);
                       }}
                     >
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        style={{ opacity: 0.8 }}
-                      >
-                        <Image
-                          src="/video_search.svg"
-                          alt="Rechercher"
-                          width={24}
-                          height={24}
-                        />
-                      </Button>
-                      <span>Analyser la bande-annonce</span>
+                      <VideoSearch size={30}/>
+                      <span className="text-xl">Analyser la bande-annonce</span>
                     </div>
                     <div
-                      className="flex gap-2"
+                      className="flex items-center gap-5"
                       onClick={() => {
                         setOpenShareDialog(true);
                         setOpenDrawer(false);
                       }}
                     >
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        style={{ opacity: 0.8 }}
-                      >
-                        <Image
-                          src="/share.svg"
-                          alt="Rechercher"
-                          width={24}
-                          height={24}
-                        />
-                      </Button>
-                      <span>Partager la fiche du film</span>
+                      <Share size={30}/>
+                      <span className="text-xl">Partager la fiche du film</span>
                     </div>
                   </div>
                 </DrawerContent>

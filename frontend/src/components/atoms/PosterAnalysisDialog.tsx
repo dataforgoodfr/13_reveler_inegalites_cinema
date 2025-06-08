@@ -45,7 +45,7 @@ const PosterAnalysisDialog = ({
               <CarouselContent className="h-full">
                 <CarouselItem>
                   <div className="w-full flex justify-center">
-                    <div className="relative flex items-center justify-center bg-[rgba(30, 30, 30, 0.8)] w-[300px] h-[380px] min-h-[380px]">
+                    <div className="relative flex items-center justify-center bg-[rgba(30, 30, 30, 0.8)] w-[300px] min-h-[380px]">
                       {safeImageSource ? (
                         <Image
                           loader={() => safeImageSource}
