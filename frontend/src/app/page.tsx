@@ -12,7 +12,7 @@ export default function Home() {
           } as React.CSSProperties
         }
       ></div>
-      <main className="container mx-auto px-4 py-16 flex flex-col items-center justify-center text-center text-white">
+      <main className="container h-full mx-auto px-4 py-16 flex flex-col items-center justify-center text-center text-white">
         <div className="animate-slide-up">
           <div className="mt-30 mb-12">
             <span className="text-5xl md:text-6xl font-bold w-3/4">

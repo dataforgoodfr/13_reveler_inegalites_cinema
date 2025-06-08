@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/atoms/Navbar";
 import { Toaster } from "@/components/ui/sonner";
+import Footer from "@/components/atoms/Footer";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -27,12 +28,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr">
+    <html className="h-full" lang="fr">
       <body
-        className={`${geistSans.variable} ${geist.variable} antialiased bg-black`}
+        className={`${geistSans.variable} ${geist.variable} antialiased bg-black h-full`}
         suppressHydrationWarning
       >
         <Navbar>{children}</Navbar>
+        <Footer />
         <Toaster />
       </body>
     </html>

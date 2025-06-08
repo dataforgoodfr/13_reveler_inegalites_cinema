@@ -122,7 +122,7 @@ export default function PageFilm() {
   }
 
   return (
-    <main className="p-10 md:p-20 bg-transparent text-white">
+    <main className="p-10 md:p-20 h-full bg-transparent text-white">
       <div
         className="background-image"
         style={
