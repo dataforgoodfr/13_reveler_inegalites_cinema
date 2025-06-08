@@ -116,7 +116,7 @@ const ShareDialog = ({
               onClick={() => openSocialShare("twitter")}
             >
               <Image src="/twitter.svg" alt="Twitter" height={48} width={48}/>
-              <span>Twitter</span>
+              <span>X (Twitter)</span>
             </div>
             <div
               className="flex flex-col items-center flex-1 text-xs text-center cursor-pointer relative"
@@ -187,7 +187,7 @@ const ShareDialog = ({
               onClick={() => openSocialShare("twitter")}
             >
               <Image src="/twitter.svg" alt="Twitter" height={48} width={48}/>
-              <span>Twitter</span>
+              <span>X (Twitter)</span>
             </div>
             <div
               className="flex flex-col items-center flex-1 text-xs text-center cursor-pointer relative"
