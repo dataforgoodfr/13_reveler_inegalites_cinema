@@ -11,6 +11,8 @@ class GetFestivalDetails:
     def execute(self, festival_id: int, year: int | None=None, award_id: int | None=None):
         # Get festival
         festival = festival_repository.get_festival(self.db, festival_id)
+        # Sort from most recent to oldest
+        years_with_awards = sorted(years_with_awards, reverse=True)
         if not festival:
             return {"error": "Festival not found"}
 
