@@ -36,7 +36,7 @@ class FilmMetricsCalculator:
         if not genders:
             return None
         female_count = sum(1 for g in genders if g == "female")
-        return round((female_count / len(genders)) * 100, 2)
+        return round((female_count / len(genders)) * 100)
 
     def calculate_female_representation_in_key_roles(self) -> float | None:
         self._prepare_gender_data()
