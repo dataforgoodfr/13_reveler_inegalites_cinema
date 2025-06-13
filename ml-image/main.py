@@ -185,7 +185,8 @@ def gather_and_save_predictions(source:pd.DataFrame) -> None :
     trailer_predictions = [os.path.join(path_to_outputs, item) for item in os.listdir(path_to_outputs) if 'trailer' in item]
     dict_poster_predictions = {
         'visa_number' : [], 
-        'allocine_url' : [], 
+        #'allocine_url' : [],
+        'allocine_id' : [],
         'gender' : [], 
         'age_min' : [], 
         'age_max' : [], 
@@ -194,7 +195,8 @@ def gather_and_save_predictions(source:pd.DataFrame) -> None :
         }
     dict_trailer_predictions = {
         'visa_number' : [], 
-        'allocine_url' : [], 
+        #'allocine_url' : [],
+        'allocine_id' : [],
         'gender' : [], 
         'age_min' : [], 
         'age_max' : [], 
@@ -207,9 +209,10 @@ def gather_and_save_predictions(source:pd.DataFrame) -> None :
             data = pkl.load(infile)
         infile.close()
         visa_number = int(prediction.split('/')[1].split('_')[0])
-        allocine_url = source[source.visa_number == visa_number].iloc[0]['allocine_url']
+        #allocine_url = source[source.visa_number == visa_number].iloc[0]['allocine_url']
+        allocine_id = int(source[source.visa_number == visa_number].iloc[0]['allocine_id'])
         for char in data :
-            dict_poster_predictions = format_prediction_results('poster', char, allocine_url, visa_number, dict_poster_predictions)
+            dict_poster_predictions = format_prediction_results('poster', char, allocine_id, visa_number, dict_poster_predictions)
     df_posters = pd.DataFrame(dict_poster_predictions)
     df_posters.to_csv('predictions_on_posters.csv', index=False)
 
@@ -218,19 +221,21 @@ def gather_and_save_predictions(source:pd.DataFrame) -> None :
             data = pkl.load(infile)
         infile.close()
         visa_number = int(prediction.split('/')[1].split('_')[0])
-        allocine_url = source[source.visa_number == visa_number].iloc[0]['allocine_url']
+        #allocine_url = source[source.visa_number == visa_number].iloc[0]['allocine_url']
+        allocine_id = int(source[source.visa_number == visa_number].iloc[0]['allocine_id'])
         for char in data :
-            dict_trailer_predictions = format_prediction_results('trailer', char, allocine_url, visa_number, dict_trailer_predictions)
+            dict_trailer_predictions = format_prediction_results('trailer', char, allocine_id, visa_number, dict_trailer_predictions)
     df_trailers = pd.DataFrame(dict_trailer_predictions)
     df_trailers.to_csv('predictions_on_trailers.csv', index=False)
 
 
 def format_prediction_results(
-        mode:str, character_data:dict, allocine_url:str, visa_number:int, dict_predictions:dict
+        mode:str, character_data:dict, allocine_id:str, visa_number:int, dict_predictions:dict
         ) -> dict:
     if any([item == 'unknown' for item in [character_data['age'], character_data['gender'], character_data['ethnicity']]]) :
         dict_predictions['visa_number'].append(visa_number)
-        dict_predictions['allocine_url'].append(allocine_url)
+        #dict_predictions['allocine_url'].append(allocine_url)
+        dict_predictions['allocine_id'].append(allocine_id)
         dict_predictions['gender'].append('unknown')
         dict_predictions['age_min'].append(0)
         dict_predictions['age_max'].append(0)
@@ -243,7 +248,8 @@ def format_prediction_results(
                 dict_predictions['average_size_on_screen'].append(0)
     else :   
         dict_predictions['visa_number'].append(visa_number)
-        dict_predictions['allocine_url'].append(allocine_url)
+        #dict_predictions['allocine_url'].append(allocine_url)
+        dict_predictions['allocine_id'].append(allocine_id)
         dict_predictions['gender'].append(character_data['gender'])
         dict_predictions['age_min'].append(character_data['age'].split('-')[0])
         dict_predictions['age_max'].append(character_data['age'].split('-')[1])
