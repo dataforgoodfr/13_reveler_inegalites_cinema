@@ -12,14 +12,16 @@ class GetFestivalDetails:
         # Get festival
         festival = festival_repository.get_festival(self.db, festival_id)
         # Sort from most recent to oldest
-        years_with_awards = sorted(years_with_awards, reverse=True)
         if not festival:
             return {"error": "Festival not found"}
 
         # Get available year
         years_with_awards = award_nomination_repository.get_years_with_awards(self.db, festival.id)
+        # Trier du plus récent au plus ancien
+        years_with_awards = sorted(years_with_awards, reverse=True)
+
         if not years_with_awards:
-            return {"error: No award nomination found for this festival"}
+            return {"error": "No award nomination found for this festival"}
 
         # Determine year
         if year is None:
