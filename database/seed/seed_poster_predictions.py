@@ -16,31 +16,32 @@ def seed_poster_predictions():
             for _, row in tqdm(df.iterrows(), total=len(df), desc="Seeding poster predictions"):
                 visa_number = row["visa_number"]
 
-                # Étape 1 : Récupérer le film via visa_number
+                # Step 1: Get the film via visa_number
                 film = film_repository.find_film_by_visa(session, visa_number)
                 if not film:
-                    print(f"Film introuvable pour visa_number {visa_number}")
+                    print(f"Film not found for visa_number {visa_number}")
                     continue
 
-                # Étape 2 : Récupérer le poster via film_id
+                # Step 2: Get the poster via film_id
                 poster = poster_repository.find_poster_by_film_id(session, film.id)
                 if not poster:
-                    print(f"Poster introuvable pour film_id {film.id}")
+                    print(f"Poster not found for film_id {film.id}")
                     continue
 
-                # Étape 3 : Préparer les données de prédiction
+                # Step 3: Delete all existing PosterCharacters for this poster
+                poster_character_repository.delete_all_by_poster_id(session, poster.id)
+
+                # Step 4: Prepare prediction data
                 predictions_data = {
-                    "gender": row["gender"],
+                    "gender": str(row["gender"]).capitalize() if pd.notna(row["gender"]) else None,
                     "age_min": row["age_min"],
                     "age_max": row["age_max"],
                     "ethnicity": row["ethnicity"],
                     "poster_percentage": row["poster_percentage"]
                 }
 
-                # Étape 4 : Créer ou mettre à jour le PosterCharacter
-                poster_character_repository.create_or_update_poster_character(
-                    session, poster.id, predictions_data
-                )
+                # Step 5: Create new PosterCharacter
+                poster_character_repository.create_poster_character(session, poster.id, predictions_data)
 
             session.commit()
             print(f"Seeded {len(df)} poster predictions.")
