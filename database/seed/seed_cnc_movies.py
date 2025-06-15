@@ -40,7 +40,8 @@ def seed_cnc_movies():
                     "cnc_agrement_year": row["cnc_agrement_year"],
                     "budget": row["budget"],
                     "budget_category": FilmEntity.budget_category(row["budget"]),
-                    "is_french_financed": FilmEntity.is_french_financed(row.get("film_country_budget_allocation_rates", {}))
+                    "is_french_financed": FilmEntity.is_french_financed(row.get("film_country_budget_allocation_rates", {})),
+                    "broadcasters": FilmEntity.broadcasters(row.get("paying_broadcasters", []), row.get("free_broadcasters", []))
                 }
 
                 film = film_repository.create_film(session, film_data)

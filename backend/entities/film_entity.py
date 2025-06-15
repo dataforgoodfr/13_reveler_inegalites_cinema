@@ -46,3 +46,19 @@ class FilmEntity:
         max_share = max(allocation.values(), default=0)
 
         return france_share == max_share
+
+    @staticmethod
+    def broadcasters(paying: list[str], free: list[str]) -> str:
+        """
+        Combine and format paying and free broadcasters into a clean, comma-separated string.
+
+        Args:
+            paying (list[str]): List of paying broadcasters
+            free (list[str]): List of free broadcasters
+
+        Returns:
+            str: Comma-separated broadcaster names, e.g. "M6, TF1"
+        """
+        all_broadcasters = paying + free
+        cleaned = sorted(set(b.strip() for b in all_broadcasters if isinstance(b, str)))
+        return ", ".join(cleaned)
