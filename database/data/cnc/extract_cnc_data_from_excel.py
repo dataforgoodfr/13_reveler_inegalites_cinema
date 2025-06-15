@@ -3,7 +3,7 @@ import os
 import re
 import openpyxl # noqa: F401
 from typing import Optional
-from .cnc_constants import COLUMNS_MAPPING, FREE_DISTRIBUTORS_MAPPING, PAYING_DISTRIBUTORS_MAPPING, COUNTRIES_MAPPING
+from .cnc_constants import COLUMNS_MAPPING, FREE_BROADCASTERS_MAPPING, PAYING_BORADCASTERS_MAPPING, COUNTRIES_MAPPING
 
 class ExtractCncDataFromExcel:
     """
@@ -88,8 +88,8 @@ class ExtractCncDataFromExcel:
 
         # Convert columns to dicts or arrays
         self.df["film_country_budget_allocation_rates"] = self.df["film_country_budget_allocation_rates"].apply(self._parse_country_budget_allocations)
-        self.df["free_distributors"] = self.df["free_distributors"].apply(lambda x: self._parse_distributor_string(x, FREE_DISTRIBUTORS_MAPPING))
-        self.df["paying_distributors"] = self.df["paying_distributors"].apply(lambda x: self._parse_distributor_string(x, PAYING_DISTRIBUTORS_MAPPING))
+        self.df["free_broadcasters"] = self.df["free_broadcasters"].apply(lambda x: self._parse_broadcaster_string(x, FREE_BROADCASTERS_MAPPING))
+        self.df["paying_broadcasters"] = self.df["paying_broadcasters"].apply(lambda x: self._parse_broadcaster_string(x, PAYING_BORADCASTERS_MAPPING))
 
         return self.df
     
@@ -167,12 +167,12 @@ class ExtractCncDataFromExcel:
         return result
     
 
-    def _parse_distributor_string(self, distributor_string: str, mapping: Optional[dict] = None) -> list:
+    def _parse_broadcaster_string(self, broadcaster_string: str, mapping: Optional[dict] = None) -> list:
         mapping = mapping or {}
-        if not isinstance(distributor_string, str):
+        if not isinstance(broadcaster_string, str):
             return []
 
-        parts = distributor_string.strip().split()
+        parts = broadcaster_string.strip().split()
         result = []
 
         for part in parts:
