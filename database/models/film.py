@@ -20,6 +20,7 @@ class Film(Base):
     cnc_agrement_year = Column(Integer, nullable=True)
     cnc_rank = Column(Integer, nullable=True)
     allocine_id = Column(Integer, nullable=True)
+    mubi_id = Column(Integer, nullable=True)
 
     genres = relationship('Genre', secondary='ric_films_genres', back_populates='films')
     country_budget_allocations = relationship("FilmCountryBudgetAllocation", back_populates="film")
