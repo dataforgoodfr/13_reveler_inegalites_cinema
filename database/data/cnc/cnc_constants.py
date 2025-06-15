@@ -59,8 +59,7 @@ FREE_BROADCASTERS_MAPPING = {
     'nrj12': 'NRJ12',
     'rmc': 'RMC',
     'tv5': 'TV5',
-    'story': 'STORY',
-    'tv': 'TV'
+    'story': 'STORY'
 }
 
 PAYING_BORADCASTERS_MAPPING = {
