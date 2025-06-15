@@ -27,3 +27,22 @@ class FilmEntity:
             if category["min"] <= budget < category["max"]:
                 return category["name"]
         return None
+    
+    @staticmethod
+    def is_french_financed(allocation: dict[str, float]) -> bool:
+        """
+        Return True if France is the biggest single contributor to the film's budget.
+        
+        Args:
+            allocation (dict): A dict mapping country names to their budget share (e.g. {'France': 40, 'Germany': 30})
+
+        Returns:
+            bool: True if France has the highest share or is tied for highest.
+        """
+        if not allocation:
+            return False
+
+        france_share = allocation.get("France", 0)
+        max_share = max(allocation.values(), default=0)
+
+        return france_share == max_share
