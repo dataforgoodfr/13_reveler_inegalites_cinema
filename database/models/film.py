@@ -21,6 +21,14 @@ class Film(Base):
     cnc_rank = Column(Integer, nullable=True)
     allocine_id = Column(Integer, nullable=True)
     mubi_id = Column(Integer, nullable=True)
+    # The columns (budget_category, genre_categories, broadcasters, is_french_financed) have been added 
+    # to provide a functional statistics dashboard using metabase
+    # They are reformated attributes of budget, genres and broadcasters roles
+    # TODO: to remove the 4 below columns if another solution for statistics is found
+    budget_category = Column(String, nullable=True)
+    genre_categories = Column(String, nullable=True)
+    broadcasters = Column(String, nullable=True)
+    is_french_financed = Column(Boolean, nullable=True, default=False)
 
     genres = relationship('Genre', secondary='ric_films_genres', back_populates='films')
     country_budget_allocations = relationship("FilmCountryBudgetAllocation", back_populates="film")
