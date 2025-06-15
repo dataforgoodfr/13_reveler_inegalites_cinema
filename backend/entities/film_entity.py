@@ -6,6 +6,36 @@ BUDGET_CATEGORIES = [
     {"name": "Plus de 20 M€",    "min": 20_000_000,     "max": float('inf')},
 ]
 
+GENRE_CATEGORIES = {
+    "animation": "Animation",
+    "action": "Aventure/Policier/Thriller",
+    "arts martiaux": "Aventure/Policier/Thriller",
+    "aventure": "Aventure/Policier/Thriller",
+    "espionnage": "Aventure/Policier/Thriller",
+    "judiciaire": "Aventure/Policier/Thriller",
+    "policier": "Aventure/Policier/Thriller",
+    "thriller": "Aventure/Policier/Thriller",
+    "western": "Aventure/Policier/Thriller",
+    "biopic": "Biopic/Guerre/Histoire",
+    "guerre": "Biopic/Guerre/Histoire",
+    "historique": "Biopic/Guerre/Histoire",
+    "péplum": "Biopic/Guerre/Histoire",
+    "comédie": "Comédie/Comédie dramatique",
+    "comédie dramatique": "Comédie/Comédie dramatique",
+    "comédie musicale": "Comédie/Comédie dramatique",
+    "famille": "Comédie/Comédie dramatique",
+    "musical": "Comédie/Comédie dramatique",
+    "romance": "Comédie/Comédie dramatique",
+    "documentaire": "Documentaire",
+    "drame": "Drame",
+    "opéra": "Drame",
+    "épouvante-horreur": "Fantastique/Horreur/SF",
+    "expérimental": "Fantastique/Horreur/SF",
+    "fantastique": "Fantastique/Horreur/SF",
+    "science fiction": "Fantastique/Horreur/SF",
+    # Excluded entries like "divers", "erotique" and "événement sportif"
+}
+
 class FilmEntity:
     @staticmethod
     def budget_category(budget_str: str) -> str | None:
@@ -62,3 +92,23 @@ class FilmEntity:
         all_broadcasters = paying + free
         cleaned = sorted(set(b.strip() for b in all_broadcasters if isinstance(b, str)))
         return ", ".join(cleaned)
+    
+    def genre_categories(genre_names: list[str]) -> str | None:
+        """
+        Return a comma-separated string of high-level genre categories 
+        derived from a list of raw genre names.
+
+        Args:
+            genre_names (list[str]): raw genre names (e.g. ['Drame', 'Documentaire'])
+
+        Returns:
+            str | None: e.g. 'Drame, Documentaire', or None if no known categories
+        """
+        cleaned = [g.strip() for g in genre_names if g]
+        mapped_categories = {
+            GENRE_CATEGORIES[g.lower()]
+            for g in cleaned
+            if g.lower() in GENRE_CATEGORIES
+        }
+
+        return ", ".join(sorted(mapped_categories)) if mapped_categories else None

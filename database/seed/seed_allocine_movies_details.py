@@ -4,6 +4,7 @@ from tqdm import tqdm
 from backend.utils.date_utils import parse_release_date, parse_duration
 
 from database.database import SessionLocal
+from backend.entities.film_entity import FilmEntity
 from backend.repositories import (
     film_repository,
     trailer_repository,
@@ -48,6 +49,8 @@ def seed():
             # Genres
             try:
                 genres = eval(row['genres']) if row['genres'] else []
+                film.genre_categories = FilmEntity.genre_categories(genres)
+
                 for genre_name in genres:
                     genre = genre_repository.find_or_create_genre(session, genre_name)
                     if genre not in film.genres:
