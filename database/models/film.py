@@ -10,7 +10,6 @@ class Film(Base):
     visa_number = Column(String, nullable=True)
     release_date = Column(Date, nullable=True)
     duration_minutes = Column(Integer, nullable=True)
-    first_language = Column(String, nullable=True)
     budget = Column(Float, nullable=True)
     parity_bonus = Column(Boolean, nullable=True, default=False)
     eof = Column(Boolean, nullable=True, default=False)
