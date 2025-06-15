@@ -63,7 +63,10 @@ export default function PageFilm() {
       .then((value: FestivalApiResponse) => {
         setFestivalData(value);
         setSelectedYear(value.year);
-        setSelectedAward(value.award.award_id);
+        // Ne définir selectedAward que si elle n'est pas déjà définie
+        if (selectedAward === null) {
+          setSelectedAward(value.award.award_id);
+        }
         setIsLoading(false);
       })
       .catch((error) => {
@@ -91,7 +94,7 @@ export default function PageFilm() {
 
   return (
     <main className="p-5 pt-20 bg-zinc-800 text-white min-h-screen">
-      <div className="flex flex-col md:items-center md:items-start md:flex-row gap-10">
+      <div className="flex flex-col md:items-start md:flex-row gap-10">
         <div className="flex flex-col gap-10 w-full md:w-1/4">
           {festivalData.festival.image_base64 &&
           festivalData.festival.image_base64.trim() !== "" ? (
@@ -116,7 +119,7 @@ export default function PageFilm() {
             {festivalData.festival.name}
           </h1>
 
-          {festivalData.festival.description && 
+          {festivalData.festival.description && (
             <Card className="bg-gray-950 border-0">
               <CardHeader>
                 <CardDescription className="text-white">
@@ -124,7 +127,7 @@ export default function PageFilm() {
                 </CardDescription>
               </CardHeader>
             </Card>
-          }
+          )}
         </div>
         <div className="md:w-3/4">
           <h1 className="hidden md:block text-4xl font-bold mb-4">
@@ -293,10 +296,9 @@ export default function PageFilm() {
                                 backgroundPosition: "center",
                                 backgroundRepeat: "no-repeat",
                                 zIndex: 0,
-                                backgroundColor: "#27272a"
+                                backgroundColor: "#27272a",
                               }}
-                            >
-                            </div>
+                            ></div>
                             <div
                               className="absolute inset-0"
                               style={{
@@ -331,7 +333,11 @@ export default function PageFilm() {
                                 </Link>
                                 <p>
                                   Réalisé par{" "}
-                                  <strong>{film.director.map(nameToUpperCase).join(", ")}</strong>
+                                  <strong>
+                                    {film.director
+                                      .map(nameToUpperCase)
+                                      .join(", ")}
+                                  </strong>
                                 </p>
                                 <div className="flex flex-row gap-5 max-w-full overflow-x-auto">
                                   {film.female_representation_in_key_roles ||
