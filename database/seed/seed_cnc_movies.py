@@ -9,6 +9,7 @@ from backend.repositories import (
     credit_holder_repository,
     role_repository
 )
+from backend.entities.film_entity import FilmEntity
 
 def seed_cnc_movies():
     """
@@ -38,6 +39,7 @@ def seed_cnc_movies():
                     "regional_funding": row["regional_funding"],
                     "cnc_agrement_year": row["cnc_agrement_year"],
                     "budget": row["budget"],
+                    "budget_category": FilmEntity.budget_category(row["budget"])
                 }
 
                 film = film_repository.create_film(session, film_data)
