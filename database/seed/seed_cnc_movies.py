@@ -50,16 +50,16 @@ def seed_cnc_movies():
                     country = country_repository.find_or_create_country(session, country_name)
                     film_country_budget_allocation_repository.create_budget_allocation(session, film.id, country.id, allocation)
 
-                # Adding the distributors to the film credits
-                for distributor_type, role_name in [
-                    ("paying_distributors", "paying_broadcaster"),
-                    ("free_distributors", "free_broadcaster"),
+                # Adding the broadcasters to the film credits
+                for broadcaster_type, role_name in [
+                    ("paying_broadcasters", "paying_broadcaster"),
+                    ("free_broadcasters", "free_broadcaster"),
                 ]:
-                    distributors = row.get(distributor_type) or []
+                    broadcasters = row.get(broadcaster_type) or []
                     role = role_repository.find_or_create_role(session, name=role_name)
 
-                    for distributor_name in distributors:
-                        holder = credit_holder_repository.find_or_create_credit_holder(session, full_name=distributor_name, type="Company")
+                    for broadcaster_name in broadcasters:
+                        holder = credit_holder_repository.find_or_create_credit_holder(session, full_name=broadcaster_name, type="Company")
                         film_credit_repository.find_or_create_film_credit(session, film.id, role.id, holder.id)
             session.commit()
             print(f"Seeded {len(data)} films.")
