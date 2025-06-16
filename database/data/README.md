@@ -90,5 +90,5 @@ python database/data/allocine/allocine_runner.py --enricher
 
 Or with nohup
 ```bash
-nohup python database/data/allocine/allocine_runner.py --matcher > output.log 2>&1 &
+nohup poetry run python database/data/allocine/allocine_runner.py --enricher > output.log 2>&1 &
 ```
