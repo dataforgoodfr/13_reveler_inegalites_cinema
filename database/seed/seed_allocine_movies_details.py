@@ -22,9 +22,6 @@ def seed():
     with open(CSV_PATH, newline='', encoding='utf-8') as csvfile:
         rows = list(csv.DictReader(csvfile))
         for row in tqdm(rows, total=len(rows), desc="Processing"):
-            if row['allocine_visa_number'] != row['visa_number']:
-                continue
-
             film = film_repository.find_film_by_visa(session, row['visa_number'])
             if not film:
                 continue
