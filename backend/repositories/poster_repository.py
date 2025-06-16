@@ -8,3 +8,6 @@ def create_or_update_poster(session: Session, film_id, image_base64):
     else:
         new_poster = Poster(film_id=film_id, image_base64=image_base64)
         session.add(new_poster)
+
+def find_poster_by_film_id(session: Session, film_id: int):
+    return session.query(Poster).filter_by(film_id=film_id).first()
