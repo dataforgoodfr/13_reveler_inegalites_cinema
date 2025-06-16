@@ -54,7 +54,7 @@ def get_data_from_url(url: str,
             else:
                 link = video_sources["low"]
                 quality = "low"
-            print(f"Downloading trailer in {quality} quality")
+            #print(f"Downloading trailer in {quality} quality")
             r = requests.get(link, stream=True)
             with open(video_path, 'wb') as f:
                 for chunk in r.iter_content(chunk_size=1024*1024) :
@@ -121,23 +121,21 @@ def draw_predictions_on_video(frames: np.ndarray, video_persons: list, frame_per
     """
     frame_index = 0
     for frame in frames:
-        for person in frame_persons:
-            if person["frame_id"] == frame_index:
+        for person in video_persons:
+            if frame_index in person["frames_bboxes"]:
                 # Ensure bbox coordinates are integers
-                bbox = [int(coord) for coord in person["bbox"]]
-                for video_person in video_persons:
-                    if person["person_id"] in video_person["persons_id"]:
-                        match video_person["gender"]:
-                            case "Male":
-                                color = (0, 0, 255)
-                            case "Female":
-                                color = (255, 0, 0)
-                            case _:
-                                color = (0, 255, 0)
-                        cv2.rectangle(
-                            frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, 2)
-                        cv2.putText(frame, f"{video_person['label']}, {video_person['age']}, {video_person['ethnicity']}", (
-                            bbox[0], bbox[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+                bbox = [int(coord) for coord in person["frames_bboxes"][frame_index]]
+                match person["gender"]:
+                    case "Male":
+                        color = (0, 0, 255)
+                    case "Female":
+                        color = (255, 0, 0)
+                    case _:
+                        color = (0, 255, 0)
+                cv2.rectangle(
+                    frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, 2)
+                cv2.putText(frame, f"{person['label']}, {person['age']}, {person['ethnicity']}", (
+                    bbox[0], bbox[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
         frame_index += 1
     
     return frames
@@ -147,7 +145,7 @@ def draw_predictions_on_poster(poster: np.ndarray, predictions: list, output_nam
     Draw predictions on poster (bounding boxes with gender, age, ethnicity...)
     """
     for person in predictions:
-        bbox = [int(coord) for coord in person["body_bbox"]]  # Ensure bbox coordinates are integers
+        bbox = [int(coord) for coord in person["bbox"]]  # Ensure bbox coordinates are integers
         match person["gender"]:
             case "Male":
                 color = (0, 0, 255)
@@ -163,7 +161,7 @@ def draw_predictions_on_poster(poster: np.ndarray, predictions: list, output_nam
     output_path = os.path.join('example', output_name)
     cv2.imwrite(output_path, poster)
 
-def store_predictions_on_video(frames: np.ndarray, video_persons: list, frame_persons: list, fps: int = 25, output_name: str = 'predictions_trailer.avi') -> None:
+def store_predictions_on_video(frames: np.ndarray, video_persons: list, frame_persons: list, fps: int = 25, output_name: str = 'predictions_trailer') -> None:
     """
     Draw predictions on video frames and store the result in a new video file
     """
@@ -172,6 +170,7 @@ def store_predictions_on_video(frames: np.ndarray, video_persons: list, frame_pe
 
     # Define the codec and create VideoWriter object
     height, width, _ = modified_frames[0].shape
+    output_name = f"{output_name}.avi"
     output_path = os.path.join('example', output_name)
     video = cv2.VideoWriter(output_path, cv2.VideoWriter_fourcc(
         *'DIVX'), fps, (width, height))

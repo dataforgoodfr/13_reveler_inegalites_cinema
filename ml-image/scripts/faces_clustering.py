@@ -1,7 +1,6 @@
 import numpy as np
 from facenet_pytorch import InceptionResnetV1
 from dlib import chinese_whispers_clustering, vector
-import statistics
 
 import torch
 from torch.utils.data import DataLoader
@@ -85,6 +84,19 @@ class FacesClustering:
                 self.persons[label] = [person]
             else:
                 self.persons[label].append(person)
+
+    def compute_weighted_vote(self, attribute: str, label: int):
+        voting_dict = {}
+        persons = self.persons[label]
+        for person in persons:
+            if person[attribute] in voting_dict:
+                voting_dict[person[attribute]] += person["weight"]
+            else:
+                voting_dict[person[attribute]] = person["weight"]
+        if "unknown" in voting_dict and len(voting_dict) > 1: 
+            del voting_dict["unknown"]
+        voted_attribute = max(voting_dict, key=lambda k: voting_dict[k])
+        return voted_attribute
     
     def aggregate_estimations(self, persons_list: list, faces_list: list, fps, total_area, method="majority", min_occurence=0.03):
         self.apply_clusters(persons_list, faces_list)
@@ -96,12 +108,9 @@ class FacesClustering:
             if len(persons) / total_persons >= min_occurence:
                 match method:
                     case "majority":
-                        aggregated_age = statistics.mode(
-                            [person["age"] for person in persons if person["age"] != "unknown"]) if len([person["age"] for person in persons if person["age"] != "unknown"]) > 0 else "unknown"
-                        aggregated_gender = statistics.mode(
-                            [person["gender"] for person in persons if person["gender"] != "unknown"]) if len([person["gender"] for person in persons if person["gender"] != "unknown"]) > 0 else "unknown"
-                        aggregated_ethnicity = statistics.mode(
-                            [person["ethnicity"] for person in persons if person["ethnicity"] != "unknown"]) if len([person["ethnicity"] for person in persons if person["ethnicity"] != "unknown"]) > 0 else "unknown"
+                        aggregated_age = self.compute_weighted_vote("age", label)
+                        aggregated_gender = self.compute_weighted_vote("gender", label)
+                        aggregated_ethnicity = self.compute_weighted_vote("ethnicity", label)
                         occurence = len(persons)/fps
                         area_occupied = float(sum([np.abs(x1 - x2) * np.abs(y1 - y2)
                                                    for (x1, y1, x2, y2) in [person["bbox"] for person in persons]])/(total_area*len(persons)))
@@ -109,10 +118,12 @@ class FacesClustering:
                                       for person in persons]
                         persons_bboxes = [person["bbox"]
                                         for person in persons]
+                        persons_ids = [person["person_id"]
+                                       for person in persons]
                         frames_to_bboxes = dict(zip(frames_id, persons_bboxes))
                         aggregated_persons.append({"age": aggregated_age, "gender": aggregated_gender, "ethnicity": aggregated_ethnicity,
-                                                   "occurence": occurence, "area occupied": area_occupied, "label": final_label, "frames_bboxes": frames_to_bboxes})
-                        print(f"Character {final_label} : {occurence:.2f} seconds on screen, {len(persons) / total_persons * 100:.2f}% of the total, age: {aggregated_age}, gender: {aggregated_gender}, ethnicity: {aggregated_ethnicity}")
+                                                   "occurence": occurence, "area occupied": area_occupied, "label": final_label, "frames_bboxes": frames_to_bboxes, "persons_ids" : persons_ids})
+                        #print(f"Character {final_label} : {occurence:.2f} seconds on screen, {len(persons) / total_persons * 100:.2f}% of the total, age: {aggregated_age}, gender: {aggregated_gender}, ethnicity: {aggregated_ethnicity}")
                     case _:
                         raise ValueError(f"Method  {method} not supported")
                 

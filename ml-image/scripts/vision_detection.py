@@ -33,7 +33,7 @@ class VisionDetection:
 
         # https://github.com/akanametov/yolo-face
 
-        print("VisionDetection initialized with device:", self.device)
+        #print("VisionDetection initialized with device:", self.device)
 
     def get_areas_of_interest(
             self, images: np.ndarray, area_type: str = "face", batch_size: int = 64) -> list:
@@ -110,7 +110,7 @@ class VisionDetection:
                     case _:
                         raise ValueError("Input images must have shape [H, W, C] or [N, H, W, C]")
                 detections.append({"bbox": [
-                     x1, y1, x2, y2], "conf": conf, "frame_id": k, f"cropped_{area_type}": cropped_image})
+                     x1, y1, x2, y2], "conf": conf, "frame_id": k, "perso_id": i, f"cropped_{area_type}": cropped_image})
     
         return detections
     

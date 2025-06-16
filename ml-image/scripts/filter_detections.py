@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 from typing import List, Dict, Callable
 import mediapipe as mp
+import os
 
 ### Review: je verrais bien une classe pr chaque filtre (qui hériteraient d'une meme classe abstraite) mais peut etre pas la priorité du projet :p
 
@@ -13,27 +14,58 @@ class DetectionFilter:
         self.kwargs = kwargs
 
     def apply(self, detections: List[Dict], mode: str = "clustering") -> List[Dict]:
+        #print(f"{len(detections)} detections before filtering")
         match mode:
             case "clustering":
-                filtered_detections = [det for det in detections if all(f(det, **self.kwargs) for f in self.simple_filters)]
+                filtered_detections = detections
+                for filter in self.simple_filters + self.complex_filters:
+                    filtered_detections = [det for det in filtered_detections if filter(det, **self.kwargs)]
+                    #print(f"{len(filtered_detections)} detections remaining after filtering {filter.__name__}")
                 
-                return [det for det in filtered_detections if all(f(det, **self.kwargs) for f in self.complex_filters)]
+                return filtered_detections
             
             case "classification":
-                filtered_detections = []
-                for det in detections:
-                    passes_classification = all(f(det, **self.kwargs) for f in self.simple_filters + self.complex_filters)
+                detections_vote_weight = np.zeros_like(detections)
+                # Add 1 to count for each passed filters
+                for filter in self.simple_filters + self.complex_filters:
+                    detections_vote_weight = np.add(detections_vote_weight, np.array([filter(det, **self.kwargs) for det in detections]))
 
-                    if passes_classification:
-                        filtered_detections.append(det)  # Keep the detection as is
-                    else:
-                        # If it fails classification, set predictions to "unknown"
-                        det["age"] = "unknown"
-                        det["gender"] = "unknown"
-                        det["ethnicity"] = "unknown"
-                        filtered_detections.append(det)
+                for det, weight in zip(detections, detections_vote_weight) :
+                    det["weight"] = weight
+                return detections
+    
+    def visualize_detection_parameters(self, movie_id: str, detections: List[Dict], storage_folder: str='visualize_parameters') -> None:
+        movie_path = os.path.join(storage_folder, movie_id)
+        os.makedirs(movie_path, exist_ok=True)
+        for det in detections:
+            image = det[f"cropped_{self.area_type}"]
+        
+            total_area = self.kwargs.get("total_area", 1.0)
+            param_area = compute_area(det["bbox"], total_area)
+            param_conf = det['conf']
+            param_sharpness = compute_sharpness(image)
+            nose_tip = get_face_landmarks(image)
+            param_nose_tip = f"_{nose_tip: .2f}.jpg" if nose_tip is not None else "_undetermined.jpg"
+            parameters = f"_{param_area: .2f}_{param_conf: .2f}_{param_sharpness: .2f}" + param_nose_tip
 
-                return filtered_detections
+            attr_age = det['age']
+            attr_age_conf = det['age_conf']
+            attr_ethnicity = det['ethnicity']
+            attr_ethnicity_conf = det['ethnicity_conf']
+            attr_gender = det['gender']
+            attr_gender_conf = det['gender_conf']
+            attributes = f"_{attr_gender}_{attr_age}_{attr_ethnicity}_{attr_gender_conf:.2f}_{attr_age_conf:.2f}_{attr_ethnicity_conf:.2f}"
+
+            image_name = f"frame_{det['frame_id']}_perso_{det['perso_id']}"
+            
+            #store image with parameters in folder
+            write_image_with_parameters(parameters, attributes, image_name, image, movie_path)
+
+def write_image_with_parameters(parameters:str, attributes:str, image_name: str, image: np.ndarray, movie_path: str) -> None:
+    file_name = image_name + attributes + parameters
+    file_path = os.path.join(movie_path, file_name)
+    cv2.imwrite(file_path, image)
+            
 
 def compute_area(bbox: List[float], total_area: float) -> float:
     x1, y1, x2, y2 = bbox
@@ -110,7 +142,7 @@ def draw_landmarks(image):
     results = face_mesh.process(rgb_image)
 
     if not results.multi_face_landmarks:
-        print("Aucun visage détecté")
+        #print("Aucun visage détecté")
         return None
     
     draw_image = image.copy()
@@ -127,4 +159,5 @@ def draw_landmarks(image):
     sup_lips = landmarks.landmark[13]
     inf_lips = landmarks.landmark[14]
 
-    cv2.imwrite(f"example/pose/face_with_landmarks_{nose_tip.z : .2f}_{left_eye.x: .2f}_{right_eye.x: .2f}_{sup_lips.y: .2f}_{inf_lips.y: .2f}.jpg", draw_image)
+    return(draw_image, nose_tip, left_eye,right_eye, sup_lips, inf_lips)
+    #cv2.imwrite(f"example/pose/face_with_landmarks_{nose_tip.z : .2f}_{left_eye.x: .2f}_{right_eye.x: .2f}_{sup_lips.y: .2f}_{inf_lips.y: .2f}.jpg", draw_image)
