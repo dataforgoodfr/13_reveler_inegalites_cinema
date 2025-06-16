@@ -200,6 +200,10 @@ ROLES = [
     { "allocine_name": "Superviseur montage dialogues", "name": "dialogue_editing_supervisor", "key_role": False, "inclusive_name": "Superviseur·euse montage dialogues" },
     { "allocine_name": "Directeur de la photographie des effets visuels", "name": "vfx_dop", "key_role": False, "inclusive_name": "Directeur·rice de la photographie des effets visuels" },
     { "allocine_name": "Images animalières", "name": "wildlife_cinematography", "key_role": False, "inclusive_name": "Images animalières" },
+    { "allocine_name": "Producteur Artistique", "name": "artistic_producer", "key_role": False, "inclusive_name": "Producteur·rice Artistique" },
+    { "allocine_name": "Délégué général", "name": "general_delegate", "key_role": False, "inclusive_name": "Délégué·e général·e" },
+    { "allocine_name": "VideoProvider", "name": "video_provider", "key_role": True, "inclusive_name": "Fournisseur·euse de vidéo" },
+    { "allocine_name": "Gagman", "name": "gagman", "key_role": False, "inclusive_name": "Gagman" },
     { "allocine_name": "", "name": "free_broadcaster", "key_role": False, "inclusive_name": "Chaîne/plateforme de diffusion gratuite" },
     { "allocine_name": "", "name": "paying_broadcaster", "key_role": False, "inclusive_name": "Chaîne/plateforme de diffusion payante" },
 ]
