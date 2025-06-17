@@ -6,7 +6,6 @@ import pickle as pkl
 import numpy as np
 import torch
 
-from datetime import datetime
 from loguru import logger
 from tqdm import tqdm
 
@@ -18,12 +17,12 @@ from scripts import vision_detection
 from scripts import evaluation_annotation 
 
 
-def load_data(source):
+def load_data(source: str, output_poster: str = "downloaded_poster", output_trailer: str = "downloaded_trailer"):
     # Get data from url or file
 
     if source[:4] == "http":
         #print(f"Looking for data at: {source}")
-        data = utils.get_data_from_url(source)
+        data = utils.get_data_from_url(source, output_poster, output_trailer)
         source_type = "url"
     else:
         #print(f"Looking for data in file: {source}")
@@ -32,7 +31,23 @@ def load_data(source):
     return data, source_type
 
 
-def compute_constants(frames, movie_id: str, source_type: str = "trailer", sharpness_factor: float = 1.0, sharpness_factor_cla: float = 1.0, aspect_ratio: float = 2.478, mode: str="evaluate") -> tuple:
+def load_data_from_links(row) :
+    # Get data directly from poster and trailer links
+    os.makedirs("downloaded_media", exist_ok=True)
+    output_poster, output_trailer = f"downloaded_media/{row.visa_number}.jpg", f"downloaded_media/{row.visa_number}.mp4"
+    utils.download_video_from_link(row.trailer_url, output_trailer)
+    utils.download_video_from_link(row.poster_url, output_poster)
+    
+    poster_image = cv2.imread(output_poster)
+    quality = "unknown"
+    source_type = "url"
+    
+    data = {"url": row.allocine_url, "poster_path": output_poster, "trailer_path": output_trailer, "image": poster_image, "quality": quality}
+    
+    return data, source_type
+
+
+def compute_constants(frames, movie_id: str, source_type: str = "trailer", sharpness_factor: float = 1.0, sharpness_factor_cla: float = 1.0, aspect_ratio: float = 2.478, mode: str = "evaluate") -> tuple:
     # Compute constants for whole pipeline
 
     match source_type:
@@ -51,7 +66,7 @@ def compute_constants(frames, movie_id: str, source_type: str = "trailer", sharp
             effective_height = W_original / aspect_ratio # The aspect ratio of the video is the effective area of the video (i.e., the area where the content is present)
             total_area = effective_height * W_original
 
-            if mode=="evaluate":
+            if mode == "evaluate":
                 movie_folder = os.path.join("visualize_parameters", movie_id)
                 constants_path = os.path.join(movie_folder, "constants.txt")
                 os.makedirs("visualize_parameters", exist_ok=True)
@@ -206,7 +221,6 @@ def gather_and_save_predictions(source:pd.DataFrame) -> None :
     trailer_predictions = [os.path.join(path_to_outputs, item) for item in os.listdir(path_to_outputs) if 'trailer' in item]
     dict_poster_predictions = {
         'visa_number' : [], 
-        #'allocine_url' : [],
         'allocine_id' : [],
         'gender' : [], 
         'age_min' : [], 
@@ -216,7 +230,6 @@ def gather_and_save_predictions(source:pd.DataFrame) -> None :
         }
     dict_trailer_predictions = {
         'visa_number' : [], 
-        #'allocine_url' : [],
         'allocine_id' : [],
         'gender' : [], 
         'age_min' : [], 
@@ -233,6 +246,7 @@ def gather_and_save_predictions(source:pd.DataFrame) -> None :
         #allocine_url = source[source.visa_number == visa_number].iloc[0]['allocine_url']
         allocine_id = int(source[source.visa_number == visa_number].iloc[0]['allocine_id'])
         for char in data :
+            print(char)
             dict_poster_predictions = format_prediction_results('poster', char, allocine_id, visa_number, dict_poster_predictions)
     df_posters = pd.DataFrame(dict_poster_predictions)
     df_posters.to_csv('predictions_on_posters.csv', index=False)
@@ -245,53 +259,45 @@ def gather_and_save_predictions(source:pd.DataFrame) -> None :
         #allocine_url = source[source.visa_number == visa_number].iloc[0]['allocine_url']
         allocine_id = int(source[source.visa_number == visa_number].iloc[0]['allocine_id'])
         for char in data :
+            print(char)
             dict_trailer_predictions = format_prediction_results('trailer', char, allocine_id, visa_number, dict_trailer_predictions)
     df_trailers = pd.DataFrame(dict_trailer_predictions)
     df_trailers.to_csv('predictions_on_trailers.csv', index=False)
 
 
 def format_prediction_results(
-        mode:str, character_data:dict, allocine_id:str, visa_number:int, dict_predictions:dict
+        mode: str, character_data: dict, allocine_id: str, visa_number: int, dict_predictions: dict
         ) -> dict:
-    if any([item == 'unknown' for item in [character_data['age'], character_data['gender'], character_data['ethnicity']]]) :
-        dict_predictions['visa_number'].append(visa_number)
-        #dict_predictions['allocine_url'].append(allocine_url)
-        dict_predictions['allocine_id'].append(allocine_id)
-        dict_predictions['gender'].append('unknown')
+    if character_data['age'] == 'unknown':
         dict_predictions['age_min'].append(0)
         dict_predictions['age_max'].append(0)
-        dict_predictions['ethnicity'].append('unknown')
-        match mode :
-            case 'poster' :
-                dict_predictions['poster_percentage'].append(0.0)
-            case 'trailer' :
-                dict_predictions['time_on_screen'].append(0)
-                dict_predictions['average_size_on_screen'].append(0)
-    else :   
-        dict_predictions['visa_number'].append(visa_number)
-        #dict_predictions['allocine_url'].append(allocine_url)
-        dict_predictions['allocine_id'].append(allocine_id)
-        dict_predictions['gender'].append(character_data['gender'])
+    else :
         dict_predictions['age_min'].append(character_data['age'].split('-')[0])
         dict_predictions['age_max'].append(character_data['age'].split('-')[1])
-        dict_predictions['ethnicity'].append(character_data['ethnicity'])
-        match mode :
-            case 'poster' :
-                dict_predictions['poster_percentage'].append(character_data['occupied_area'])
-            case 'trailer' :
-                dict_predictions['time_on_screen'].append(character_data['occurence'])
-                dict_predictions['average_size_on_screen'].append(character_data['area occupied'])
+        
+    dict_predictions['visa_number'].append(visa_number)
+    dict_predictions['allocine_id'].append(allocine_id)
+    dict_predictions['gender'].append(character_data['gender'])
+    dict_predictions['ethnicity'].append(character_data['ethnicity'])
+    match mode :
+        case 'poster' :
+            dict_predictions['poster_percentage'].append(character_data['occupied_area'])
+        case 'trailer' :
+            dict_predictions['time_on_screen'].append(character_data['occurence'])
+            dict_predictions['average_size_on_screen'].append(character_data['area occupied'])
     return dict_predictions
 
 
 def main(
         source, movie_id, num_cpu, batch_size, min_area, max_area, min_conf, min_conf_cla, min_sharpness, min_sharpness_cla,
-        max_z, max_z_cla, min_mouth_opening, min_mouth_opening_cla, cluster_model, cluster_threshold, agr_method, store_video, video_path, mode='evaluate', poster_source='None'
+        max_z, max_z_cla, min_mouth_opening, min_mouth_opening_cla, cluster_model, cluster_threshold, agr_method, store_visuals, visuals_path, mode='inference', poster_source='None', row=None,
         ) -> None:
-    start_time = datetime.now()
+    #start_time = datetime.now()
 
     # Load data
-    data, source_type = load_data(source)
+
+    #data, source_type = load_data(source)
+    data, source_type = load_data_from_links(row)
     if source_type == "url":
         poster = data["image"]
     elif poster_source != "None":
@@ -347,8 +353,8 @@ def main(
         method=agr_method, fps=fps, effective_area=effective_area)
     #print("Faces clustered", datetime.now() - start_time)
 
-     # Store predictions on video
-    if store_video :
+    # Store predictions on video
+    if store_visuals :
         utils.store_predictions_on_video(
             frames, aggregated_estimations, classified_faces, fps=fps, output_name=movie_id)
        # print("Video with predictions saved", datetime.now() - start_time)
@@ -358,7 +364,7 @@ def main(
         #print("----- Predicting on poster -----")
 
         # Initialize constants
-        H_original, W_original, total_area, _, _= compute_constants(poster, movie_id, mode=mode, source_type="poster")
+        H_original, W_original, total_area, _, _ = compute_constants(poster, movie_id, mode=mode, source_type="poster")
         #print("Constants initialized", datetime.now() - start_time)
 
         # Detect faces in the poster
@@ -385,6 +391,8 @@ def main(
             closest_index = None
             closest_distance = float("inf")  # Distance initiale très grande
 
+            #closest_index = int(np.argmin(np.linalg.norm(face - np.array(embedded_faces), axis = 1)))
+            
             # Comparer avec chaque embedding dans embedded_faces
             for i, cluster_embedding in enumerate(embedded_faces):
             # Calculer la distance Euclidienne entre les embeddings
@@ -412,7 +420,7 @@ def main(
 
         '''
         # Classify all faces
-        classified_faces, _= classify_faces(filtered_detections, batch_size, device, mode = "poster")
+        classified_faces, _ = classify_faces(filtered_detections, batch_size, device, mode = "poster")
         print("Faces classified", datetime.now() - start_time)
         '''
             
@@ -421,7 +429,7 @@ def main(
             pkl.dump(filtered_detections, outfile)
         outfile.close()
 
-        if store_video :
+        if store_visuals :
             # Draw predictions on poster
             utils.draw_predictions_on_poster(poster, filtered_detections)
             #print("Poster with predictions saved", datetime.now() - start_time)
@@ -450,7 +458,7 @@ if __name__ == '__main__':
         " le fichier vidéo ou vers un fichier csv pour traiter une liste de"
         " films.")
     parser.add_argument("--mode", type=str, default="infer", help="Mode to use the main, will infer if not 'evaluate'")
-    parser.add_argument("--column_id", type=str, default="visa_number",
+    parser.add_argument("--column_identifier", type=str, default="visa_number",
                         help="Column to use to get the identifier to save prediction outputs")
     parser.add_argument("--num_cpu", type=int, default=8,
                         help="Number of CPU threads to use")
@@ -482,14 +490,18 @@ if __name__ == '__main__':
                         default=0.92, help="Threshold for clustering faces")
     parser.add_argument("--agr_method", type=str, default="majority",
                         help="Method for aggregating predictions")
-    parser.add_argument("--store_video", action=argparse.BooleanOptionalAction,
-                        default=False, help="Store trailer with video predictions")
-    parser.add_argument("--video_path", type=str, default="stored_videos/",
-                        help="Path to store trailers with video predictions")
+    parser.add_argument("--store_visuals", action=argparse.BooleanOptionalAction,
+                        default=False, help="Store trailer and poster with visual predictions")
+    parser.add_argument("--visuals_path", type=str, default="stored_visuals/",
+                        help="Path to store trailers and posters with visual predictions")
+    parser.add_argument("--istart", type=int, default=0,
+                        help="Row index from which to start dataframe analysis")
+    parser.add_argument("--istop", type=int, default=1e9,
+                        help="Row index on which to stop dataframe analysis")
     
 
     args = parser.parse_args()
-    os.makedirs("stored_videos", exist_ok=True)
+    os.makedirs("stored_visuals", exist_ok=True)
     os.makedirs("stored_predictions", exist_ok=True)
     # Check if the source is a url or a file
     if args.source[:4] == "http" or args.source[-4:] == ".mp4":
@@ -502,18 +514,23 @@ if __name__ == '__main__':
         predictions = main(
             args.source, movie_id, args.num_cpu, args.batch_size, args.min_area, args.max_area, args.min_conf, args.min_conf_cla, args.min_sharpness, args.min_sharpness_cla,
             args.max_z, args.max_z_cla, args.min_mouth_opening, args.min_mouth_opening_cla, args.cluster_model, args.cluster_threshold, args.agr_method,
-            args.store_video, args.video_path, mode=args.mode, poster_source=args.source_image
+            args.store_visuals, args.visuals_path, mode=args.mode, poster_source=args.source_image, row=None,
         )
 
     elif args.source[-4:] == ".csv":
         df = pd.read_csv(args.source)
+        istart = args.istart
+        istop = min(len(df), args.istop)
+        df = df.iloc[istart:istop]
         logger.info(f"Found {len(df)} films to analyze in the source csv.")
         for _, row in tqdm(df.iterrows(), total=len(df)):
             predictions = main(
-                row.allocine_url, row[args.column_id], args.num_cpu, args.batch_size, args.min_area, args.max_area, args.min_conf, args.min_conf_cla, args.min_sharpness, args.min_sharpness_cla,
+                row.allocine_url, row[args.column_identifier], args.num_cpu, args.batch_size, args.min_area, args.max_area, args.min_conf, args.min_conf_cla, args.min_sharpness, args.min_sharpness_cla,
                 args.max_z, args.max_z_cla, args.min_mouth_opening, args.min_mouth_opening_cla, args.cluster_model, args.cluster_threshold, args.agr_method,
-                args.store_video, args.video_path,
+                args.store_visuals, args.visuals_path, row=row,
             )
+            os.remove(f"downloaded_media/{row.visa_number}.jpg")
+            os.remove(f"downloaded_media/{row.visa_number}.mp4")
         logger.success(f"All films from {args.source} have been analyzed.")
         gather_and_save_predictions(df)
     else:
