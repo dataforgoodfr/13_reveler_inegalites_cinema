@@ -85,7 +85,7 @@ class GetFilmDetails:
                 "is_key_role": role.is_key_role if role else None,
                 "is_company": holder.is_company() if holder else None,
                 "name": holder.full_name() if holder else None,
-                "gender": credit.credit_holder.gender.capitalize()
+                "gender": credit.credit_holder.gender.capitalize() if credit.credit_holder.gender else None
             }
 
             # Casting: role == 'actor'
