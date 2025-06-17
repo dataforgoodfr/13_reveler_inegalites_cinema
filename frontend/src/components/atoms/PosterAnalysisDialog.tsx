@@ -6,6 +6,7 @@ import {
   CarouselContent,
   CarouselDots,
   CarouselItem,
+  CarouselNavigation,
 } from "../ui/carousel";
 import Image from "next/image";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "../ui/drawer";
@@ -217,7 +218,7 @@ const PosterAnalysisDialog = ({
                     </div>
                   </CarouselItem>
                 </CarouselContent>
-                <CarouselDots />
+                <CarouselNavigation />
               </Carousel>
             </div>
           </div>
