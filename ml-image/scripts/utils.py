@@ -55,27 +55,36 @@ def get_data_from_url(url: str,
                 link = video_sources["low"]
                 quality = "low"
             #print(f"Downloading trailer in {quality} quality")
-            r = requests.get(link, stream=True)
-            with open(video_path, 'wb') as f:
-                for chunk in r.iter_content(chunk_size=1024*1024) :
-                    if chunk:
-                        f.write(chunk)
-
+            download_video_from_link(link, video_path)
+            
         # to download poster
         poster_path = os.path.join('example', f'{output_poster}.jpg')
         poster_tag = soup.find('meta', property='og:image')
         poster_url = poster_tag['content']
-        r = requests.get(poster_url, stream=True)
-        with open(poster_path, 'wb') as f:
-            for chunk in r:
-                f.write(chunk)
+        download_poster_from_link(poster_url, poster_path)
         
         poster_image = cv2.imread(poster_path)
         
         data = {"url": url, "poster_path": poster_path, "trailer_path": video_path, "image": poster_image, "quality": quality}
 
         return data
-        
+
+    
+def download_video_from_link(link: str, video_path: str) -> None: 
+    r = requests.get(link, stream=True)
+    with open(video_path, 'wb') as f:
+        for chunk in r.iter_content(chunk_size=1024*1024) :
+            if chunk:
+                f.write(chunk)
+
+                
+def download_poster_from_link(link: str, poster_path: str) -> None: 
+    r = requests.get(link, stream=True)
+    with open(poster_path, 'wb') as f:
+        for chunk in r:
+            f.write(chunk)
+
+                
 def get_data_from_file(file_path: str, filetype: str = "poster") -> None:
     """
     Load data from local file for either a 'poster' or 'trailer' file

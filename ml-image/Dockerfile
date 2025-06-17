@@ -1,6 +1,7 @@
 FROM python:3.11-slim
 
-RUN pip install --no-cache-dir "uv~=0.1"
+#RUN pip install --no-cache-dir "uv~=0.1"
+RUN pip install "uv~=0.1"
 
 #RUN --mount=from=uv,source=/uv,target=./uv \
 #    ./uv venv /opt/venv
