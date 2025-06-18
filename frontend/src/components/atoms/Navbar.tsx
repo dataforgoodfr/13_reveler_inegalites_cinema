@@ -277,7 +277,7 @@ const Navbar = ({
           )}
         </nav>
       )}
-      <div className="h-full">{children}</div>
+      {children}
     </>
   );
 };
