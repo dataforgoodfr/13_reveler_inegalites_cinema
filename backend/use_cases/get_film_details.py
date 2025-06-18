@@ -55,7 +55,7 @@ class GetFilmDetails:
             film_data["duration"] = None
 
         # Get the film genres
-        film_data["genres"] = [genre.name for genre in film.genres]
+        film_data["genres"] = [genre.name.capitalize() for genre in film.genres]
 
         # Get the film poster and trailer
         film_data["poster_image_base64"] = film.poster[0].image_base64 if film.poster else None
@@ -85,7 +85,7 @@ class GetFilmDetails:
                 "is_key_role": role.is_key_role if role else None,
                 "is_company": holder.is_company() if holder else None,
                 "name": holder.full_name() if holder else None,
-                "gender": credit.credit_holder.gender.capitalize() if credit.credit_holder.gender else None
+                "gender": credit.credit_holder.gender
             }
 
             # Casting: role == 'actor'
