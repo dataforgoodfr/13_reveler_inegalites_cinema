@@ -78,7 +78,7 @@ export default function PageFilm() {
 
   if (isLoading || !festivalData) {
     return (
-      <main className="p-20 bg-transparent text-white flex justify-center items-center">
+      <main className="p-20 h-full bg-transparent text-white flex justify-center items-center">
         <p>Chargement...</p>
       </main>
     );
@@ -86,7 +86,7 @@ export default function PageFilm() {
 
   if (hasError) {
     return (
-      <main className="p-20 bg-transparent text-white flex justify-center items-center">
+      <main className="p-20 h-full bg-transparent text-white flex justify-center items-center">
         <h1 className="text-4xl font-bold">404 - Festival non trouvé</h1>
       </main>
     );
