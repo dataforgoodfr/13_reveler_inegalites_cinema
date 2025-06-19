@@ -77,7 +77,7 @@ const isMobile: boolean = useMediaQuery("(max-width: 768px)");
           </a>
         </div>
       </div>
-      <div className="flex md:justify-center items-center font-bold w-full">
+      <div className="flex justify-center items-center font-bold w-full">
         <div className="bg-violet-700 border border-white/40 rounded-xl text-center p-4">
           Observatoire des inégalités dans le cinéma, <br />
           par le Collectif 50/50 et Data For Good
