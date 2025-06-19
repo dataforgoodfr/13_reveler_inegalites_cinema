@@ -49,7 +49,7 @@ const isMobile: boolean = useMediaQuery("(max-width: 768px)");
           </div>
           <a href="https://www.helloasso.com/associations/collectif-50-50" target="_blank" rel="noopener noreferrer" className="w-full">
           <Button className="text-black bg-white hover:bg-grey w-full">
-            Faire un don
+            Adhérer / Faire un don
           </Button>
           </a>
         </div>
