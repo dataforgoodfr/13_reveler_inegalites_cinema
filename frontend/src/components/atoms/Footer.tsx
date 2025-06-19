@@ -56,11 +56,11 @@ const isMobile: boolean = useMediaQuery("(max-width: 768px)");
         <div className="flex flex-col gap-5 md:gap-1 justify-center w-full pb-10">
           <Image src={"/logo_d4g.png"} alt="" width={70} height={0} />
           <h1 className="font-bold">Data for good</h1>
-          <a href="https://dataforgood.fr/" className="flex hover:underline">
+          <a href="https://dataforgood.fr/" target="_blank" rel="noopener noreferrer" className="flex hover:underline">
             <p className="pr-2">Site internet</p>
             <ExternalLink />
           </a>
-          <a href="https://x.com/dataforgood_fr?lang=fr" className="flex hover:underline">
+          <a href="https://x.com/dataforgood_fr?lang=fr" target="_blank" rel="noopener noreferrer" className="flex hover:underline">
             <p className="pr-2">Twitter</p>
             <ExternalLink />
           </a>
