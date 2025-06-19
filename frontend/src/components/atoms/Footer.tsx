@@ -20,7 +20,7 @@ const isMobile: boolean = useMediaQuery("(max-width: 768px)");
             height={100}
           />
           <h1 className="font-bold">Collectif 50/50</h1>
-          <a href="https://collectif5050.com" className="flex hover:underline">
+          <a href="https://collectif5050.com" target="_blank" rel="noopener noreferrer" className="flex hover:underline">
             <p className="pr-2">Site internet</p>
             <ExternalLink />
           </a>
