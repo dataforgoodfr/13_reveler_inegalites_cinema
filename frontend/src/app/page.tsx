@@ -13,13 +13,13 @@ export default function Home() {
         }
       ></div>
       <main className="container h-full mx-auto px-4 py-16 flex flex-col items-center justify-center text-center text-white">
-        <div className="animate-slide-up">
-          <div className="mt-30 mb-12">
+        <div className="animate-slide-up flex flex-col items-center gap-8">
+          <div>
             <span className="text-5xl md:text-6xl font-bold w-3/4">
               <span className="text-violet-500">29%</span>
               <span>
                 {" "}
-                des réalisateurs·rices actifs·ves
+                des réalisateurs·rices actifs·ves{" "}
                 <br className="hidden md:block" />
                 ces 10 dernières années sont des{" "}
               </span>
