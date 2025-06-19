@@ -24,7 +24,7 @@ const isMobile: boolean = useMediaQuery("(max-width: 768px)");
             <p className="pr-2">Site internet</p>
             <ExternalLink />
           </a>
-          <a href="https://collectif5050.com/nos-etudes/" className="flex hover:underline">
+          <a href="https://collectif5050.com/nos-etudes/" target="_blank" rel="noopener noreferrer" className="flex hover:underline">
             <p className="pr-2">Nos études</p>
             <ExternalLink />
           </a>
