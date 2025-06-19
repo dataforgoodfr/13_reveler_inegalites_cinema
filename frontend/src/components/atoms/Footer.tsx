@@ -47,7 +47,7 @@ const isMobile: boolean = useMediaQuery("(max-width: 768px)");
               />
             </a>
           </div>
-          <a href="https://www.helloasso.com/associations/collectif-50-50"target="_blank" rel="noopener noreferrer" className="w-full">
+          <a href="https://www.helloasso.com/associations/collectif-50-50" target="_blank" rel="noopener noreferrer" className="w-full">
           <Button className="text-black bg-white hover:bg-grey w-full">
             Faire un don
           </Button>
