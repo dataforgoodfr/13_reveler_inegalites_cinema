@@ -65,13 +65,11 @@ const isMobile: boolean = useMediaQuery("(max-width: 768px)");
             <ExternalLink />
           </a>
           <a
-            href="https://www.linkedin.com/company/dataforgood"
-            className="flex hover:underline"
-          >
+            href="https://www.linkedin.com/company/dataforgood" target="_blank" rel="noopener noreferrer" className="flex hover:underline">
             <p className="pr-2">LinkedIn</p>
             <ExternalLink />
           </a>
-          <a href="mailto:contact@dataforgood.fr" className="flex hover:underline">
+          <a href="mailto:contact@dataforgood.fr" target="_blank" rel="noopener noreferrer" className="flex hover:underline">
             <p className="pr-2">Envoyer un mail</p>
             <ExternalLink />
           </a>
