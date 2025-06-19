@@ -22,23 +22,23 @@ const isMobile: boolean = useMediaQuery("(max-width: 768px)");
           <h1 className="font-bold">Collectif 50/50</h1>
           <a href="https://collectif5050.com" className="flex hover:underline">
             <p className="pr-2">Site internet</p>
-              <ExternalLink />
+            <ExternalLink />
           </a>
           <a href="https://collectif5050.com/nos-etudes/" className="flex hover:underline">
             <p className="pr-2">Nos études</p>
             <ExternalLink />
           </a>
           <div className="flex w-full py-2 justify-between">
-            <a href="https://www.facebook.com/Collectif5050">
+            <a href="https://www.facebook.com/Collectif5050" target="_blank" rel="noopener noreferrer">
               <Image src="/facebook.png" alt="Facebook" width={isMobile ? 35 : 25} height={0} />
             </a>
-            <a href="https://www.linkedin.com/company/le-collectif-50-50">
+            <a href="https://www.linkedin.com/company/le-collectif-50-50" target="_blank" rel="noopener noreferrer">
               <Image src="/linkedin.png" alt="Linkedin" width={isMobile ? 35 : 25} height={0} />
             </a>
-            <a href="https://www.youtube.com/channel/UCWhSC21jayqFUXUoo02pLTA">
+            <a href="https://www.youtube.com/channel/UCWhSC21jayqFUXUoo02pLTA" target="_blank" rel="noopener noreferrer">
               <Image src="/youtube.png" alt="YouTube" width={isMobile ? 35 : 25} height={0} />
             </a>
-            <a href="https://www.instagram.com/lecollectif5050/">
+            <a href="https://www.instagram.com/lecollectif5050/" target="_blank" rel="noopener noreferrer">
               <Image
                 src="/instagram.png"
                 alt="Instagram"
@@ -47,7 +47,7 @@ const isMobile: boolean = useMediaQuery("(max-width: 768px)");
               />
             </a>
           </div>
-          <a className="w-full" href="https://www.helloasso.com/associations/collectif-50-50/formulaires/4">
+          <a href="https://www.helloasso.com/associations/collectif-50-50"target="_blank" rel="noopener noreferrer" className="w-full">
           <Button className="text-black bg-white hover:bg-grey w-full">
             Faire un don
           </Button>
@@ -78,9 +78,9 @@ const isMobile: boolean = useMediaQuery("(max-width: 768px)");
         </div>
       </div>
       <div className="flex md:justify-center items-center font-bold w-full">
-        <div className="bg-[rgba(30,30,30,0.2)] p-2">
-          Observatoire de <br /> l’inclusion et de l’équité <br />
-          dans l’industrie du <br /> cinéma
+        <div className="bg-violet-700 border border-white/40 rounded-xl text-center p-4">
+          Observatoire des inégalités dans le cinéma, <br />
+          par le Collectif 50/50 et Data For Good
         </div>
       </div>
     </div>
