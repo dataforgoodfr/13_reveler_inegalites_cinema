@@ -40,25 +40,19 @@ def get_festival_awards_by_festival_id(session: Session, festival_id: int) -> Li
 
 def get_festival_awards_by_id_year(session: Session, festival_id: int, year: int) -> List[FestivalAward]:
     """
-    Returns a list of awards associated with a given festival and a given year.
-    Only includes awards that have at least one nomination in the specified year.
+    Returns a list of unique awards for a given festival that have at least one nomination in the given year.
     """
-    subquery = (
-        session.query(AwardNomination.award_id)
-        .filter(extract('year', AwardNomination.date) == year)
-        .subquery()
-    )
-
     awards = (
         session.query(FestivalAward)
+        .join(AwardNomination, AwardNomination.award_id == FestivalAward.id)
         .filter(
             FestivalAward.festival_id == festival_id,
-            FestivalAward.id.in_(session.query(subquery))
+            extract('year', AwardNomination.date) == year
         )
-        .order_by(FestivalAward.name)
+        .distinct()  # ✅ correct way to ensure uniqueness
+        .order_by(FestivalAward.french_label)
         .all()
     )
-
     return awards
 
 def _load_constants():
