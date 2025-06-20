@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from backend.repositories import festival_repository, festival_award_repository, award_nomination_repository, film_repository
+from backend.entities.festival_award_entity import FestivalAwardEntity
 from backend.use_cases import get_film_details
 from backend.services import festival_metrics_calculator
 from database.models import Festival
@@ -11,63 +12,47 @@ class GetFestivalDetails:
     def execute(self, festival_id: int, year: int | None=None, award_id: int | None=None):
         # Get festival
         festival = festival_repository.get_festival(self.db, festival_id)
-        # Sort from most recent to oldest
         if not festival:
             return {"error": "Festival not found"}
 
-        # Get available year
-        years_with_awards = award_nomination_repository.get_years_with_awards(self.db, festival.id)
-        # Trier du plus récent au plus ancien
-        years_with_awards = sorted(years_with_awards, reverse=True)
-
+        # Get years with awards (sorted latest → oldest)
+        years_with_awards = sorted(
+            award_nomination_repository.get_years_with_awards(self.db, festival.id),
+            reverse=True
+        )
         if not years_with_awards:
             return {"error": "No award nomination found for this festival"}
 
-        # Determine year
-        if year is None:
-            year = max(years_with_awards)
+        # Default to most recent year
+        year = year or years_with_awards[0]
         if year not in years_with_awards:
-                return {"error": "No award nomination found for this festival"}
+            return {"error": f"No award nomination found for year {year}"}
 
         # Get awards for that year
         festival_awards = festival_award_repository.get_festival_awards_by_id_year(self.db, festival.id, year)
         if not festival_awards:
             return {"error": f"No awards found for year {year}"}
         
-        # Determine specific award
-        selected_award = None
-        if award_id:
-            selected_award = next((a for a in festival_awards if a.id == award_id), None)
-            if not selected_award:
-                return {"error": f"Award ID {award_id} not found for year {year}"}
-        else:
-            selected_award = festival_awards[0]
+        # Select award (given or default to first)
+        selected_award = next((a for a in festival_awards if a.id == award_id), None) if award_id else festival_awards[0]
+        print (f"Selected award: {selected_award.id if selected_award else 'None'}, award_id: {award_id}, year: {year}")
+        if not selected_award:
+            return {"error": f"Award ID {award_id} not found for year {year}"}
 
-        # Get nomination data for selected award
-        nomination_data = self._get_nomination_data(selected_award.id, year)
-        award_data = {
-            "award_id": selected_award.id,
-            "name": selected_award.name,
-            "nominations": nomination_data
-        }
-        # Get festival data
-        festival_data = self._get_festival_data(festival, str(year))
-
-        # Get available awards list
-        available_awards = [
-        {
-            "award_id": award.id,
-            "name": award.name
-        }
-        for award in festival_awards
-        ]
-
+        # Prepare response
         return {
-            "festival": festival_data,
+            "festival": self._get_festival_data(festival, str(year)),
             "year": year,
             "available_years": years_with_awards,
-            "award": award_data,
-            "available_awards": available_awards
+            "award": {
+                "award_id": selected_award.id,
+                "name": FestivalAwardEntity(selected_award).display_name(),
+                "nominations": self._get_nomination_data(selected_award.id, year)
+            },
+            "available_awards": [
+                {"award_id": award.id, "name": FestivalAwardEntity(award).display_name()}
+                for award in festival_awards
+            ]
         }
 
     def _get_nomination_data(self, award_id: int, year: int):
