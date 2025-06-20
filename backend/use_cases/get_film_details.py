@@ -4,6 +4,7 @@ from backend.services.film_metrics_calculator import FilmMetricsCalculator
 from backend.entities.credit_holder_entity import CreditHolderEntity
 from backend.entities.trailer_entity import TrailerEntity
 from backend.entities.poster_entity import PosterEntity
+from backend.entities.festival_award_entity import FestivalAwardEntity
 
 class GetFilmDetails:
     def __init__(self, db: Session):
@@ -115,7 +116,7 @@ class GetFilmDetails:
             film_data["awards"].append({
                 "festival_id": festival.id if festival else None,
                 "festival_name": festival.name if festival else None,
-                "award_name": award.name if award else None,
+                "award_name": FestivalAwardEntity(award).display_name(),
                 "date": nomination.date.isoformat() if nomination.date else None,
                 "is_winner": nomination.is_winner,
             })
