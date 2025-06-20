@@ -25,7 +25,7 @@ def seed_film_awards(filename):
                 festival_name = row['festival']
                 year = int(row['year'])
                 distinction = row['distinction']
-                reward = row['reward']
+                mubi_label = row['reward']
 
                 country = country_repository.find_or_create_country(session, country_name)
 
@@ -40,8 +40,10 @@ def seed_film_awards(filename):
                 festival = festival_repository.find_or_create_festival(session, festival_name)
                 if not festival:
                     continue
-                    
-                festival_award = festival_award_repository.insert_festival_award(session, reward, festival.id)
+                
+                festival_award = festival_award_repository.find_or_create_festival_award(session, festival.id, mubi_label)
+                if not festival_award:
+                    continue
 
                 # Determine whether the award is a winner
                 is_winner = distinction == "Lauréat" 
