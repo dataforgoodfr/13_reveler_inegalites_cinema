@@ -1,18 +1,23 @@
 from sqlalchemy.orm import Session
 from database.models import Festival
+from backend.constants.festival_constants import FESTIVALS
+from backend.repositories import country_repository
 
-def find_or_create_festival(session: Session, country_id: int, name: str, description: str, image_base64: str) -> Festival:
-    festival = session.query(Festival).filter_by(
-        name = name,
-        country_id = country_id
-        ).first()
+def find_or_create_festival(session: Session, name: str) -> Festival:
+    festival_data = next((f for f in FESTIVALS if f['name'].lower() == name.lower()), None)
+    if not festival_data:
+        return None
+
+    festival = session.query(Festival).filter_by(name = name).first()
     
     if not festival:
+        country_name = festival_data.get("country", "Unknown")
+        country = country_repository.find_or_create_country(session, country_name)
         data = {
             "name": name,
-            "description": description,
-            "image_base64": image_base64,
-            "country_id": country_id,
+            "description": festival_data.get("description", ""),
+            "image_base64": festival_data.get("image_url", ""),
+            "country_id": country.id,
         }
         festival = Festival(**data)
         session.add(festival)
