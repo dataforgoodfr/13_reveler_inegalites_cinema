@@ -37,7 +37,9 @@ def seed_film_awards(filename):
                 allocation_null = float(100)
                 film_country_budget_allocation_repository.find_or_create_budget_allocation(session, film.id, country.id, allocation_null)
                     
-                festival = festival_repository.find_or_create_festival(session, country.id, festival_name, "", "")
+                festival = festival_repository.find_or_create_festival(session, festival_name)
+                if not festival:
+                    continue
                     
                 festival_award = festival_award_repository.insert_festival_award(session, reward, festival.id)
 
