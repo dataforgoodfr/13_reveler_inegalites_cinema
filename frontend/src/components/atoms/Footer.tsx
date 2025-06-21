@@ -20,25 +20,25 @@ const isMobile: boolean = useMediaQuery("(max-width: 768px)");
             height={100}
           />
           <h1 className="font-bold">Collectif 50/50</h1>
-          <a href="https://collectif5050.com" className="flex hover:underline">
+          <a href="https://collectif5050.com" target="_blank" rel="noopener noreferrer" className="flex hover:underline">
             <p className="pr-2">Site internet</p>
-              <ExternalLink />
+            <ExternalLink />
           </a>
-          <a href="https://collectif5050.com/nos-etudes/" className="flex hover:underline">
+          <a href="https://collectif5050.com/nos-etudes/" target="_blank" rel="noopener noreferrer" className="flex hover:underline">
             <p className="pr-2">Nos études</p>
             <ExternalLink />
           </a>
           <div className="flex w-full py-2 justify-between">
-            <a href="https://www.facebook.com/Collectif5050">
+            <a href="https://www.facebook.com/Collectif5050" target="_blank" rel="noopener noreferrer">
               <Image src="/facebook.png" alt="Facebook" width={isMobile ? 35 : 25} height={0} />
             </a>
-            <a href="https://www.linkedin.com/company/le-collectif-50-50">
+            <a href="https://www.linkedin.com/company/le-collectif-50-50" target="_blank" rel="noopener noreferrer">
               <Image src="/linkedin.png" alt="Linkedin" width={isMobile ? 35 : 25} height={0} />
             </a>
-            <a href="https://www.youtube.com/channel/UCWhSC21jayqFUXUoo02pLTA">
+            <a href="https://www.youtube.com/channel/UCWhSC21jayqFUXUoo02pLTA" target="_blank" rel="noopener noreferrer">
               <Image src="/youtube.png" alt="YouTube" width={isMobile ? 35 : 25} height={0} />
             </a>
-            <a href="https://www.instagram.com/lecollectif5050/">
+            <a href="https://www.instagram.com/lecollectif5050/" target="_blank" rel="noopener noreferrer">
               <Image
                 src="/instagram.png"
                 alt="Instagram"
@@ -47,40 +47,38 @@ const isMobile: boolean = useMediaQuery("(max-width: 768px)");
               />
             </a>
           </div>
-          <a className="w-full" href="https://www.helloasso.com/associations/collectif-50-50/formulaires/4">
+          <a href="https://www.helloasso.com/associations/collectif-50-50" target="_blank" rel="noopener noreferrer" className="w-full">
           <Button className="text-black bg-white hover:bg-grey w-full">
-            Faire un don
+            Adhérer / Faire un don
           </Button>
           </a>
         </div>
         <div className="flex flex-col gap-5 md:gap-1 justify-center w-full pb-10">
           <Image src={"/logo_d4g.png"} alt="" width={70} height={0} />
           <h1 className="font-bold">Data for good</h1>
-          <a href="https://dataforgood.fr/" className="flex hover:underline">
+          <a href="https://dataforgood.fr/" target="_blank" rel="noopener noreferrer" className="flex hover:underline">
             <p className="pr-2">Site internet</p>
             <ExternalLink />
           </a>
-          <a href="https://x.com/dataforgood_fr?lang=fr" className="flex hover:underline">
+          <a href="https://x.com/dataforgood_fr?lang=fr" target="_blank" rel="noopener noreferrer" className="flex hover:underline">
             <p className="pr-2">Twitter</p>
             <ExternalLink />
           </a>
           <a
-            href="https://www.linkedin.com/company/dataforgood"
-            className="flex hover:underline"
-          >
+            href="https://www.linkedin.com/company/dataforgood" target="_blank" rel="noopener noreferrer" className="flex hover:underline">
             <p className="pr-2">LinkedIn</p>
             <ExternalLink />
           </a>
-          <a href="mailto:contact@dataforgood.fr" className="flex hover:underline">
+          <a href="mailto:contact@dataforgood.fr" target="_blank" rel="noopener noreferrer" className="flex hover:underline">
             <p className="pr-2">Envoyer un mail</p>
             <ExternalLink />
           </a>
         </div>
       </div>
-      <div className="flex md:justify-center items-center font-bold w-full">
-        <div className="bg-[rgba(30,30,30,0.2)] p-2">
-          Observatoire de <br /> l’inclusion et de l’équité <br />
-          dans l’industrie du <br /> cinéma
+      <div className="flex justify-center items-center font-bold w-full">
+        <div className="bg-violet-700 border border-white/40 rounded-xl text-center p-4">
+          Observatoire des inégalités dans le cinéma, <br />
+          par le Collectif 50/50 et Data For Good
         </div>
       </div>
     </div>
