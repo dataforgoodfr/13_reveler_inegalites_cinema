@@ -37,12 +37,6 @@ def find_most_similar_film_by_director(session: Session, film_title: str, direct
     )
     return session.execute(stmt).scalar_one_or_none()
 
-def find_or_create_film(session: Session, original_name: str) -> Film:
-    film = session.query(Film).filter_by(original_name=original_name).first()
-    if not film:
-        data = { "original_name": original_name }
-        film = create_film(session, data)
-    return film
 
 def find_film_by_visa(session: Session, visa_number: str | int) -> Film | None:
     return session.query(Film).filter_by(visa_number=str(visa_number)).first()
