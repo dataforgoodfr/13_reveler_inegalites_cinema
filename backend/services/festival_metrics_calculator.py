@@ -39,7 +39,7 @@ def calculate_female_representation_in_nominated_films(session: Session, festiva
         .count()
     )
 
-    return round(female_directed_count / total_films_count) * 100
+    return round((female_directed_count / total_films_count) * 100)
 
 def calculate_female_representation_in_award_winning_films(session: Session, festival_id: int, year: str) -> float:
     """Calculates percentage of awards given to films with ≥1 female director in a specific year.
@@ -57,7 +57,7 @@ def calculate_female_representation_in_award_winning_films(session: Session, fes
     )
     
     if not award_wins:
-        return 0.0
+        return None
     
     winning_film_ids = {f[0] for f in award_wins}
     
@@ -79,4 +79,4 @@ def calculate_female_representation_in_award_winning_films(session: Session, fes
     # Count qualifying awards
     qualifying_awards = sum(1 for film_id, in award_wins if film_id in female_directed_ids)
 
-    return round(qualifying_awards / len(award_wins))  * 100
+    return round(qualifying_awards / len(award_wins)  * 100)
