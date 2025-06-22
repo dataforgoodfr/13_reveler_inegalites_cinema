@@ -1,4 +1,5 @@
 import dateparser
+from datetime import date
 
 def parse_release_date(date_str):
     try:
@@ -24,4 +25,11 @@ def parse_duration(duration_str):
         return total if total > 0 else None
 
     except Exception:
+        return None
+
+def safe_year_to_date_range(year: str | int):
+    try:
+        year_int = int(year)
+        return date(year_int, 1, 1), date(year_int, 12, 31)
+    except (ValueError, TypeError):
         return None
