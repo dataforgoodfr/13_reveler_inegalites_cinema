@@ -73,7 +73,11 @@ class GetFilmDetails:
         film_data["credits"] = {
             "casting": [],
             "key_roles": [],
-            "distribution": [],
+            "distribution": {
+                "distribution": [],
+                "production": [],
+                "budget": film.budget if film.budget else None
+            },
         }
 
         for credit in film.film_credits:
@@ -97,8 +101,11 @@ class GetFilmDetails:
                 film_data["credits"]["key_roles"].append(credit_info)
 
             # Distribution: role in ['production_company', 'distribution_company']
-            if role and role.name in ["production_company", "distribution_company"]:
-                film_data["credits"]["distribution"].append(credit_info)
+            if role and holder.is_company():
+                if role.name in ["distribution"]:
+                    film_data["credits"]["distribution"]["distribution"].append(credit_info)
+                elif role.name in ["production", "co-production"]:
+                    film_data["credits"]["distribution"]["production"].append(credit_info)
 
         # Get the film awards
         film_data["awards"] = []
