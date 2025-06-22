@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from backend.repositories import festival_repository, festival_award_repository, award_nomination_repository, film_repository
+from backend.repositories import festival_repository, festival_award_repository, award_nomination_repository, film_repository, credit_holder_repository
 from backend.entities.festival_award_entity import FestivalAwardEntity
 from backend.use_cases import get_film_details
 from backend.services import festival_metrics_calculator
@@ -79,8 +79,8 @@ class GetFestivalDetails:
         return nomination_data
    
     def _get_festival_data(self, festival: Festival, year: str):
-        female_representation_in_nominated_films = festival_metrics_calculator.calculate_female_representation_in_nominated_films(self.db, festival.id, year)
-        female_representation_in_award_winning_films = festival_metrics_calculator.calculate_female_representation_in_award_winning_films(self.db, festival.id, year)
+        nominated_directors = credit_holder_repository.find_directors_of_nominated_films_in_festival(self.db, festival.id, year)
+        female_director_representation = festival_metrics_calculator.calculate_female_director_representation(nominated_directors)
 
         return {
             "id": festival.id,
@@ -89,7 +89,7 @@ class GetFestivalDetails:
             "date": year,
             "image_base64": festival.image_base64 if festival.image_base64 else None,
             "festival_metrics": {
-                "female_representation_in_nominated_films": female_representation_in_nominated_films,
-                "female_representation_in_award_winning_films": female_representation_in_award_winning_films
+                "female_representation_in_nominated_films": female_director_representation["nominated"],
+                "female_representation_in_award_winning_films": female_director_representation["awarded"],
             }
         }
