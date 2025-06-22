@@ -10,6 +10,9 @@ from backend.repositories import (
     film_country_budget_allocation_repository,
     film_repository,
     festival_repository,
+    role_repository,
+    credit_holder_repository,
+    film_credit_repository
 )
 
 def seed_film_awards(filename):
@@ -18,6 +21,7 @@ def seed_film_awards(filename):
     try:
         with open(filename, newline='', encoding='utf-8') as csvfile:
             rows = list(csv.DictReader(csvfile))
+            director_role = role_repository.find_role_by_name(session, "director")
             for row in tqdm(rows, total=len(rows), desc="Processing"):
                 film_title = row['title']
                 film_director = row['director']
@@ -31,7 +35,17 @@ def seed_film_awards(filename):
 
                 film = film_repository.find_most_similar_film_by_director(session, film_title, film_director)
                 if not film:
-                    continue
+                    film = film_repository.create_film(session, { "original_name": film_title })
+                    credit_holder = credit_holder_repository.find_or_create_credit_holder(session, film_director, "Individual")
+                    if not credit_holder:
+                        print(f"Credit holder not found or created for {film_director}")
+                        continue
+                    film_credit_repository.find_or_create_film_credit(
+                        session,
+                        film_id=film.id,
+                        role_id=director_role.id,
+                        credit_holder_id=credit_holder.id
+                    )
 
                 # Contribution of a country to a film (100% by default)
                 allocation_null = float(100)
