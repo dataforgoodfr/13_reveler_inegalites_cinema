@@ -43,3 +43,20 @@ def find_or_create_role(session: Session, name: str = None, allocine_name: str =
         session.flush()
 
     return role
+
+def find_role_by_name(session: Session, name: str) -> Role | None:
+    if not name:
+        raise ValueError("Name is required to find a role")
+
+    normalized_name = remove_extra_spaces(name).lower()
+    valid_role_names = {role["name"].lower() for role in ROLES}
+    if normalized_name not in valid_role_names:
+        print(f"[WARN] '{name}' is not a valid role name. Skipping DB lookup.")
+        return None
+
+    role = session.query(Role).filter(func.lower(Role.name) == normalized_name).first()
+
+    if role is None:
+        print(f"[WARN] Role not found in database for name: '{normalized_name}'")
+
+    return role
