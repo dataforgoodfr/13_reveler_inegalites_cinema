@@ -34,6 +34,12 @@ Pour lancer la base de données avec le backend:
    - Seeder les récompenses de films (il est nécessaire de seeder les infos CNC et allociné avant):
    `poetry run python -m database.seed.seed_film_awards`
 
+   - Seeder les prédictions du machine learning sur les posters :
+   `poetry run python -m database.seed.seed_poster_predictions`
+
+   - Seeder les prédictions du machine learning sur les trailers :
+   `poetry run python -m database.seed.seed_trailer_predictions`
+
 * OPTION 2 - seeder un sample de données pour 5 films
    * ATTENTION: ce script supprime toutes les données existantes sur la base actuelle
    * Depuis le container backend: `poetry run python database/data/sample/seed_sample.py`
