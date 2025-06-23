@@ -11,7 +11,6 @@ export type Film = {
   genres: string[];
   poster_image_base64: string;
   parity_bonus: boolean;
-  budget: number;
   metrics: Metrics;
   credits: Credits;
   awards: Award[];
