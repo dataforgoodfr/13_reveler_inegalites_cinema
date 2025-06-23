@@ -77,6 +77,8 @@ class GetFilmDetails:
             "distribution": {
                 "distribution": [],
                 "production": [],
+                "co-production": [],
+                "financiers": [],
                 "budget": film.budget if film.budget else None
             },
         }
@@ -101,12 +103,20 @@ class GetFilmDetails:
             if role and role.is_key_role:
                 film_data["credits"]["key_roles"].append(credit_info)
 
-            # Distribution: role in ['production_company', 'distribution_company']
+            # Distribution: several categories based on role
+            # - distribution
+            # - production
+            # - co-production
+            # - financiers (free_broadcaster, paying_broadcaster)
             if role and holder.is_company():
                 if role.name in ["distribution"]:
                     film_data["credits"]["distribution"]["distribution"].append(credit_info)
-                elif role.name in ["production", "co-production"]:
+                elif role.name in ["production"]:
                     film_data["credits"]["distribution"]["production"].append(credit_info)
+                elif role.name in ["co-production"]:
+                    film_data["credits"]["distribution"]["co-production"].append(credit_info)
+                elif role.name in ["free_broadcaster", "paying_broadcaster"]:
+                    film_data["credits"]["distribution"]["financiers"].append(credit_info)
 
         # Get the film awards
         film_data["awards"] = []
