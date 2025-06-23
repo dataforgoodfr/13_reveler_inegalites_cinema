@@ -117,6 +117,17 @@ export default function PageFilm() {
     };
   };
 
+  const getBackgroundColorFromGender = (gender?: string) => {
+    switch (gender) {
+      case "male":
+        return "bg-slate-700";
+      case "female":
+        return "bg-violet-800";
+      default:
+        return "bg-[#525252]";
+    }
+  };
+
   if (isLoading || !filmData) {
     return (
       <main className="p-20 h-full bg-transparent text-white flex justify-center items-center">
@@ -534,9 +545,7 @@ export default function PageFilm() {
                             <Badge
                               key={idx}
                               className={
-                                role.gender === "male"
-                                  ? "bg-slate-700"
-                                  : "bg-violet-800"
+                                getBackgroundColorFromGender(role.gender)
                               }
                             >
                               {nameToUpperCase(role.name)}
@@ -562,9 +571,7 @@ export default function PageFilm() {
                       <Badge
                         key={index}
                         className={
-                          actor.gender === "male"
-                            ? "bg-slate-700"
-                            : "bg-violet-800"
+                          getBackgroundColorFromGender(actor.gender)
                         }
                       >
                         {nameToUpperCase(actor.name)}
