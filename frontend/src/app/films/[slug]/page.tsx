@@ -41,6 +41,7 @@ import CncDialog from "@/components/atoms/CncDialog";
 import FrameSearch from "@/icons/frame_search";
 import VideoSearch from "@/icons/video_search";
 import Share from "@/icons/share";
+import { Distribution } from "@/dto/film/distribution.dto";
 
 // Ceci est un composant de page avec une route dynamique
 // Le [slug] dans le nom du dossier sera disponible comme paramètre
@@ -103,6 +104,17 @@ export default function PageFilm() {
       acc[data].push(element);
       return acc;
     }, {});
+  };
+
+  const getDistribution = (
+    distribution: Distribution
+  ): Record<string, Credit[]> => {
+    return {
+      distribution: distribution.distribution,
+      production: distribution.production,
+      'co-production': distribution["co-production"],
+      financiers: distribution.financiers,
+    };
   };
 
   if (isLoading || !filmData) {
@@ -433,12 +445,15 @@ export default function PageFilm() {
             )}
 
             {activeSection === "Distribution" &&
-              (filmData.credits?.distribution &&
-              filmData.credits.distribution.length > 0 ? (
+              (filmData.credits?.distribution ? (
                 <>
-                  {Object.entries(
-                    groupByCriteria(filmData.credits.distribution, "role")
-                  ).map(
+                  {Object.entries(getDistribution(filmData.credits.distribution))
+                  .filter(
+                    (
+                      value: [string, Credit[]],
+                    ) => value[1].length
+                  )
+                  .map(
                     (
                       [role, credits]: [string, Credit[]],
                       role_index: number
@@ -471,8 +486,8 @@ export default function PageFilm() {
                     </span>
                     <div className="px-2 py-1">
                       <span>
-                        {filmData.budget
-                          ? filmData.budget.toLocaleString() + " €"
+                        {filmData.credits.distribution.budget
+                          ? filmData.credits.distribution.budget.toLocaleString() + " €"
                           : "NC"}
                       </span>
                     </div>
