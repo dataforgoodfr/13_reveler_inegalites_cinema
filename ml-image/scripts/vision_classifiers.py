@@ -20,7 +20,8 @@ class VisionClassifier:
 
         torch.set_num_threads(num_cpu_threads)
 
-        self.model_fair_7 = models.resnet34(pretrained=True)
+        self.model_fair_7 = models.resnet34(weights=models.ResNet34_Weights.IMAGENET1K_V1)
+        # self.model_fair_7 = models.resnet34(pretrained=True)
         self.model_fair_7.fc = torch.nn.Linear(
             self.model_fair_7.fc.in_features, 18)
         fair_7_state_dict = torch.load(

@@ -35,8 +35,10 @@ def load_data_from_links(row) :
     # Get data directly from poster and trailer links
     os.makedirs("downloaded_media", exist_ok=True)
     output_poster, output_trailer = f"downloaded_media/{row.visa_number}.jpg", f"downloaded_media/{row.visa_number}.mp4"
-    utils.download_video_from_link(row.trailer_url, output_trailer)
-    utils.download_video_from_link(row.poster_url, output_poster)
+    if f"{row.visa_number}.mp4" not in os.listdir("downloaded_media"):
+        utils.download_video_from_link(row.trailer_url, output_trailer)
+    if f"{row.visa_number}.jpg" not in os.listdir("downloaded_media"):
+        utils.download_video_from_link(row.poster_url, output_poster)
     
     poster_image = cv2.imread(output_poster)
     quality = "unknown"
@@ -246,7 +248,6 @@ def gather_and_save_predictions(source:pd.DataFrame) -> None :
         #allocine_url = source[source.visa_number == visa_number].iloc[0]['allocine_url']
         allocine_id = int(source[source.visa_number == visa_number].iloc[0]['allocine_id'])
         for char in data :
-            print(char)
             dict_poster_predictions = format_prediction_results('poster', char, allocine_id, visa_number, dict_poster_predictions)
     df_posters = pd.DataFrame(dict_poster_predictions)
     df_posters.to_csv('predictions_on_posters.csv', index=False)
@@ -259,7 +260,6 @@ def gather_and_save_predictions(source:pd.DataFrame) -> None :
         #allocine_url = source[source.visa_number == visa_number].iloc[0]['allocine_url']
         allocine_id = int(source[source.visa_number == visa_number].iloc[0]['allocine_id'])
         for char in data :
-            print(char)
             dict_trailer_predictions = format_prediction_results('trailer', char, allocine_id, visa_number, dict_trailer_predictions)
     df_trailers = pd.DataFrame(dict_trailer_predictions)
     df_trailers.to_csv('predictions_on_trailers.csv', index=False)
@@ -384,7 +384,8 @@ def main(
 
             # Step 2: Filter embedded_faces to keep only the embeddings corresponding to the collected indexes
             embedded_faces = [embedding for i, embedding in enumerate(embedded_faces) if i in all_indexes]
-
+            
+        indexes_to_del = []
         for index, face in enumerate(embedded_faces_poster):
             cv2.imwrite(f"example/detections/face_{index}.jpg", flattened_faces_poster[index])
 
@@ -415,9 +416,10 @@ def main(
                 filtered_detections[index]["occupied_area"] = occupied_area
                 #print(f"Character {closest_index} with predicted gender: {filtered_detections[index]['gender']}, age: {filtered_detections[index]['age']}, ethnicity: {filtered_detections[index]['ethnicity']} representing {occupied_area:.2%} of the image")
             else:
-                # Delete the detection from filtered_detections
-                del filtered_detections[index]
-
+                indexes_to_del.append(index)
+        # Delete the detection from filtered_detections
+        filtered_detections = [det for i, det in enumerate(filtered_detections) if i not in indexes_to_del]
+        
         '''
         # Classify all faces
         classified_faces, _ = classify_faces(filtered_detections, batch_size, device, mode = "poster")
@@ -498,9 +500,10 @@ if __name__ == '__main__':
                         help="Row index from which to start dataframe analysis")
     parser.add_argument("--istop", type=int, default=1e9,
                         help="Row index on which to stop dataframe analysis")
-    
 
     args = parser.parse_args()
+    
+
     os.makedirs("stored_visuals", exist_ok=True)
     os.makedirs("stored_predictions", exist_ok=True)
     # Check if the source is a url or a file
@@ -512,9 +515,7 @@ if __name__ == '__main__':
             logger.info("Source is an mp4 file.")
             movie_id = os.path.splitext(os.path.basename(args.source))[0]  # Extract file name without extension
         predictions = main(
-            args.source, movie_id, args.num_cpu, args.batch_size, args.min_area, args.max_area, args.min_conf, args.min_conf_cla, args.min_sharpness, args.min_sharpness_cla,
-            args.max_z, args.max_z_cla, args.min_mouth_opening, args.min_mouth_opening_cla, args.cluster_model, args.cluster_threshold, args.agr_method,
-            args.store_visuals, args.visuals_path, mode=args.mode, poster_source=args.source_image, row=None,
+            args.source, movie_id, args.num_cpu, args.batch_size, args.min_area, args.max_area, args.min_conf, args.min_conf_cla, args.min_sharpness, args.min_sharpness_cla, args.max_z, args.max_z_cla, args.min_mouth_opening, args.min_mouth_opening_cla, args.cluster_model, args.cluster_threshold, args.agr_method, args.store_visuals, args.visuals_path, mode=args.mode, poster_source=args.source_image, row=None,
         )
 
     elif args.source[-4:] == ".csv":
@@ -523,15 +524,18 @@ if __name__ == '__main__':
         istop = min(len(df), args.istop)
         df = df.iloc[istart:istop]
         logger.info(f"Found {len(df)} films to analyze in the source csv.")
-        for _, row in tqdm(df.iterrows(), total=len(df)):
-            predictions = main(
-                row.allocine_url, row[args.column_identifier], args.num_cpu, args.batch_size, args.min_area, args.max_area, args.min_conf, args.min_conf_cla, args.min_sharpness, args.min_sharpness_cla,
-                args.max_z, args.max_z_cla, args.min_mouth_opening, args.min_mouth_opening_cla, args.cluster_model, args.cluster_threshold, args.agr_method,
-                args.store_visuals, args.visuals_path, row=row,
-            )
-            os.remove(f"downloaded_media/{row.visa_number}.jpg")
-            os.remove(f"downloaded_media/{row.visa_number}.mp4")
+        for i, row in tqdm(df.iterrows(), total=len(df)):
+            try : 
+                predictions = main(
+                    row.allocine_url, row[args.column_identifier], args.num_cpu, args.batch_size, args.min_area, args.max_area, args.min_conf, args.min_conf_cla, args.min_sharpness, args.min_sharpness_cla, args.max_z, args.max_z_cla, args.min_mouth_opening, args.min_mouth_opening_cla, args.cluster_model, args.cluster_threshold, args.agr_method, args.store_visuals, args.visuals_path, row=row,
+                )
+                os.remove(f"downloaded_media/{row.visa_number}.jpg")
+                os.remove(f"downloaded_media/{row.visa_number}.mp4")
+            except Exception as e:
+                logger.info(f"Row {i}, id {row[args.column_identifier]} : {repr(e)}")
+                continue
         logger.success(f"All films from {args.source} have been analyzed.")
+        df = pd.read_csv(args.source)
         gather_and_save_predictions(df)
     else:
         raise ValueError("Source must be a url or a file")
