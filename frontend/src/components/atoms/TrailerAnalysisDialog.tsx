@@ -40,8 +40,8 @@ const TrailerAnalysisDialog = ({
   };
 
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
+    const mins = Math.round(seconds / 60);
+    const secs = Math.round(seconds % 60);
     const minPart = mins ? `${mins} ${mins > 1 ? "minutes" : "minute"}` : "";
     const secPart = secs ? `${secs} ${secs > 1 ? "secondes" : "seconde"}` : "";
     return [minPart, secPart].filter(Boolean).join(" ");
