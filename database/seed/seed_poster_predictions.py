@@ -6,13 +6,20 @@ from backend.repositories import (
     poster_repository,
     poster_character_repository
 )
+from backend.utils.age_utils import parse_age
 
-def seed_poster_predictions():
-    df = pd.read_csv("database/data/predictions_on_posters.csv")
+DEFAULT_CSV_PATH = "database/data/machine_learning_predictions/poster_predictions.csv"
+
+def seed_poster_predictions(csv_path: str = DEFAULT_CSV_PATH):
+    df = pd.read_csv(csv_path)
+    visa_numbers = df["visa_number"].dropna().astype(str).unique().tolist()
 
     session = SessionLocal()
     try:
         with session.begin():
+            # Step 0: Bulk delete existing PosterCharacter records for the given visa numbers
+            poster_character_repository.bulk_delete_by_film_visas(session, visa_numbers)
+
             for _, row in tqdm(df.iterrows(), total=len(df), desc="Seeding poster predictions"):
                 visa_number = row["visa_number"]
 
@@ -21,6 +28,10 @@ def seed_poster_predictions():
                 if not film:
                     print(f"Film not found for visa_number {visa_number}")
                     continue
+                
+                if str(film.visa_number) != str(visa_number):
+                    print(f"Film visa number mismatch: expected {visa_number}, found {film.visa_number}")
+                    continue
 
                 # Step 2: Get the poster via film_id
                 poster = poster_repository.find_poster_by_film_id(session, film.id)
@@ -28,19 +39,16 @@ def seed_poster_predictions():
                     print(f"Poster not found for film_id {film.id}")
                     continue
 
-                # Step 3: Delete all existing PosterCharacters for this poster
-                poster_character_repository.delete_all_by_poster_id(session, poster.id)
-
-                # Step 4: Prepare prediction data
+                # Step 3: Prepare prediction data
                 predictions_data = {
-                    "gender": str(row["gender"]).capitalize() if pd.notna(row["gender"]) else None,
-                    "age_min": row["age_min"],
-                    "age_max": row["age_max"],
-                    "ethnicity": row["ethnicity"],
-                    "poster_percentage": row["poster_percentage"]
+                    "gender": row["gender"].strip().lower() if isinstance(row["gender"], str) else None,
+                    "age_min": parse_age(row["age_min"]),
+                    "age_max": parse_age(row["age_max"]),
+                    "ethnicity": row["ethnicity"].strip().lower() if isinstance(row["ethnicity"], str) else None,
+                    "poster_percentage": float(row["poster_percentage"]) if pd.notna(row["poster_percentage"]) else None
                 }
 
-                # Step 5: Create new PosterCharacter
+                # Step 4: Create new PosterCharacter
                 poster_character_repository.create_poster_character(session, poster.id, predictions_data)
 
             session.commit()
