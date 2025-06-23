@@ -16,18 +16,19 @@ RESTART IDENTITY CASCADE;
 INSERT INTO ric_films (
     id, original_name, visa_number, release_date, duration_minutes, first_language,
     allocine_id, budget, parity_bonus, eof, asr, sofica_funding,
-    tax_credit, regional_funding, cnc_agrement_year, cnc_rank
+    tax_credit, regional_funding, cnc_agrement_year, cnc_rank,
+    budget_category, genre_categories, broadcasters, is_french_financed
 ) VALUES
 -- Le Comte de Monte-Cristo
-(1, 'Le Comte de Monte-Cristo', 158738, '2024-06-28', 178, 'French', 288404, 43000000, false, true, NULL, false, true, true, 2023, 3),
+(1, 'Le Comte de Monte-Cristo', 158738, '2024-06-28', 178, 'French', 288404, 43000000, false, true, NULL, false, true, true, 2023, 3, '2 à 5 M€', 'Aventure/Policier/Thriller, Biopic/Guerre/Histoire', 'Canal+, Ciné+, M6, W9', true),
 -- Emilia Pérez
-(2, 'Emilia Pérez', 158907, '2024-11-13', 130, 'Spanish', 304508, 24990000, false, true, 'avant', false, true, true, 2023, 4),
+(2, 'Emilia Pérez', 158907, '2024-11-13', 130, 'Spanish', 304508, 24990000, false, true, 'avant', false, true, true, 2023, 4, '2 à 5 M€', 'Drame, Comédie/Comédie dramatique, Aventure/Policier/Thriller', 'Canal+, Ciné+, France2', true),
 -- Saint Omer
-(3, 'Saint Omer', 146896, '2022-11-23', 123, 'French', 280206, 3260000, true, true, 'avant', true, true, true, 2021, 4),
+(3, 'Saint Omer', 146896, '2022-11-23', 123, 'French', 280206, 3260000, true, true, 'avant', true, true, true, 2021, 4, '2 à 5 M€', 'Drame, Aventure/Policier/Thriller', 'Canal+, Ciné+, Arte', true),
 -- L'Événement
-(4, 'L''Événement', 153108, '2021-11-24', 100, 'French', 275122, 4360000, true, true, 'avant', true, true, true, 2020, 2),
+(4, 'L''Événement', 153108, '2021-11-24', 100, 'French', 275122, 4360000, true, true, 'avant', true, true, true, 2020, 2, '2 à 5 M€', 'Drame', 'Canal+, Ciné+, France3', true),
 -- Titane
-(5, 'Titane', 148345, '2021-07-14', 108, 'French', 277192, 7430000, true, true, 'avant', true, true, true, 2020, 2);
+(5, 'Titane', 148345, '2021-07-14', 108, 'French', 277192, 7430000, true, true, 'avant', true, true, true, 2020, 2, '5 à 10 M€', 'Drame, Aventure/Policier/Thriller, Fantastique/Horreur/SF', 'Canal+, Ciné+, Arte', true);
 
 -- Genres
 INSERT INTO ric_genres (
@@ -106,7 +107,7 @@ id, name, description, image_base64, country_id
 
 -- Festival awards
 INSERT INTO ric_festival_awards (
-  id, name, festival_id
+  id, mubi_label, french_label, english_label, festival_id
 ) VALUES
 -- César (festival_id = 1)
 (11, 'Meilleure réalisation', 1),
