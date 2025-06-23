@@ -1,8 +1,29 @@
-from database.models import PosterCharacter
+from database.models import Film, Poster, PosterCharacter
 from sqlalchemy.orm import Session
+from sqlalchemy import delete
 
-def delete_all_by_poster_id(session: Session, poster_id: int):
-    session.query(PosterCharacter).filter_by(poster_id=poster_id).delete()
+def bulk_delete_by_film_visas(session, film_visas: list):
+    """
+    Deletes all PosterCharacter records linked to posters of films
+    whose visa_number is in the given list.
+
+    Args:
+        session (Session): SQLAlchemy session
+        film_visas (list): List of visa numbers to target
+    """
+    if not film_visas:
+        return
+
+    stmt = (
+        delete(PosterCharacter)
+        .where(
+            PosterCharacter.poster_id == Poster.id,
+            Poster.film_id == Film.id,
+            Film.visa_number.in_(film_visas)
+        )
+        .execution_options(synchronize_session=False)
+    )
+    session.execute(stmt)
 
 def create_poster_character(session: Session, poster_id: int, data: dict):
     character = PosterCharacter(
