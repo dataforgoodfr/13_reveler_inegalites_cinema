@@ -1,4 +1,4 @@
-d_festival_name_urls = {
+festival_name_urls = {
     "Academy Awards" : "oscars",
     "Les César du cinéma" : "cesars",
     "Berlin International Film Festival" : "berlinale",
@@ -31,4 +31,4 @@ d_festival_name_urls = {
     "European Film Awards" : "efas",
 }
 
-mubi_base_url = "https://mubi.com/en/awards-and-festivals/"
+MUBI_BASE_URL = "https://mubi.com/en/awards-and-festivals/"
