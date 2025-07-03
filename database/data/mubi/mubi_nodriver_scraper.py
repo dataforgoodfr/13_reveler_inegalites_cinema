@@ -9,23 +9,25 @@ from bs4 import BeautifulSoup
 import festival_constants
 
 
-async def get_movie_mubi_id(page:uc.core.tab.Tab) -> int:
+async def get_movie_information_id(page:uc.core.tab.Tab) -> list:
     page_content = await page.get_content()
-    soup = BeautifulSoup(page_content)
-    link = soup.find("meta", property="og:image")['content']
-    mubi_id = link.split('/')[5]
-    return int(mubi_id)
-
-
-async def get_movie_mubi_awards(page:uc.core.tab.Tab) -> list[str, str, str]:
+    soup = BeautifulSoup(page_content, 'html.parser')
+    title = soup.find('h1', class_='css-1cxu13r e3rrcsu2').text.strip()
+    director = soup.find('span', class_='css-1vg6q84 e1slvksg0').text.strip()
+    country_and_date = soup.find('h2', class_='css-xbgqya e3rrcsu3').text[len(director)+1:]
+    categories = soup.find('div', class_='css-sllbpf e1b05nlx0').text.strip()
+    runtime = soup.find('time', {'itemprop' : 'duration'}).text.strip()
+    image_url = soup.find('meta', {'property' : 'og:image'})['content'].strip()
+    trailer_url = soup.find('meta', {'property' : 'og:video:url'})['content'].strip()
+    mubi_id = int(image_url.split('/')[5])
+    return title, mubi_id, director, country_and_date, categories, runtime, image_url, trailer_url
+    
+async def get_movie_mubi_awards(page:uc.core.tab.Tab) -> list[list[str, str, str]]:
     page_content = await page.get_content()
     page_soup = BeautifulSoup(page_content, 'html.parser')
     festival_infos = page_soup.find_all('a', class_='css-pgwez eajdb4a4')
-    #festival_urls = page_soup.find_all('a', class_='css-pgwez eajdb4a4')
     award_infos = page_soup.find_all('div', class_='css-16kkjs eajdb4a6')
 
-    # festival_names = [festival_name.text for festival_name in festival_names]
-    # festival_urls = [festival_url['href'] for festival_url in festival_urls]
     festival_names = [festival_info.text for festival_info in festival_infos]
     festival_urls = [festival_info['href'] for festival_info in festival_infos]
     award_infos = [award_info.text for award_info in award_infos]
@@ -71,6 +73,20 @@ async def get_all_movies_for_year_festival(page:uc.core.tab.Tab, festival:str, y
     with open(f'festival_data/{festival}/{festival}_{year}.pkl', 'wb') as outfile:
         pkl.dump(all_movie_urls, outfile)
     outfile.close()
+
+
+def parse_festival_results() -> set:
+    festival_list = os.listdir('festival_data')
+    all_movie_urls = []
+    for festival in festival_list:
+        all_years_festival = os.listdir(os.path.join('festival_data', festival))
+        for year_festival in all_years_festival:
+            with open(os.path.join('festival_data', festival, year_festival), 'rb') as infile:
+                yearly_festival_data = pkl.load(infile)
+            infile.close()
+            all_movie_urls += yearly_festival_data
+            
+    return set(all_movie_urls)
 
     
 async def extract_all_movie_urls_festival(festival:str, year_start:int, year_stop:int) -> None:

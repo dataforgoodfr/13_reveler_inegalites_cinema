@@ -31,4 +31,4 @@ festival_name_urls = {
     "European Film Awards" : "efas",
 }
 
-MUBI_BASE_URL = "https://mubi.com/en/awards-and-festivals/"
+MUBI_BASE_URL = "https://mubi.com/fr/awards-and-festivals/"
