@@ -9,20 +9,32 @@ from bs4 import BeautifulSoup
 import festival_constants
 
 
-async def get_movie_information_id(page:uc.core.tab.Tab) -> list:
+d_selectors = {
+    'title' : 'css-1kpd5de e3x40ye4',
+    'director' : 'css-98s5c8 ekdfppc2',
+    'country_and_date' : 'css-1js8va1 e3x40ye11',
+    'categories' : 'css-139sg3h e3x40ye12',
+    }
+
+
+async def get_movie_information(page:uc.core.tab.Tab) -> tuple:
     page_content = await page.get_content()
     soup = BeautifulSoup(page_content, 'html.parser')
-    title = soup.find('h1', class_='css-1cxu13r e3rrcsu2').text.strip()
-    director = soup.find('span', class_='css-1vg6q84 e1slvksg0').text.strip()
-    country_and_date = soup.find('h2', class_='css-xbgqya e3rrcsu3').text[len(director)+1:]
-    categories = soup.find('div', class_='css-sllbpf e1b05nlx0').text.strip()
+    title = soup.find('h1', class_=d_selectors['title']).text.strip()
+    director = soup.find('span', class_=d_selectors['director']).text.strip()
+    country_and_date = soup.find('div', class_=d_selectors['country_and_date']).text.strip()
+    categories = soup.find('div', class_=d_selectors['categories']).text.strip()
     runtime = soup.find('time', {'itemprop' : 'duration'}).text.strip()
     image_url = soup.find('meta', {'property' : 'og:image'})['content'].strip()
-    trailer_url = soup.find('meta', {'property' : 'og:video:url'})['content'].strip()
+    try:
+        trailer_url = soup.find('meta', {'property' : 'og:video:url'})['content'].strip()
+    except TypeError:
+        trailer_url = ''
     mubi_id = int(image_url.split('/')[5])
     return title, mubi_id, director, country_and_date, categories, runtime, image_url, trailer_url
-    
-async def get_movie_mubi_awards(page:uc.core.tab.Tab) -> list[list[str, str, str]]:
+
+
+async def get_movie_mubi_awards(page:uc.core.tab.Tab) -> tuple[list[str, str, str]]:
     page_content = await page.get_content()
     page_soup = BeautifulSoup(page_content, 'html.parser')
     festival_infos = page_soup.find_all('a', class_='css-pgwez eajdb4a4')
@@ -35,6 +47,49 @@ async def get_movie_mubi_awards(page:uc.core.tab.Tab) -> list[list[str, str, str
     return awards
 
 
+async def get_info_single_movie(movie_url:str, page:uc.core.tab.Tab) -> dict:
+    if movie_url[:3] == "/en":
+        movie_url = "/fr" + movie_url[3:]
+    if movie_url[0] == "/":
+        movie_url = movie_url[1:]
+
+    page = await page.get(
+        f'https://mubi.com/{movie_url}'
+    )
+    time.sleep(1)
+    title, mubi_id, director, country_and_date, categories, runtime, image_url, trailer_url = await get_movie_information(page)
+    
+    page = await page.get(
+        f'https://mubi.com/{movie_url}/awards/'
+    )
+    time.sleep(1)
+    awards = await get_movie_mubi_awards(page)
+    d_movie = {
+        "title" : title,
+        "mubi_id" : mubi_id,
+        "director" : director,
+        "country_and_date" : country_and_date,
+        "categories" : categories,
+        "runtime" : runtime,
+        "image_url" : image_url,
+        "trailer_url" : trailer_url,
+        "awards" : awards,
+        "movie_url" : movie_url,
+    }
+    return d_movie
+
+
+async def get_info_list_movies(movie_list:list[str]) -> None:
+    browser = await uc.start()
+    page = await browser.get(festival_constants.MUBI_BASE_URL)
+    os.makedirs("movie_data", exist_ok=True)
+    for movie_url in movie_list:
+        d_movie = await get_info_single_movie(movie_url, page)
+        with open(os.path.join('movie_data', f'{d_movie["mubi_id"]}.pkl'), 'wb') as outfile:
+            pkl.dump(d_movie, outfile)
+        outfile.close()
+    
+    
 async def test_page_content(page:uc.core.tab.Tab) -> None:
     test_content = await page.find_element_by_text('Oops, we don’t have this information yet.')
     if test_content.text == 'Oops, we don’t have this information yet. Please check back later.' :
@@ -116,3 +171,13 @@ async def extract_all_movie_urls_all_festivals(year_start:int, year_stop:int) ->
         if festival_url :
             await extract_all_movie_urls_festival(festival_url, year_start, year_stop)
         
+
+def open_all_festival_movies() -> list[str]:
+    all_festival_movies = []
+    for folder in os.listdir('festival_data'):
+        for item in os.listdir(os.path.join('festival_data', folder)):
+            with open(os.path.join('festival_data', folder, item), 'rb') as infile:
+                festival_movies = pkl.load(infile)
+            infile.close()
+            all_festival_movies += festival_movies
+    return list(set(all_festival_movies))
