@@ -113,7 +113,7 @@ class GetFilmDetails:
                     film_data["credits"]["distribution"]["distribution"].append(credit_info)
                 elif role.name in ["production"]:
                     film_data["credits"]["distribution"]["production"].append(credit_info)
-                elif role.name in ["co-production"]:
+                elif role.name in ["co_production"]:
                     film_data["credits"]["distribution"]["co-production"].append(credit_info)
                 elif role.name in ["free_broadcaster", "paying_broadcaster"]:
                     film_data["credits"]["distribution"]["financiers"].append(credit_info)
