@@ -9,8 +9,8 @@ import torch
 from loguru import logger
 from tqdm import tqdm
 
-from scripts import faces_clustering as faces_clus
-from scripts import filter_detections as filter_det
+from scripts import faces_clustering
+from scripts import filter_detections
 from scripts import utils
 from scripts import vision_classifiers
 from scripts import vision_detection
@@ -29,7 +29,7 @@ def infer_on_trailer(trailer_path: str, movie_id: str | int, mode: str, batch_si
                               batch_size=batch_size, device=device, num_cpu_threads=num_cpu)
 
     # Filter detections
-    filtered_detections = filter_det.filter_detections_clustering(
+    filtered_detections = filter_detections.filter_detections_clustering(
         detections, effective_area, min_area, max_area, min_conf, movie_id)
 
     # Classify all filtered faces
@@ -37,12 +37,12 @@ def infer_on_trailer(trailer_path: str, movie_id: str | int, mode: str, batch_si
         filtered_detections, batch_size, device)
 
     # Filter detections for classification
-    filtered_detections = filter_det.filter_detections_classifications(
+    filtered_detections = filter_detections.filter_detections_classifications(
         classified_faces, effective_area, min_conf_cla, min_sharpness_cla, max_z_cla, min_mouth_opening_cla, movie_id, mode=mode)
 
     # Cluster faces and aggregate predictions for each character
-    embedded_faces = faces_clus.embed_faces(flattened_faces, batch_size, device)
-    aggregated_estimations = faces_clus.cluster_faces(
+    embedded_faces = faces_clustering.embed_faces(flattened_faces, batch_size, device)
+    aggregated_estimations = faces_clustering.cluster_faces(
         embedded_faces, model=cluster_model, threshold=cluster_threshold, classified_faces=filtered_detections,
         method=agr_method, fps=fps, effective_area=effective_area)
 
@@ -63,10 +63,10 @@ def infer_on_poster(poster: np.ndarray, embedded_faces: np.ndarray, aggregated_e
                               batch_size=1, device=device, num_cpu_threads=num_cpu)
 
     # Filter detections
-    filtered_detections = filter_det.filter_detections_poster(detections, total_area, min_area, min_conf)
+    filtered_detections = filter_detections.filter_detections_poster(detections, total_area, min_area, min_conf)
 
     flattened_faces_poster = [face["cropped_face"] for face in filtered_detections]
-    embedded_faces_poster = faces_clus.embed_faces(flattened_faces_poster, batch_size, device)
+    embedded_faces_poster = faces_clustering.embed_faces(flattened_faces_poster, batch_size, device)
     all_indexes = set()  # Use a set to avoid duplicates
     for video_person in aggregated_estimations:
         all_indexes.update(video_person["persons_ids"])  # Add all indexes from persons_ids
@@ -103,7 +103,7 @@ def aggregate_poster(embedded_faces_poster: list[dict], embedded_faces: list[np.
                     filtered_detections[index]["age"] = video_person["age"]
                     filtered_detections[index]["ethnicity"] = video_person["ethnicity"]
 
-            occupied_area = filter_det.compute_area(filtered_detections[index]["bbox"], total_area)
+            occupied_area = filter_detections.compute_area(filtered_detections[index]["bbox"], total_area)
             filtered_detections[index]["occupied_area"] = occupied_area
         else:
             indexes_to_del.append(index)
