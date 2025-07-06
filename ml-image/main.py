@@ -17,7 +17,7 @@ from scripts import vision_detection
 from scripts import evaluation_annotation 
 
 
-def infer_on_trailer(trailer_path: str, movie_id: str | int, mode: str, batch_size: int, num_cpu: int, cluster_model: str, cluster_threshold: float, agr_method: str, store_visuals: bool, device: str, min_area: float, max_area: float, min_conf: float, min_conf_cla: float, min_sharpness_cla: float, max_z_cla: float, min_mouth_opening_cla : float) -> tuple[list[dict], np.ndarray]:
+def infer_on_trailer(trailer_path: str, cluster_model: str, cluster_threshold: float, agr_method: str, min_area: float, max_area: float, min_conf: float, min_conf_cla: float, min_sharpness_cla: float, max_z_cla: float, min_mouth_opening_cla : float, movie_id: str | int, mode: str, batch_size: int, device: str, num_cpu: int, store_visuals: bool) -> tuple[list[dict], np.ndarray]:
     # Extract frames from video
     frames, fps = utils.frame_capture(trailer_path)
 
@@ -77,7 +77,7 @@ def infer_on_poster(poster: np.ndarray, embedded_faces: np.ndarray, aggregated_e
     return embedded_faces_poster, embedded_faces, filtered_detections, total_area
 
 
-def aggregate_poster(embedded_faces_poster: list[dict], embedded_faces: list[np.ndarray], aggregated_estimations: list[dict], filtered_detections: list[dict], total_area: float) -> list:
+def assign_poster(embedded_faces_poster: list[dict], embedded_faces: list[np.ndarray], aggregated_estimations: list[dict], filtered_detections: list[dict], total_area: float) -> list:
     indexes_to_del = []
     for index, face in enumerate(embedded_faces_poster):
         closest_index = None
@@ -133,17 +133,24 @@ def main(
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Infer on trailer
-    aggregated_estimations = infer_on_trailer(
-        trailer_path,
-        movie_id,
-        cluster_model,
-        cluster_threshold,
-        agr_method,
-        mode,
-        batch_size,
-        num_cpu,
-        store_visuals)
-    
+    aggregated_estimations = infer_on_trailer(trailer_path,
+                                              cluster_model,
+                                              cluster_threshold,
+                                              agr_method,
+                                              min_area,
+                                              max_area,
+                                              min_conf,
+                                              min_conf_cla,
+                                              min_sharpness_cla,
+                                              max_z_cla,
+                                              min_mouth_opening_cla,
+                                              movie_id,
+                                              mode,
+                                              batch_size,
+                                              device,
+                                              num_cpu,
+                                              store_visuals)
+
     if poster_source != "None":
         # Infer on poster
         embedded_faces_poster, embedded_faces, filtered_detections, total_area = infer_on_poster(poster,
@@ -155,7 +162,7 @@ def main(
                                                                                                  batch_size,
                                                                                                  device,
                                                                                                  num_cpu)
-        filtered_detections = aggregate_poster(embedded_faces_poster, embedded_faces, aggregated_estimations, filtered_detections, total_area)
+        filtered_detections = assign_poster(embedded_faces_poster, embedded_faces, aggregated_estimations, filtered_detections, total_area)
         
         # Store poster predictions in .pkl file
         with open(f'stored_predictions/{movie_id}_poster_predictions.pkl', 'wb') as outfile:
