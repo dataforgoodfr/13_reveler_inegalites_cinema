@@ -1,12 +1,15 @@
-import requests
-import os
-import json
 import cv2
+import json
 import numpy as np
+import os
+import pandas as pd
+import pickle as pkl
+import requests
 
 from bs4 import BeautifulSoup
 from PIL import Image
 from torch.utils.data import Dataset
+
 
 class ImageDataset(Dataset):
     # Dataset builder for array images for specific PyTorch model compliance
@@ -209,3 +212,150 @@ def find_video_effective_area(frames: np.ndarray) -> tuple:
         return (x, y), (w, h)
     
     return (0, 0), (w, h)  # Default to full size if no contours found
+
+
+def gather_and_save_predictions(source:pd.DataFrame) -> None :
+    """
+    Function to aggregate trailer and poster predictions in one large .csv file for later database insertion.
+    """
+    path_to_outputs = 'stored_predictions'
+    poster_predictions = [os.path.join(path_to_outputs, item) for item in os.listdir(path_to_outputs) if 'poster' in item]
+    trailer_predictions = [os.path.join(path_to_outputs, item) for item in os.listdir(path_to_outputs) if 'trailer' in item]
+    dict_poster_predictions = {
+        'visa_number' : [], 
+        'allocine_id' : [],
+        'gender' : [], 
+        'age_min' : [], 
+        'age_max' : [], 
+        'ethnicity' : [], 
+        'poster_percentage' : []
+        }
+    dict_trailer_predictions = {
+        'visa_number' : [], 
+        'allocine_id' : [],
+        'gender' : [], 
+        'age_min' : [], 
+        'age_max' : [], 
+        'ethnicity' : [], 
+        'time_on_screen' : [], 
+        'average_size_on_screen' : []
+        }
+    for prediction in poster_predictions :
+        with open(prediction, 'rb') as infile :
+            data = pkl.load(infile)
+        infile.close()
+        visa_number = int(prediction.split('/')[1].split('_')[0])
+        allocine_id = int(source[source.visa_number == visa_number].iloc[0]['allocine_id'])
+        for char in data :
+            dict_poster_predictions = format_prediction_results('poster', char, allocine_id, visa_number, dict_poster_predictions)
+    df_posters = pd.DataFrame(dict_poster_predictions)
+    df_posters.to_csv('predictions_on_posters.csv', index=False)
+
+    for prediction in trailer_predictions :
+        with open(prediction, 'rb') as infile :
+            data = pkl.load(infile)
+        infile.close()
+        visa_number = int(prediction.split('/')[1].split('_')[0])
+        allocine_id = int(source[source.visa_number == visa_number].iloc[0]['allocine_id'])
+        for char in data :
+            dict_trailer_predictions = format_prediction_results('trailer', char, allocine_id, visa_number, dict_trailer_predictions)
+    df_trailers = pd.DataFrame(dict_trailer_predictions)
+    df_trailers.to_csv('predictions_on_trailers.csv', index=False)
+
+
+def format_prediction_results(
+        mode: str, character_data: dict, allocine_id: str, visa_number: int, dict_predictions: dict
+        ) -> dict:
+    if character_data['age'] == 'unknown':
+        dict_predictions['age_min'].append(0)
+        dict_predictions['age_max'].append(0)
+    else :
+        dict_predictions['age_min'].append(character_data['age'].split('-')[0])
+        dict_predictions['age_max'].append(character_data['age'].split('-')[1])
+        
+    dict_predictions['visa_number'].append(visa_number)
+    dict_predictions['allocine_id'].append(allocine_id)
+    dict_predictions['gender'].append(character_data['gender'])
+    dict_predictions['ethnicity'].append(character_data['ethnicity'])
+    match mode :
+        case 'poster' :
+            dict_predictions['poster_percentage'].append(character_data['occupied_area'])
+        case 'trailer' :
+            dict_predictions['time_on_screen'].append(character_data['occurence'])
+            dict_predictions['average_size_on_screen'].append(character_data['area occupied'])
+    return dict_predictions
+
+
+def load_data(source: str, output_poster: str = "downloaded_poster", output_trailer: str = "downloaded_trailer"):
+    # Get data from url or file
+
+    if source[:4] == "http":
+        #print(f"Looking for data at: {source}")
+        data = get_data_from_url(source, output_poster, output_trailer)
+        source_type = "url"
+    else:
+        #print(f"Looking for data in file: {source}")
+        data = get_data_from_file(source, filetype="trailer")
+        source_type = "path"
+    return data, source_type
+
+
+def load_data_from_links(row) :
+    # Get data directly from poster and trailer links
+    os.makedirs("downloaded_media", exist_ok=True)
+    output_poster, output_trailer = f"downloaded_media/{row.visa_number}.jpg", f"downloaded_media/{row.visa_number}.mp4"
+    if f"{row.visa_number}.mp4" not in os.listdir("downloaded_media"):
+        download_video_from_link(row.trailer_url, output_trailer)
+    if f"{row.visa_number}.jpg" not in os.listdir("downloaded_media"):
+        download_video_from_link(row.poster_url, output_poster)
+    
+    poster_image = cv2.imread(output_poster)
+    quality = "unknown"
+    source_type = "url"
+    
+    data = {"url": row.allocine_url, "poster_path": output_poster, "trailer_path": output_trailer, "image": poster_image, "quality": quality}
+    
+    return data, source_type
+
+
+def compute_constants(frames, movie_id: str, source_type: str = "trailer", sharpness_factor: float = 1.0, sharpness_factor_cla: float = 1.0, aspect_ratio: float = 2.478, mode: str = "evaluate") -> tuple:
+    # Compute constants for whole pipeline
+
+    match source_type:
+        case "trailer":
+            '''
+            overall_sharpness = 0
+            for frame in frames:
+                overall_sharpness += filter_det.compute_sharpness(frame)/len(frames)
+
+            min_sharpness = overall_sharpness / sharpness_factor
+            min_sharpness_cla = overall_sharpness / sharpness_factor_cla
+            '''
+            min_sharpness, min_sharpness_cla = 0, 0
+
+            H_original, W_original = frames[0].shape[:2] 
+            effective_height = W_original / aspect_ratio # The aspect ratio of the video is the effective area of the video (i.e., the area where the content is present)
+            total_area = effective_height * W_original
+
+            if mode == "evaluate":
+                movie_folder = os.path.join("visualize_parameters", movie_id)
+                constants_path = os.path.join(movie_folder, "constants.txt")
+                os.makedirs("visualize_parameters", exist_ok=True)
+                os.makedirs(movie_folder, exist_ok=True)
+
+                with open(constants_path, mode='w') as constants_file:
+                    #constants_file.write(f"overall sharpness : {overall_sharpness}\n")
+                    constants_file.write(f"minimal sharpness : {min_sharpness}")
+                    constants_file.write(f"total area : {total_area}")
+                    constants_file.close()
+        
+        case "poster":
+            H_original, W_original = frames.shape[:2]
+            total_area = H_original * W_original
+
+            min_sharpness, min_sharpness_cla = 0, 0
+        
+        case _:
+            raise ValueError(f"Invalid source_type: {source_type}. Choose either 'trailer' or 'poster'.")
+
+    return H_original, W_original, total_area, min_sharpness, min_sharpness_cla

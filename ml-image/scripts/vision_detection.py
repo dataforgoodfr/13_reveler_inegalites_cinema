@@ -1,11 +1,9 @@
 import cv2
-
-from ultralytics import YOLO
 import numpy as np
-
 import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
+from ultralytics import YOLO
 
 from .utils import ImageDataset
 
@@ -83,7 +81,7 @@ class VisionDetection:
         return results
 
     def crop_areas_of_interest(
-            self, images: np.ndarray, H_original: int, W_original: int, area_type: str = 'face', batch_size: int = 64) -> list:
+            self, images: np.ndarray, H_original: int, W_original: int, area_type: str = 'face', batch_size: int = 64) -> list[dict]:
         """
         Create individual subimages for all areas of interest in one image
         """
@@ -113,6 +111,7 @@ class VisionDetection:
                      x1, y1, x2, y2], "conf": conf, "frame_id": k, "perso_id": i, f"cropped_{area_type}": cropped_image})
     
         return detections
+
     
 def link_faces_to_bodies(detections, body_detections):
     """
@@ -165,6 +164,7 @@ def link_faces_to_bodies(detections, body_detections):
 
     return linked_detections
 
+
 def compute_I_o_U(face_bbox, body_bbox):
     """
     Compute the Intersection over Union (IoU) between two bounding boxes.
@@ -196,3 +196,14 @@ def compute_I_o_U(face_bbox, body_bbox):
     iou = inter_area / union_area if union_area > 0 else 0
 
     return iou
+
+
+def detect_faces(
+        frames: np.array, H_original: int, W_original: int, area_type: str, batch_size: int, device: str, num_cpu_threads: int) -> list[dict]:
+    # Detect faces in the video
+    vision_detector = VisionDetection(
+        device=device, num_cpu_threads=num_cpu_threads)
+    detections = vision_detector.crop_areas_of_interest(
+        frames, H_original, W_original, area_type=area_type, batch_size=batch_size)
+
+    return detections

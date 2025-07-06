@@ -1,8 +1,8 @@
 import cv2
-import numpy as np
-from typing import List, Dict, Callable
 import mediapipe as mp
+import numpy as np
 import os
+from typing import List, Dict, Callable
 
 ### Review: je verrais bien une classe pr chaque filtre (qui hériteraient d'une meme classe abstraite) mais peut etre pas la priorité du projet :p
 
@@ -30,7 +30,7 @@ class DetectionFilter:
                 for filter in self.simple_filters + self.complex_filters:
                     detections_vote_weight = np.add(detections_vote_weight, np.array([filter(det, **self.kwargs) for det in detections]))
 
-                for det, weight in zip(detections, detections_vote_weight) :
+                for det, weight in zip(detections, detections_vote_weight, strict=False) :
                     det["weight"] = weight
                 return detections
     
@@ -134,6 +134,59 @@ def is_face_not_occluded(det: Dict, **kwargs) -> bool:
 
     return True
 
+
+def filter_detections_poster(detections: list[dict], total_area: float, min_area: float, min_conf: float) -> list[dict]: 
+    # Filter detections for poster
+    filters = DetectionFilter(
+        simple_filters=[validates_confidence_filter],
+        complex_filters=[],
+        area_type='face',
+        total_area=total_area,
+        min_area=min_area,
+        min_conf=min_conf
+    )    
+    filtered_detections = filters.apply(detections)
+
+    return filtered_detections
+
+
+def filter_detections_clustering(detections: list[dict], effective_area: float, min_area: float, max_area: float, min_conf: float) -> list[dict]:
+    # Filter detections
+    filters = DetectionFilter(
+        simple_filters=[validates_area_filter,
+                        validates_confidence_filter],
+        complex_filters=[],
+        area_type='face',
+        total_area=effective_area,
+        min_area=min_area,
+        max_area=max_area,
+        min_conf=min_conf
+    )
+    filtered_detections = filters.apply(detections)
+
+    return filtered_detections
+
+
+def filter_detections_classifications(detections: list[dict], effective_area: float, min_conf: float, min_sharpness: float, max_z: float, min_mouth_opening: float, movie_id: int | str, mode="infer") -> list[dict]:
+    # Filter detections
+    filters = DetectionFilter(
+        simple_filters=[validates_confidence_filter],
+        complex_filters=[validates_sharpness_filter, validates_pose_filter],
+        area_type='face',
+        total_area=effective_area,
+        min_conf=min_conf,
+        min_sharpness=min_sharpness,
+        max_z=max_z,
+        min_mouth_opening=min_mouth_opening
+    )    
+    filtered_detections = filters.apply(detections, mode = "classification")
+
+    if mode == "evaluate":
+        filters.visualize_detection_parameters(movie_id=movie_id, detections=detections, storage_folder='visualize_parameters')
+
+    return filtered_detections
+
+
 def draw_landmarks(image):
     h, w, _ = image.shape  # Dimensions de l'image
 
@@ -161,3 +214,5 @@ def draw_landmarks(image):
 
     return(draw_image, nose_tip, left_eye,right_eye, sup_lips, inf_lips)
     #cv2.imwrite(f"example/pose/face_with_landmarks_{nose_tip.z : .2f}_{left_eye.x: .2f}_{right_eye.x: .2f}_{sup_lips.y: .2f}_{inf_lips.y: .2f}.jpg", draw_image)
+
+

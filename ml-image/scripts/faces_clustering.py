@@ -55,14 +55,14 @@ class EmbeddingModel:
         return embeddings_array
 
 
-class FacesClustering:
-    def __init__(self, model="chinese_whispers", threshold: float = 0.92,  **kwargs):
+class FacesClusterer:
+    def __init__(self, model: str ="chinese_whispers", threshold: float = 0.92,  **kwargs):
         self.model = model
         self.threshold = threshold
         self.parameters = kwargs
         self.persons = {}
 
-    def cluster_faces(self, embedded_faces_array: np.array):
+    def get_clustering_labels(self, embedded_faces_array: np.ndarray):
         match self.model:
             case "chinese_whispers":
                 encoded_faces = [vector(encoding)
@@ -75,7 +75,7 @@ class FacesClustering:
         return labels
 
     def apply_clusters(self, persons_list: list, faces_list: list):
-        labels = self.cluster_faces(faces_list)
+        labels = self.get_clustering_labels(faces_list)
 
         for i in range(len(persons_list)):
             label, person = labels[i], persons_list[i]
@@ -98,7 +98,7 @@ class FacesClustering:
         voted_attribute = max(voting_dict, key=lambda k: voting_dict[k])
         return voted_attribute
     
-    def aggregate_estimations(self, persons_list: list, faces_list: list, fps, total_area, method="majority", min_occurence=0.03):
+    def aggregate_estimations(self, persons_list: list, faces_list: list, fps, total_area, method="majority", min_occurence=0.03) -> list[dict]:
         self.apply_clusters(persons_list, faces_list)
         aggregated_persons = []
 
@@ -120,7 +120,7 @@ class FacesClustering:
                                         for person in persons]
                         persons_ids = [person["person_id"]
                                        for person in persons]
-                        frames_to_bboxes = dict(zip(frames_id, persons_bboxes))
+                        frames_to_bboxes = dict(zip(frames_id, persons_bboxes, strict=False))
                         aggregated_persons.append({"age": aggregated_age, "gender": aggregated_gender, "ethnicity": aggregated_ethnicity,
                                                    "occurence": occurence, "area occupied": area_occupied, "label": final_label, "frames_bboxes": frames_to_bboxes, "persons_ids" : persons_ids})
                         #print(f"Character {final_label} : {occurence:.2f} seconds on screen, {len(persons) / total_persons * 100:.2f}% of the total, age: {aggregated_age}, gender: {aggregated_gender}, ethnicity: {aggregated_ethnicity}")
@@ -130,3 +130,22 @@ class FacesClustering:
                 final_label += 1
         
         return aggregated_persons
+
+
+def embed_faces(flattened_faces: list[np.ndarray], batch_size: int, device: str) -> np.ndarray:
+    # Embed faces
+    embedding_model = EmbeddingModel(device=device)
+    embedded_faces = embedding_model.get_embedding(
+        batch_size=batch_size, detected_faces=flattened_faces)
+
+    return embedded_faces
+
+
+def cluster_faces(embedded_faces: np.ndarray, model: str, threshold: float, classified_faces: list[dict], method: str, fps: int, effective_area: float) -> list[dict]:
+    # Cluster faces and aggregate predictions for each character
+    faces_clusterer = FacesClusterer(
+        model=model, threshold=threshold)
+    aggregated_estimations = faces_clusterer.aggregate_estimations(
+        classified_faces, embedded_faces, fps, effective_area, method=method)
+
+    return aggregated_estimations
