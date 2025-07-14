@@ -142,15 +142,15 @@ const Navbar = ({
         </div>
       ) : (
         <nav
-          className={`text-white absolute w-full z-10 ${
+          className={`text-white text-sm absolute w-full z-10 ${
             isOpen ? "flex flex-col h-full bg-zinc-800" : ""
           } md:bg-transparent`}
         >
           {["/", "/statistics"].includes(pathname) && !isOpen && (
-            <div className="absolute mx-16 cursor-pointer md:w-96 w-56 pt-6">
-              <Link href="/" className="font-bold text-xl">
-                Observatoire des inégalités dans le cinéma, par le Collectif
-                50/50 et Data For Good
+            <div className="absolute mx-5 cursor-pointer w-56 pt-6">
+              <Link href="/" className="font-bold text-md">
+                Observatoire des inégalités dans le cinéma,
+                <br />par le Collectif 50/50 et Data For Good
               </Link>
             </div>
           )}
@@ -158,7 +158,7 @@ const Navbar = ({
             <div className="flex items-center justify-end h-16">
               {/* Menu desktop */}
               <div className="hidden md:block">
-                <div className="ml-10 flex items-center space-x-4">
+                <div className="ml-10 flex items-center">
                   <Link
                     href="/"
                     className="px-3 py-2 rounded-md cursor-pointer"
@@ -177,8 +177,28 @@ const Navbar = ({
                   >
                     À propos
                   </Link>
+                  <div
+                    className="bg-[#2A2A2A] rounded-full hidden lg:block"
+                    onClick={() => setIsSearching(!isSearching)}
+                  >
+                    <div className="px-4 flex items-center text-[#CBD5E1]">
+                      <button
+                        className="cursor-pointer"
+                      >
+                        <Image
+                          src="/search.svg"
+                          alt="Rechercher"
+                          height={36}
+                          width={36}
+                        />
+                      </button>
+                      <p className="pr-2">
+                        Recherchez un film ou un festival
+                      </p>
+                    </div>
+                  </div>
                   <button
-                    className="px-3 py-2 rounded-md cursor-pointer"
+                    className="cursor-pointer lg:hidden"
                     onClick={() => setIsSearching(!isSearching)}
                   >
                     <Image
