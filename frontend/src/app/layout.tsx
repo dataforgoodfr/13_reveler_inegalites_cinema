@@ -28,9 +28,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html className="h-full" lang="fr">
+    <html className="min-h-screen h-full" lang="fr">
       <body
-        className={`${geistSans.variable} ${geist.variable} antialiased bg-black h-full`}
+        className={`${geistSans.variable} ${geist.variable} antialiased bg-red min-h-screen h-full`}
+        style={{
+          background: 'linear-gradient(#1E1E1E, #0B0C0F)'
+        }}
         suppressHydrationWarning
       >
         <Navbar>{children}</Navbar>
