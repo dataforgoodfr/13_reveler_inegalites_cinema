@@ -145,15 +145,7 @@ export default function PageFilm() {
   }
 
   return (
-    <main className="p-10 md:p-20 min-h-screen bg-transparent text-white">
-      <div
-        className="background-image"
-        style={
-          {
-            "--background-image-url": `url(${filmData.poster_image_base64})`,
-          } as React.CSSProperties
-        }
-      ></div>
+    <main className="p-10 md:p-20 min-h-screen text-white">
       <div className="flex flex-col items-center md:items-start md:flex-row gap-10">
         <div className="pt-5 md:pt-0 relative">
           {filmData.poster_image_base64 &&
