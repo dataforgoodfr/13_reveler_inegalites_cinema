@@ -147,11 +147,12 @@ export default function PageFilm() {
   return (
     <main className="p-10 md:p-20 min-h-screen text-white">
       <div className="flex flex-col items-center md:items-start md:flex-row gap-10">
-        <div className="pt-5 md:pt-0 relative">
+        <div className="pt-5 md:pt-0 relative shadow-[0_0_10px_white] rounded-md">
           {filmData.poster_image_base64 &&
           filmData.poster_image_base64 !== "" ? (
             <Image
               loader={({ src }) => src}
+              className="rounded-md"
               style={{ height: "fit-content" }}
               src={filmData.poster_image_base64}
               alt="Affiche"
@@ -160,6 +161,7 @@ export default function PageFilm() {
             />
           ) : (
             <Image
+              className="rounded-md"
               style={{ height: "fit-content" }}
               src="/placeholder_image.svg"
               alt="Image indisponible"
