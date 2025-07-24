@@ -7,6 +7,7 @@ import time
 
 from bs4 import BeautifulSoup
 from multiprocessing import Pool
+from tqdm import tqdm
 
 import festival_constants
 
@@ -19,7 +20,7 @@ d_selectors = {
     }
 
 
-async def get_movie_information(page:uc.core.tab.Tab) -> tuple:
+async def get_movie_information(page: uc.core.tab.Tab) -> tuple:
     page_content = await page.get_content()
     soup = BeautifulSoup(page_content, 'html.parser')
     title = soup.find('h1', class_=d_selectors['title']).text.strip()
@@ -27,16 +28,22 @@ async def get_movie_information(page:uc.core.tab.Tab) -> tuple:
     country_and_date = soup.find('div', class_=d_selectors['country_and_date']).text.strip()
     categories = soup.find('div', class_=d_selectors['categories']).text.strip()
     runtime = soup.find('time', {'itemprop' : 'duration'}).text.strip()
-    image_url = soup.find('meta', {'property' : 'og:image'})['content'].strip()
+    try:
+        image_url = soup.find('meta', {'property' : 'og:image'})['content'].strip()
+        mubi_id = int(image_url.split('/')[5])
+    except TypeError:
+        image_url = ''
+        mubi_id = 'none'
+        
     try:
         trailer_url = soup.find('meta', {'property' : 'og:video:url'})['content'].strip()
     except TypeError:
         trailer_url = ''
-    mubi_id = int(image_url.split('/')[5])
+
     return title, mubi_id, director, country_and_date, categories, runtime, image_url, trailer_url
 
 
-async def get_movie_mubi_awards(page:uc.core.tab.Tab) -> tuple[list[str, str, str]]:
+async def get_movie_mubi_awards(page: uc.core.tab.Tab) -> tuple[list[str, str, str]]:
     page_content = await page.get_content()
     page_soup = BeautifulSoup(page_content, 'html.parser')
     festival_infos = page_soup.find_all('a', class_='css-pgwez eajdb4a4')
@@ -49,7 +56,17 @@ async def get_movie_mubi_awards(page:uc.core.tab.Tab) -> tuple[list[str, str, st
     return awards
 
 
-async def get_info_single_movie(movie_url:str, page:uc.core.tab.Tab) -> None:
+async def perform_random_behaviour(page: uc.core.tab.Tab, sleep_multiplier: float = 1.5) -> None:
+    time.sleep(sleep_multiplier * np.random.random() + 1)
+    await page.scroll_down(np.random.randint(25, 75))
+    time.sleep(sleep_multiplier * np.random.random() + 1)
+    await page.scroll_down(np.random.randint(25, 75))
+    time.sleep(sleep_multiplier / 2 * np.random.random())
+    await page.scroll_up(np.random.randint(10, 25))
+    time.sleep(sleep_multiplier / 2 * np.random.random() + 1)
+    
+    
+async def get_info_single_movie(movie_url: str, page: uc.core.tab.Tab) -> None:
     if movie_url[:3] == "/en":
         movie_url = "/fr" + movie_url[3:]
     if movie_url[0] == "/":
@@ -58,13 +75,14 @@ async def get_info_single_movie(movie_url:str, page:uc.core.tab.Tab) -> None:
     page = await page.get(
         f'https://mubi.com/{movie_url}'
     )
-    time.sleep(3*np.random.random() + 1)
+    await perform_random_behaviour(page)
     title, mubi_id, director, country_and_date, categories, runtime, image_url, trailer_url = await get_movie_information(page)
     
     page = await page.get(
         f'https://mubi.com/{movie_url}/awards/'
     )
-    time.sleep(3*np.random.random() + 1)
+    await perform_random_behaviour(page)
+    
     awards = await get_movie_mubi_awards(page)
     d_movie = {
         "title" : title,
@@ -83,11 +101,13 @@ async def get_info_single_movie(movie_url:str, page:uc.core.tab.Tab) -> None:
     outfile.close()
 
 
-async def get_info_list_movies(movie_list:list[str]) -> None:
+async def get_info_list_movies(movie_list: list[str]) -> None:
     browser = await uc.start()
     page = await browser.get(festival_constants.MUBI_BASE_URL)
-    os.makedirs("movie_data", exist_ok=True)
-    for movie_url in movie_list:
+    os.makedirs('movie_data', exist_ok=True)
+    for movie_url in tqdm(movie_list):
+        if np.random.randint(20) == 0:
+            time.sleep(4)
         try:
             await get_info_single_movie(movie_url, page)
             with open('processed_downloads.pkl', 'rb') as infile:
@@ -98,7 +118,7 @@ async def get_info_list_movies(movie_list:list[str]) -> None:
                 pkl.dump(processed_downloads, outfile)
             outfile.close()
 
-        except AttributeError:
+        except AttributeError as e:
             with open('failed_downloads.pkl', 'rb') as infile:
                 failed_downloads = pkl.load(infile)
             infile.close()
@@ -106,21 +126,22 @@ async def get_info_list_movies(movie_list:list[str]) -> None:
             with open('failed_downloads.pkl', 'wb') as outfile:
                 pkl.dump(failed_downloads, outfile)
             outfile.close()
+            print(e)
+            time.sleep(30)
     
-    
-async def test_page_content(page:uc.core.tab.Tab) -> None:
+async def test_page_content(page: uc.core.tab.Tab) -> None:
     test_content = await page.find_element_by_text('Oops, we don’t have this information yet.')
     if test_content.text == 'Oops, we don’t have this information yet. Please check back later.' :
         raise ValueError('Page not found.')
 
     
-async def get_festival_year(page:uc.core.tab.Tab, festival:str, year:int) -> None:
+async def get_festival_year(page: uc.core.tab.Tab, festival: str, year: int) -> None:
     await page.get(f'{festival_constants.MUBI_BASE_URL}/{festival}?year={year}')
     await test_page_content(page)
     time.sleep(3*np.random.random())
 
     
-async def get_movie_urls_from_page(page:uc.core.tab.Tab) -> list[str]:
+async def get_movie_urls_from_page(page: uc.core.tab.Tab) -> list[str]:
     content = await page.get_content()
     soup = BeautifulSoup(content, 'html.parser')
     all_movies_page = soup.find_all('a', class_='css-122y91a expqqu72')
@@ -128,7 +149,7 @@ async def get_movie_urls_from_page(page:uc.core.tab.Tab) -> list[str]:
     return movie_urls
     
     
-async def get_all_movies_for_year_festival(page:uc.core.tab.Tab, festival:str, year:int) -> None:
+async def get_all_movies_for_year_festival(page: uc.core.tab.Tab, festival: str, year: int) -> None:
     os.makedirs('festival_data', exist_ok=True)
     os.makedirs(os.path.join('festival_data', festival), exist_ok=True)
     next_button = await page.select('.e1sjp3u22')
@@ -162,7 +183,7 @@ def parse_festival_results() -> set:
     return set(all_movie_urls)
 
     
-async def extract_all_movie_urls_festival(festival:str, year_start:int, year_stop:int) -> None:
+async def extract_all_movie_urls_festival(festival: str, year_start: int, year_stop: int) -> None:
     browser = await uc.start()
     page = await browser.get(f'{festival_constants.MUBI_BASE_URL}')
     if f'{festival}' in os.listdir('festival_data'):
@@ -183,7 +204,7 @@ async def extract_all_movie_urls_festival(festival:str, year_start:int, year_sto
     browser.stop()
     
 
-async def extract_all_movie_urls_all_festivals(year_start:int, year_stop:int) -> None:
+async def extract_all_movie_urls_all_festivals(year_start: int, year_stop: int) -> None:
     all_festivals = festival_constants.festival_name_urls
     for _, festival_url in all_festivals.items() :
         if festival_url :
@@ -201,22 +222,27 @@ def open_all_festival_movies() -> list[str]:
     return sorted(list(set(all_festival_movies)))
 
 
-def split_download_urls(urls:list[str], n_workers:int = 4) -> list[list[str]]:
+def split_download_urls(urls: list[str], n_workers: int = 4) -> list[list[str]]:
     split_urls = []
     for n in range(n_workers):
         split_urls.append(urls[n*len(urls)//n_workers:(n+1)*len(urls)//n_workers])
     return split_urls
 
 
-def run_scraping(list_urls:list[str]) -> None:
+def run_scraping(list_urls: list[str]) -> None:
     asyncio.run(get_info_list_movies(list_urls))
 
 
-def run_parallel_scraping(from_scratch:bool = False, n_workers:int = 4, n_downloads:int = 1e6) -> None:
+def run_parallel_scraping(from_scratch: bool = False, n_workers: int = 4, n_downloads: int = 1000000) -> None:
+    print(f'Starting processing on {time.ctime()}...')
     if 'failed_downloads.pkl' not in os.listdir():
         pkl.dump([], open('failed_downloads.pkl', 'wb'))
         pkl.dump([], open('processed_downloads.pkl', 'wb'))
-
+    else:
+        processed = pkl.load(open('processed_downloads.pkl', 'rb'))
+        failed = pkl.load(open('failed_downloads.pkl', 'rb'))
+        print(f'{len(processed)} processed downloads.\n{len(failed)} failed downloads.')
+    
     all_urls = open_all_festival_movies()
     if not from_scratch:
         processed_downloads = pkl.load(open('processed_downloads.pkl', 'rb'))
@@ -225,6 +251,21 @@ def run_parallel_scraping(from_scratch:bool = False, n_workers:int = 4, n_downlo
         
     split_urls = split_download_urls(all_urls[:int(n_downloads)], n_workers)
     print(f'Parsing {len(all_urls)} urls...')
+
+    with Pool(n_workers) as p:
+        p.map(run_scraping, split_urls)
+
+
+def run_parallel_scraping_failed_urls(n_workers: int = 4, n_downloads: int = 1000000, istart: int = 370.) -> None:
+    print(f'Starting processing on {time.ctime()}...')
+    all_urls = open_all_festival_movies()
+    processed_downloads = pkl.load(open('processed_downloads.pkl', 'rb'))
+    print(f'{len(processed_downloads)}/{len(all_urls)} downloads processed')
+    all_urls = sorted(list(set(all_urls) - set(processed_downloads)))
+    print(f'Parsing {len(all_urls)} urls...')
+    #all_urls = sorted(list(set(failed_downloads)))
+        
+    split_urls = split_download_urls(all_urls[istart:int(n_downloads)], n_workers)
 
     with Pool(n_workers) as p:
         p.map(run_scraping, split_urls)
