@@ -32,7 +32,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geist.variable} antialiased bg-red min-h-screen h-full`}
         style={{
-          background: 'linear-gradient(#1E1E1E, #0B0C0F)'
+          background: '#0B0C0F'
         }}
         suppressHydrationWarning
       >
