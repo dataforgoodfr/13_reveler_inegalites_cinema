@@ -9,7 +9,7 @@ import requests
 from bs4 import BeautifulSoup
 from PIL import Image
 from torch.utils.data import Dataset
-
+from loguru import logger
 
 class ImageDataset(Dataset):
     # Dataset builder for array images for specific PyTorch model compliance
@@ -214,13 +214,13 @@ def find_video_effective_area(frames: np.ndarray) -> tuple:
     return (0, 0), (w, h)  # Default to full size if no contours found
 
 
-def gather_and_save_predictions(source:pd.DataFrame) -> None :
+def gather_and_save_predictions(source:pd.DataFrame, path_to_outputs: str, final_predictions_path: str) -> None :
     """
     Function to aggregate trailer and poster predictions in one large .csv file for later database insertion.
     """
-    path_to_outputs = 'stored_predictions'
     poster_predictions = [os.path.join(path_to_outputs, item) for item in os.listdir(path_to_outputs) if 'poster' in item]
     trailer_predictions = [os.path.join(path_to_outputs, item) for item in os.listdir(path_to_outputs) if 'trailer' in item]
+    logger.info(f'Gathering {len(poster_predictions)} poster predictions and {len(trailer_predictions)} trailer predictions')
     dict_poster_predictions = {
         'visa_number' : [], 
         'allocine_id' : [],
@@ -244,23 +244,26 @@ def gather_and_save_predictions(source:pd.DataFrame) -> None :
         with open(prediction, 'rb') as infile :
             data = pkl.load(infile)
         infile.close()
-        visa_number = int(prediction.split('/')[1].split('_')[0])
+        logger.debug(f'la tête du path des prédictions: {prediction}')
+        visa_number = int(prediction.split('\\')[-1].split('_')[0]) #To make more robust to the OS used -> using the Path library
+        logger.debug(f'Le numéro de visa récupéré dans le path: {visa_number}')
         allocine_id = int(source[source.visa_number == visa_number].iloc[0]['allocine_id'])
         for char in data :
             dict_poster_predictions = format_prediction_results('poster', char, allocine_id, visa_number, dict_poster_predictions)
     df_posters = pd.DataFrame(dict_poster_predictions)
-    df_posters.to_csv('predictions_on_posters.csv', index=False)
+    df_posters.to_csv(f'{final_predictions_path}/predictions_on_posters.csv', index=False)
 
     for prediction in trailer_predictions :
         with open(prediction, 'rb') as infile :
+            logger.debug(f'Gathering predictions from {prediction}')
             data = pkl.load(infile)
         infile.close()
-        visa_number = int(prediction.split('/')[1].split('_')[0])
+        visa_number = int(prediction.split('\\')[-1].split('_')[0])
         allocine_id = int(source[source.visa_number == visa_number].iloc[0]['allocine_id'])
         for char in data :
             dict_trailer_predictions = format_prediction_results('trailer', char, allocine_id, visa_number, dict_trailer_predictions)
     df_trailers = pd.DataFrame(dict_trailer_predictions)
-    df_trailers.to_csv('predictions_on_trailers.csv', index=False)
+    df_trailers.to_csv(f'{final_predictions_path}/predictions_on_trailers.csv', index=False)
 
 
 def format_prediction_results(
@@ -300,14 +303,13 @@ def load_data(source: str, output_poster: str = "downloaded_poster", output_trai
     return data, source_type
 
 
-def load_data_from_links(row) :
+def load_data_from_links(row, downloaded_media_path) :
     # Get data directly from poster and trailer links
-    os.makedirs("downloaded_media", exist_ok=True)
-    output_poster, output_trailer = f"downloaded_media/{row.visa_number}.jpg", f"downloaded_media/{row.visa_number}.mp4"
-    if f"{row.visa_number}.mp4" not in os.listdir("downloaded_media"):
+    output_poster, output_trailer = f"{downloaded_media_path}/{row.visa_number}.jpg", f"{downloaded_media_path}/{row.visa_number}.mp4"
+    if f"{row.visa_number}.mp4" not in os.listdir(downloaded_media_path):
         download_video_from_link(row.trailer_url, output_trailer)
-    if f"{row.visa_number}.jpg" not in os.listdir("downloaded_media"):
-        download_video_from_link(row.poster_url, output_poster)
+    if f"{row.visa_number}.jpg" not in os.listdir(downloaded_media_path):
+        download_poster_from_link(row.poster_url, output_poster)
     
     poster_image = cv2.imread(output_poster)
     quality = "unknown"

@@ -1,6 +1,7 @@
 import argparse
 import cv2
 import os
+import sys
 import pandas as pd
 import pickle as pkl
 import numpy as np
@@ -16,6 +17,14 @@ from scripts import vision_classifiers
 from scripts import vision_detection
 from scripts import evaluation_annotation 
 
+PREDICTIONS_FOLDER = os.environ.get('PREDICTIONS_FOLDER', 'stored_predictions')
+DOWNLOADED_MEDIA_FOLDER =  os.environ.get('DOWNLOADED_MEDIA_FOLDER', 'downloaded_media')
+TEMP_FOLDER = os.environ.get('TEMP_FOLDER', 'tmp')
+OUTPUTS_FOLDER = os.environ.get('OUTPUTS_FOLDER', 'outputs')
+FINAL_PREDICTIONS_FOLDER = os.environ.get('FINAL_PREDICTIONS_FOLDER', 'final_predictions')
+
+logger.remove(0)
+logger.add(sys.stderr, level="INFO")
 
 def infer_on_trailer(trailer_path: str, cluster_model: str, cluster_threshold: float, agr_method: str, min_area: float, max_area: float, min_conf: float, min_conf_cla: float, min_sharpness_cla: float, max_z_cla: float, min_mouth_opening_cla : float, movie_id: str | int, mode: str, batch_size: int, device: str, num_cpu: int, store_visuals: bool) -> tuple[list[dict], np.ndarray]:
     # Extract frames from video
@@ -30,7 +39,7 @@ def infer_on_trailer(trailer_path: str, cluster_model: str, cluster_threshold: f
 
     # Filter detections
     filtered_detections = filter_detections.filter_detections_clustering(
-        detections, effective_area, min_area, max_area, min_conf, movie_id)
+        detections, effective_area, min_area, max_area, min_conf)
 
     # Classify all filtered faces
     classified_faces, flattened_faces = vision_classifiers.classify_faces(
@@ -114,13 +123,14 @@ def assign_poster(embedded_faces_poster: list[dict], embedded_faces: list[np.nda
 
 def main(
         source, movie_id, num_cpu, batch_size, min_area, max_area, min_conf, min_conf_cla, min_sharpness, min_sharpness_cla,
-        max_z, max_z_cla, min_mouth_opening, min_mouth_opening_cla, cluster_model, cluster_threshold, agr_method, store_visuals, visuals_path, mode='inference', poster_source='None', row=None,
+        max_z, max_z_cla, min_mouth_opening, min_mouth_opening_cla, cluster_model, cluster_threshold, agr_method, store_visuals, visuals_path, predictions_path, downloaded_media_path, mode='inference', poster_source='None', row=None,
         ) -> None:
 
     # Load data
-    data, source_type = utils.load_data_from_links(row)
+    data, source_type = utils.load_data_from_links(row, downloaded_media_path)
     if source_type == "url":
         poster = data["image"]
+        poster_source = "url"
     elif poster_source != "None":
         poster = cv2.imread(poster_source)
 
@@ -133,7 +143,7 @@ def main(
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Infer on trailer
-    aggregated_estimations = infer_on_trailer(trailer_path,
+    aggregated_estimations, embedded_faces = infer_on_trailer(trailer_path,
                                               cluster_model,
                                               cluster_threshold,
                                               agr_method,
@@ -154,10 +164,11 @@ def main(
     if poster_source != "None":
         # Infer on poster
         embedded_faces_poster, embedded_faces, filtered_detections, total_area = infer_on_poster(poster,
-                                                                                                 movie_id,
+                                                                                                 embedded_faces,
                                                                                                  aggregated_estimations,
                                                                                                  min_area,
                                                                                                  min_conf,
+                                                                                                 movie_id,
                                                                                                  mode,
                                                                                                  batch_size,
                                                                                                  device,
@@ -165,7 +176,7 @@ def main(
         filtered_detections = assign_poster(embedded_faces_poster, embedded_faces, aggregated_estimations, filtered_detections, total_area)
         
         # Store poster predictions in .pkl file
-        with open(f'stored_predictions/{movie_id}_poster_predictions.pkl', 'wb') as outfile:
+        with open(f'{predictions_path}/{movie_id}_poster_predictions.pkl', 'wb') as outfile:
             pkl.dump(filtered_detections, outfile)
         outfile.close()
 
@@ -180,7 +191,7 @@ def main(
             return score_tot, score_kept_frames
         case _:
             # Store trailer predictions in .pkl file
-            with open(f'stored_predictions/{movie_id}_trailer_predictions.pkl', 'wb') as outfile:
+            with open(f'{predictions_path}/{movie_id}_trailer_predictions.pkl', 'wb') as outfile:
                 pkl.dump(aggregated_estimations, outfile)
             outfile.close()
             
@@ -241,9 +252,16 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     
-    os.makedirs("stored_visuals", exist_ok=True)
-    os.makedirs("stored_predictions", exist_ok=True)
-        
+    os.makedirs(TEMP_FOLDER, exist_ok=True)
+    visuals_path = os.path.join(TEMP_FOLDER, args.visuals_path) #TODO use this arg or delete it
+    os.makedirs(visuals_path, exist_ok=True)
+    temp_predictions_path = os.path.join(TEMP_FOLDER, PREDICTIONS_FOLDER)
+    os.makedirs(temp_predictions_path, exist_ok=True)
+    downloaded_media_path = os.path.join(TEMP_FOLDER, DOWNLOADED_MEDIA_FOLDER)
+    os.makedirs(downloaded_media_path, exist_ok=True)
+    final_predictions_path = os.path.join(OUTPUTS_FOLDER, FINAL_PREDICTIONS_FOLDER)
+    os.makedirs(final_predictions_path, exist_ok=True)
+
     if args.source[-4:] == ".csv":
         df = pd.read_csv(args.source)
         istart = args.istart
@@ -253,15 +271,15 @@ if __name__ == '__main__':
         for i, row in tqdm(df.iterrows(), total=len(df)):
             try : 
                 predictions = main(
-                    row.allocine_url, row[args.column_identifier], args.num_cpu, args.batch_size, args.min_area, args.max_area, args.min_conf, args.min_conf_cla, args.min_sharpness, args.min_sharpness_cla, args.max_z, args.max_z_cla, args.min_mouth_opening, args.min_mouth_opening_cla, args.cluster_model, args.cluster_threshold, args.agr_method, args.store_visuals, args.visuals_path, row=row,
+                    row.allocine_url, row[args.column_identifier], args.num_cpu, args.batch_size, args.min_area, args.max_area, args.min_conf, args.min_conf_cla, args.min_sharpness, args.min_sharpness_cla, args.max_z, args.max_z_cla, args.min_mouth_opening, args.min_mouth_opening_cla, args.cluster_model, args.cluster_threshold, args.agr_method, args.store_visuals, visuals_path, temp_predictions_path, downloaded_media_path, row=row,
                 )
-                os.remove(f"downloaded_media/{row.visa_number}.jpg")
-                os.remove(f"downloaded_media/{row.visa_number}.mp4")
+                os.remove(f"{downloaded_media_path}/{row.visa_number}.jpg")
+                os.remove(f"{downloaded_media_path}/{row.visa_number}.mp4")
             except Exception as e:
                 logger.info(f"Row {i}, id {row[args.column_identifier]} : {repr(e)}")
                 continue
         logger.success(f"All films from {args.source} have been analyzed.")
         df = pd.read_csv(args.source)
-        utils.gather_and_save_predictions(df)
+        utils.gather_and_save_predictions(df, temp_predictions_path, final_predictions_path)
     else:
         raise ValueError("Source must be a .csv file")
