@@ -167,7 +167,7 @@ def filter_detections_clustering(detections: list[dict], effective_area: float, 
     return filtered_detections
 
 
-def filter_detections_classifications(detections: list[dict], effective_area: float, min_conf: float, min_sharpness: float, max_z: float, min_mouth_opening: float, movie_id: int | str, mode="infer") -> list[dict]:
+def filter_detections_classifications(detections: list[dict], effective_area: float, min_conf: float, min_sharpness: float, max_z: float, min_mouth_opening: float, movie_id: int | str=None, mode: str="infer") -> list[dict]:
     # Filter detections
     filters = DetectionFilter(
         simple_filters=[validates_confidence_filter],

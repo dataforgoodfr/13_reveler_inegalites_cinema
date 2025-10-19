@@ -8,6 +8,7 @@ from torchvision import transforms
 
 from .utils import ImageDataset
 
+from loguru import logger
 
 class EmbeddingModel:
     def __init__(self, model: str = "facenet", device: str = 'cpu'):
@@ -75,9 +76,14 @@ class FacesClusterer:
         return labels
 
     def apply_clusters(self, persons_list: list, faces_list: list):
+        '''
+        Determine a cluster for each detected faces and register them.
+        '''
         labels = self.get_clustering_labels(faces_list)
 
         for i in range(len(persons_list)):
+            if i==14:
+                logger.debug(f'le label du person_id {i}: {labels[i]}')
             label, person = labels[i], persons_list[i]
             person["person_id"] = i
             if label not in self.persons:
@@ -105,7 +111,9 @@ class FacesClusterer:
         final_label = 0
         total_persons = np.sum([len(persons) for persons in self.persons.values()])
         for label, persons in self.persons.items():
+            logger.debug(f'Aggregation des résultats sur le label: {label}')
             if len(persons) / total_persons >= min_occurence:
+                logger.debug(f'Le label: {label} valide les conditions minimales pour être conservé')
                 match method:
                     case "majority":
                         aggregated_age = self.compute_weighted_vote("age", label)
@@ -125,9 +133,11 @@ class FacesClusterer:
                                                    "occurence": occurence, "area occupied": area_occupied, "label": final_label, "frames_bboxes": frames_to_bboxes, "persons_ids" : persons_ids})
                         #print(f"Character {final_label} : {occurence:.2f} seconds on screen, {len(persons) / total_persons * 100:.2f}% of the total, age: {aggregated_age}, gender: {aggregated_gender}, ethnicity: {aggregated_ethnicity}")
                     case _:
-                        raise ValueError(f"Method  {method} not supported")
+                        raise ValueError(f"Method {method} not supported")
                 
                 final_label += 1
+            else:
+                logger.debug(f'/!\ Le label: {label} ne valide pas les conditions minimales pour être conservé')
         
         return aggregated_persons
 

@@ -245,7 +245,7 @@ def gather_and_save_predictions(source:pd.DataFrame, path_to_outputs: str, final
             data = pkl.load(infile)
         infile.close()
         logger.debug(f'la tête du path des prédictions: {prediction}')
-        visa_number = int(prediction.split('\\')[-1].split('_')[0]) #To make more robust to the OS used -> using the Path library
+        visa_number = int(prediction.split('\\')[-1].split('_')[0]) #FIXME: To make more robust to the OS used -> using the Path library
         logger.debug(f'Le numéro de visa récupéré dans le path: {visa_number}')
         allocine_id = int(source[source.visa_number == visa_number].iloc[0]['allocine_id'])
         for char in data :
@@ -269,6 +269,8 @@ def gather_and_save_predictions(source:pd.DataFrame, path_to_outputs: str, final
 def format_prediction_results(
         mode: str, character_data: dict, allocine_id: str, visa_number: int, dict_predictions: dict
         ) -> dict:
+    if 'age' not in character_data:
+        logger.info(f'Le fameux charactère qui pose problème : {allocine_id}, {visa_number}, {character_data}')
     if character_data['age'] == 'unknown':
         dict_predictions['age_min'].append(0)
         dict_predictions['age_max'].append(0)
@@ -303,19 +305,18 @@ def load_data(source: str, output_poster: str = "downloaded_poster", output_trai
     return data, source_type
 
 
-def load_data_from_links(row, downloaded_media_path) :
+def load_data_from_links(row, downloaded_media_path, poster_path, trailer_path) :
     # Get data directly from poster and trailer links
-    output_poster, output_trailer = f"{downloaded_media_path}/{row.visa_number}.jpg", f"{downloaded_media_path}/{row.visa_number}.mp4"
     if f"{row.visa_number}.mp4" not in os.listdir(downloaded_media_path):
-        download_video_from_link(row.trailer_url, output_trailer)
+        download_video_from_link(row.trailer_url, trailer_path)
     if f"{row.visa_number}.jpg" not in os.listdir(downloaded_media_path):
-        download_poster_from_link(row.poster_url, output_poster)
+        download_poster_from_link(row.poster_url, poster_path)
     
-    poster_image = cv2.imread(output_poster)
+    poster_image = cv2.imread(poster_path)
     quality = "unknown"
     source_type = "url"
     
-    data = {"url": row.allocine_url, "poster_path": output_poster, "trailer_path": output_trailer, "image": poster_image, "quality": quality}
+    data = {"url": row.allocine_url, "poster_path": poster_path, "trailer_path": trailer_path, "image": poster_image, "quality": quality}
     
     return data, source_type
 
