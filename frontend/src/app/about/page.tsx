@@ -2,7 +2,7 @@
 
 import { Ref, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronUp, Mouse } from "lucide-react";
 
 export default function PageAbout() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -61,30 +61,30 @@ export default function PageAbout() {
           } as React.CSSProperties
         }
       ></div>
-      <main className="container mx-auto px-10 py-16 flex flex-col items-center justify-center text-white">
+      <main
+        className="container mx-auto px-10 py-16 flex flex-col items-center justify-center text-white"
+        style={{ background: 'unset' }}
+      >
         <div
           id="section-top"
           className="w-full flex items-center justify-center"
           style={{ height: "calc(100vh - var(--spacing)* 16)" }}
         >
           <div className="w-[897px] h-[379px] flex flex-col justify-around">
-            <span className="block w-full text-violet-300 underline">
-              A PROPOS
-            </span>
             <h1 className="text-4xl text-center font-bold">
               L&apos;Observatoire de l&apos;inclusion et de l&apos;équité dans l&apos;industrie du
               cinéma, <span className="text-violet-300">c&apos;est quoi ?</span>
             </h1>
             <div className="flex justify-center">
-              <div className="flex gap-5 items-center">
+              <div className="flex flex-col items-center">
+                <span>Défilez pour découvrir</span>
                 <Button
-                  className="rounded-full bg-violet-300 hover:bg-violet-300 text-black"
+                  className="bg-transparent hover:bg-transparent text-white"
                   size={"icon"}
                   onClick={() => scrollToSection("section-below")}
                 >
-                  <ChevronDown />
+                  <Mouse />
                 </Button>
-                <span>Défilez pour découvrir</span>
               </div>
             </div>
           </div>
@@ -114,11 +114,11 @@ export default function PageAbout() {
               </h1>
               <div className="flex flex-col gap-5">
                 <span>
-                Le cinéma et l’audiovisuel façonnent nos imaginaires collectifs,
+                Le cinéma et l&apos;audiovisuel façonnent nos imaginaires collectifs,
                 mais <span className="font-bold">reflètent-ils vraiment la diversité de notre société ?</span>
                 </span>
                 <span>
-                Derrière la caméra comme à l’écran, <span className="font-bold">les inégalités persistent</span> :
+                Derrière la caméra comme à l&apos;écran, <span className="font-bold">les inégalités persistent</span> :
                 manque de représentation, faible visibilité des femmes et des
                 minorités…  
                 </span>
@@ -126,7 +126,7 @@ export default function PageAbout() {
                 Pour objectiver ces réalités et impulser un changement
                 concret, nous avons créé <span className="font-bold">une boîte à outils data-driven</span>. Cet
                 observatoire analyse, mesure et met en lumière les déséquilibres
-                dans l’industrie du cinéma grâce à des données précises et
+                dans l&apos;industrie du cinéma grâce à des données précises et
                 accessibles.
                 </span>
               </div>

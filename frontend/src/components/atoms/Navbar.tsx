@@ -146,7 +146,7 @@ const Navbar = ({
             isOpen ? "flex flex-col h-full bg-zinc-800" : ""
           } md:bg-transparent`}
         >
-          {["/", "/statistics"].includes(pathname) && !isOpen && (
+          {["/", "/statistics", "/about"].includes(pathname) && !isOpen && (
             <div className="absolute mx-5 cursor-pointer w-56 pt-6">
               <Link href="/" className="font-bold text-md">
                 Observatoire des inégalités dans le cinéma,
@@ -209,7 +209,7 @@ const Navbar = ({
                     />
                   </button>
                   <Link href="mailto:collectif5050x2020@gmail.com?subject=Toolbox%2050%2F50" className="px-3 py-2 rounded-md">
-                    <Button className="cursor-pointer">
+                    <Button className="bg-white text-black cursor-pointer hover:text-white">
                       Donnez-nous votre avis 💬
                     </Button>
                   </Link>

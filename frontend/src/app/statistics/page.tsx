@@ -29,7 +29,7 @@ export default function StatisticsPage() {
 
   if (isLoading || !iFrameUrl) {
     return (
-      <main className="p-40 bg-transparent text-white flex justify-center items-center">
+      <main className="p-40 min-h-screen h-full bg-transparent text-white flex justify-center items-center">
         <p>Chargement...</p>
       </main>
     );
@@ -37,7 +37,7 @@ export default function StatisticsPage() {
 
   if (hasError) {
     return (
-      <main className="p-40 bg-transparent text-white flex justify-center items-center">
+      <main className="p-40 min-h-screen h-full bg-transparent text-white flex justify-center items-center">
         <h1 className="text-4xl font-bold">Une erreur est survenue lors de la récupération des statistiques</h1>
       </main>
     );
