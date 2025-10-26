@@ -321,8 +321,25 @@ def load_data_from_links(row, downloaded_media_path, poster_path, trailer_path) 
     return data, source_type
 
 
-def compute_constants(frames, movie_id: str, source_type: str = "trailer", sharpness_factor: float = 1.0, sharpness_factor_cla: float = 1.0, aspect_ratio: float = 2.478, mode: str = "evaluate") -> tuple:
-    # Compute constants for whole pipeline
+def compute_constants(frames: np.ndarray, movie_id: str, source_type: str = "trailer", sharpness_factor: float = 1.0, sharpness_factor_cla: float = 1.0, aspect_ratio: float = 2.478, mode: str = "evaluate") -> tuple:
+    """
+    Compute parameters of the given material (e.g., sharpness of frames)
+    Args: 
+        - frames: an array of the frames in the video. P.S.: a poster is considered as a trailer w/ one frame only.
+        - movie_id: unique identifier of the movie which we infer on.
+        - source_type: trailer or poster
+        - sharpness_factor:
+        - sharpness_factor_cla:
+        - aspect_ratio: effective area of the video ratio W/H (i.e., the area where the content is present)
+        - mode: evaluation or infer
+    Returns: 
+        - H_original: original height of the frames
+        - W_original: original width of the frames
+        - total_area:
+        - min_sharpness:
+        - min_sharpness_cla:
+    """
+    #FIXME: Pas sûr de la qualité de toutes les constantes
 
     match source_type:
         case "trailer":
@@ -340,7 +357,7 @@ def compute_constants(frames, movie_id: str, source_type: str = "trailer", sharp
             effective_height = W_original / aspect_ratio # The aspect ratio of the video is the effective area of the video (i.e., the area where the content is present)
             total_area = effective_height * W_original
 
-            if mode == "evaluate":
+            if mode == "evaluate": #FIXME: mettre dans un dossier eval ?
                 movie_folder = os.path.join("visualize_parameters", movie_id)
                 constants_path = os.path.join(movie_folder, "constants.txt")
                 os.makedirs("visualize_parameters", exist_ok=True)

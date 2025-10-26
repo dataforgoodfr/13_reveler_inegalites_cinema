@@ -1,14 +1,14 @@
 import numpy as np
-from facenet_pytorch import InceptionResnetV1
-from dlib import chinese_whispers_clustering, vector
-
 import torch
+
 from torch.utils.data import DataLoader
 from torchvision import transforms
-
-from .utils import ImageDataset
-
+from facenet_pytorch import InceptionResnetV1
+from dlib import chinese_whispers_clustering, vector
 from loguru import logger
+
+from scripts import filter_detections
+from scripts import utils
 
 class EmbeddingModel:
     def __init__(self, model: str = "facenet", device: str = 'cpu'):
@@ -35,7 +35,7 @@ class EmbeddingModel:
             case _:
                 raise ValueError("Model not supported")
 
-        dataset = ImageDataset(detected_faces, face_transform)
+        dataset = utils.ImageDataset(detected_faces, face_transform)
         dataloader = DataLoader(dataset, batch_size=batch_size, num_workers=0)
 
         embeddings = []
@@ -159,3 +159,60 @@ def cluster_faces(embedded_faces: np.ndarray, model: str, threshold: float, clas
         classified_faces, embedded_faces, fps, effective_area, method=method)
 
     return aggregated_estimations
+
+def assign_poster(embedded_faces_poster: list[dict], embedded_faces: list[np.ndarray], aggregated_estimations: list[dict], filtered_detections: list[dict], total_area: float, poster: np.ndarray, store_visuals: bool) -> list:
+    """
+    Given a list of embedded faces detected on a poster and a list of embedded_faces from predicted characters of a trailer,
+    returns the character id w/ its characteristics predicted from trailer.
+    Args:
+        - embedded_faces_poster: Embedded faces from the poster
+        - embedded_faces: Embedded faces from the trailer
+        - aggregated_estimations: Global predictions on the trailer
+        - filtered_detections: ...
+        - total_area: ...
+        - poster: The image of the poster
+        - store_visuals: True or False. If True, will store predictions drawn on the poster.
+
+    """
+    #FIXME: filtered_detections & aggregated_estimations have some common info
+    indexes_to_del = []
+    for index, face in enumerate(embedded_faces_poster):
+        closest_index = None
+        closest_distance = float("inf")  # Distance initiale très grande
+
+        #closest_index = int(np.argmin(np.linalg.norm(face - np.array(embedded_faces), axis = 1)))
+
+        # Comparer avec chaque embedding dans embedded_faces
+        for embedded_face in embedded_faces:
+            i, cluster_embedding = embedded_face
+        # Calculer la distance Euclidienne entre les embeddings
+            distance = np.linalg.norm(face - np.array(cluster_embedding))
+
+            # Mettre à jour si une distance plus petite est trouvée
+            if distance < closest_distance:
+                closest_distance = distance
+                closest_index = i
+
+        # Assigner le label correspondant à l'index le plus proche
+        if closest_index is not None:
+            logger.debug(f"Assignation du label {closest_index} à l'index {index}")
+            for video_person in aggregated_estimations:
+                logger.debug(f'La liste des persons_ids : {video_person["persons_ids"]}')
+                if closest_index in video_person["persons_ids"]:
+                    filtered_detections[index]["gender"] = video_person["gender"]
+                    filtered_detections[index]["age"] = video_person["age"]
+                    logger.debug(f"l'age du cluster qui lui est assigné: {video_person['age']}")
+                    filtered_detections[index]["ethnicity"] = video_person["ethnicity"]
+
+            occupied_area = filter_detections.compute_area(filtered_detections[index]["bbox"], total_area)
+            filtered_detections[index]["occupied_area"] = occupied_area
+        else:
+            indexes_to_del.append(index)
+    # Delete the detection from filtered_detections
+    filtered_detections = [det for i, det in enumerate(filtered_detections) if i not in indexes_to_del]
+
+    if store_visuals :
+        # Draw predictions on poster
+        utils.draw_predictions_on_poster(poster, filtered_detections)
+
+    return filtered_detections

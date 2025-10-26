@@ -1,8 +1,10 @@
 import cv2
+import os
 import mediapipe as mp
 import numpy as np
-import os
+
 from typing import List, Dict, Callable
+from loguru import logger
 
 ### Review: je verrais bien une classe pr chaque filtre (qui hériteraient d'une meme classe abstraite) mais peut etre pas la priorité du projet :p
 
@@ -14,13 +16,13 @@ class DetectionFilter:
         self.kwargs = kwargs
 
     def apply(self, detections: List[Dict], mode: str = "clustering") -> List[Dict]:
-        #print(f"{len(detections)} detections before filtering")
+        logger.debug(f"{len(detections)} detections before filtering")
         match mode:
             case "clustering":
                 filtered_detections = detections
                 for filter in self.simple_filters + self.complex_filters:
                     filtered_detections = [det for det in filtered_detections if filter(det, **self.kwargs)]
-                    #print(f"{len(filtered_detections)} detections remaining after filtering {filter.__name__}")
+                    logger.debug(f"{len(filtered_detections)} detections remaining after filtering {filter.__name__}")
                 
                 return filtered_detections
             
@@ -163,6 +165,8 @@ def filter_detections_clustering(detections: list[dict], effective_area: float, 
         min_conf=min_conf
     )
     filtered_detections = filters.apply(detections)
+
+    #TODO: add the results logs pusher.
 
     return filtered_detections
 

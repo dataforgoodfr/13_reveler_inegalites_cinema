@@ -30,7 +30,7 @@ def infer_on_trailer(trailer_path: str, cluster_model: str, cluster_threshold: f
     H_original, W_original, effective_area, _, _= utils.compute_constants(frames, movie_id=movie_id, source_type="trailer", mode=mode)
 
     # Detect faces in the video
-    detections = vision_detection.detect_faces(frames, H_original, W_original, area_type="face",
+    detections = vision_detection.detect_faces(frames, H_original, W_original,
                               batch_size=batch_size, device=device, num_cpu_threads=num_cpu)
 
     # Filter detections for classification
@@ -59,7 +59,7 @@ def infer_on_trailer(trailer_path: str, cluster_model: str, cluster_threshold: f
     return aggregated_estimations, embedded_faces
 
 
-def infer_on_poster(poster: np.ndarray, embedded_faces: np.ndarray, aggregated_estimations: list[dict], min_area: float, min_conf: float, movie_id: str | int, mode: str, batch_size: int, device: str, num_cpu: int) -> tuple[list[dict], list[np.ndarray], list[dict], float]:
+def infer_on_poster(poster: np.ndarray, embedded_faces: np.ndarray, aggregated_estimations: list[dict], min_area: float, min_conf: float, movie_id: str | int, mode: str, batch_size: int, device: str, num_cpu: int, store_visuals: bool=False) -> tuple[list[dict], list[np.ndarray], list[dict], float]:
     """
     Description of the function
     """
@@ -67,7 +67,7 @@ def infer_on_poster(poster: np.ndarray, embedded_faces: np.ndarray, aggregated_e
     H_original, W_original, total_area, _, _ = utils.compute_constants(poster, movie_id, mode=mode, source_type="poster")
 
     # Detect faces in the poster
-    detections = vision_detection.detect_faces(poster, H_original, W_original, area_type="face",
+    detections = vision_detection.detect_faces(poster, H_original, W_original,
                               batch_size=1, device=device, num_cpu_threads=num_cpu)
 
     # Filter detections
@@ -82,52 +82,7 @@ def infer_on_poster(poster: np.ndarray, embedded_faces: np.ndarray, aggregated_e
     # Step 2: Filter embedded_faces to keep only the embeddings corresponding to the collected indexes
     embedded_faces = [(i, embedding) for i, embedding in enumerate(embedded_faces) if i in all_indexes]
 
-    return embedded_faces_poster, embedded_faces, filtered_detections, total_area
-
-
-def assign_poster(embedded_faces_poster: list[dict], embedded_faces: list[np.ndarray], aggregated_estimations: list[dict], filtered_detections: list[dict], total_area: float, poster: np.ndarray, store_visuals: bool) -> list:
-    """
-    Description of the function
-    """
-    indexes_to_del = []
-    for index, face in enumerate(embedded_faces_poster):
-        closest_index = None
-        closest_distance = float("inf")  # Distance initiale très grande
-
-        #closest_index = int(np.argmin(np.linalg.norm(face - np.array(embedded_faces), axis = 1)))
-
-        # Comparer avec chaque embedding dans embedded_faces
-        for embedded_face in embedded_faces:
-            i, cluster_embedding = embedded_face
-        # Calculer la distance Euclidienne entre les embeddings
-            distance = np.linalg.norm(face - np.array(cluster_embedding))
-
-            # Mettre à jour si une distance plus petite est trouvée
-            if distance < closest_distance:
-                closest_distance = distance
-                closest_index = i
-
-        # Assigner le label correspondant à l'index le plus proche
-        if closest_index is not None:
-            logger.debug(f"Assignation du label {closest_index} à l'index {index}")
-            for video_person in aggregated_estimations:
-                logger.debug(f'La liste des persons_ids : {video_person["persons_ids"]}')
-                if closest_index in video_person["persons_ids"]:
-                    filtered_detections[index]["gender"] = video_person["gender"]
-                    filtered_detections[index]["age"] = video_person["age"]
-                    logger.debug(f"l'age du cluster qui lui est assigné: {video_person['age']}")
-                    filtered_detections[index]["ethnicity"] = video_person["ethnicity"]
-
-            occupied_area = filter_detections.compute_area(filtered_detections[index]["bbox"], total_area)
-            filtered_detections[index]["occupied_area"] = occupied_area
-        else:
-            indexes_to_del.append(index)
-    # Delete the detection from filtered_detections
-    filtered_detections = [det for i, det in enumerate(filtered_detections) if i not in indexes_to_del]
-
-    if store_visuals :
-        # Draw predictions on poster
-        utils.draw_predictions_on_poster(poster, filtered_detections)
+    filtered_detections = faces_clustering.assign_poster(embedded_faces_poster, embedded_faces, aggregated_estimations, filtered_detections, total_area, poster, store_visuals)
 
     return filtered_detections
 
@@ -178,23 +133,17 @@ def predict_one_item(
     
     # Infer on poster
     if poster_source != "None":
-        embedded_faces_poster, embedded_faces, filtered_detections, total_area = infer_on_poster(poster,
-                                                                                                 embedded_faces,
-                                                                                                 aggregated_estimations,
-                                                                                                 min_area,
-                                                                                                 min_conf,
-                                                                                                 movie_id,
-                                                                                                 mode,
-                                                                                                 batch_size,
-                                                                                                 device,
-                                                                                                 num_cpu)
-        filtered_detections = assign_poster(embedded_faces_poster,
-                                            embedded_faces,
-                                            aggregated_estimations,
-                                            filtered_detections,
-                                            total_area,
-                                            poster,
-                                            store_visuals)
+        filtered_detections = infer_on_poster(poster,
+                                              embedded_faces,
+                                              aggregated_estimations,
+                                              min_area,
+                                              min_conf,
+                                              movie_id,
+                                              mode,
+                                              batch_size,
+                                              device,
+                                              num_cpu,
+                                              store_visuals=False)                                                                                   
     else :
         filtered_detections = []
             

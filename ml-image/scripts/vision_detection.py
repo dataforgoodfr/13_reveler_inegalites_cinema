@@ -5,6 +5,8 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from ultralytics import YOLO
 
+from loguru import logger
+
 from .utils import ImageDataset
 
 
@@ -41,6 +43,7 @@ class VisionDetection:
         # Transformation for YOLO model
         if len(images.shape) == 3:  # Single image: [H, W, C]
             images = np.expand_dims(images, axis=0)  # Convert to batch: [1, H, W, C]
+            logger.debug(images.shape)
 
         if len(images.shape) != 4:  # Ensure batch format: [N, H, W, C]
             raise ValueError("Input images must have shape [H, W, C] or [N, H, W, C]")
@@ -112,7 +115,32 @@ class VisionDetection:
     
         return detections
 
-    
+def detect_faces(
+        frames: np.array, H_original: int, W_original: int, batch_size: int, device: str, num_cpu_threads: int) -> list[dict]:
+    """
+    Detect faces in the video.
+    Args:
+        - frames: an array of the frames in the video
+        - H_original: original height of the frames
+        - W_original: original width of the frames
+        - batch_size: The batch size (i.e. nb of frames which we infer on in one go)
+        - device: cuda or cpu
+        - num_cpu_threads : only used if device==cpu
+    Returns: 
+        - detections: a list of faces detected in the frames. 
+        Each item contains: 'bbox'=bounding box of the face; 'conf'=model confidence in the detection; 'frame_id'=nb of the frame in the video; 
+                            'perso_id'=unic identifier for the detected face; 'cropped_face'=the image (np.ndarray) of the face alone
+    """
+    # Detect faces in the video
+    vision_detector = VisionDetection(
+        device=device, num_cpu_threads=num_cpu_threads)
+    detections = vision_detector.crop_areas_of_interest(
+        frames, H_original, W_original, area_type='face', batch_size=batch_size)
+
+    return detections
+
+### Unused utils for vision detection ###
+
 def link_faces_to_bodies(detections, body_detections):
     """
     Link faces to bodies based on bounding box overlap.
@@ -196,14 +224,3 @@ def compute_I_o_U(face_bbox, body_bbox):
     iou = inter_area / union_area if union_area > 0 else 0
 
     return iou
-
-
-def detect_faces(
-        frames: np.array, H_original: int, W_original: int, area_type: str, batch_size: int, device: str, num_cpu_threads: int) -> list[dict]:
-    # Detect faces in the video
-    vision_detector = VisionDetection(
-        device=device, num_cpu_threads=num_cpu_threads)
-    detections = vision_detector.crop_areas_of_interest(
-        frames, H_original, W_original, area_type=area_type, batch_size=batch_size)
-
-    return detections
