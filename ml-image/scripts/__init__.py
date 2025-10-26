@@ -1,4 +1,4 @@
-from .faces_clustering import (FacesClustering, EmbeddingModel)
+from .faces_clustering import (FacesClusterer, EmbeddingModel)
 from .filter_detections import (DetectionFilter, validates_area_filter, validates_confidence_filter, validates_sharpness_filter, validates_pose_filter, compute_sharpness, compute_area)
 from .vision_classifiers import VisionClassifier
 from .vision_detection import (VisionDetection, link_faces_to_bodies)

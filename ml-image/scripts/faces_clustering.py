@@ -8,6 +8,7 @@ from torchvision import transforms
 
 from .utils import ImageDataset
 
+from loguru import logger
 
 class EmbeddingModel:
     def __init__(self, model: str = "facenet", device: str = 'cpu'):
@@ -55,14 +56,14 @@ class EmbeddingModel:
         return embeddings_array
 
 
-class FacesClustering:
-    def __init__(self, model="chinese_whispers", threshold: float = 0.92,  **kwargs):
+class FacesClusterer:
+    def __init__(self, model: str ="chinese_whispers", threshold: float = 0.92,  **kwargs):
         self.model = model
         self.threshold = threshold
         self.parameters = kwargs
         self.persons = {}
 
-    def cluster_faces(self, embedded_faces_array: np.array):
+    def get_clustering_labels(self, embedded_faces_array: np.ndarray):
         match self.model:
             case "chinese_whispers":
                 encoded_faces = [vector(encoding)
@@ -75,9 +76,14 @@ class FacesClustering:
         return labels
 
     def apply_clusters(self, persons_list: list, faces_list: list):
-        labels = self.cluster_faces(faces_list)
+        '''
+        Determine a cluster for each detected faces and register them.
+        '''
+        labels = self.get_clustering_labels(faces_list)
 
         for i in range(len(persons_list)):
+            if i==14:
+                logger.debug(f'le label du person_id {i}: {labels[i]}')
             label, person = labels[i], persons_list[i]
             person["person_id"] = i
             if label not in self.persons:
@@ -98,14 +104,16 @@ class FacesClustering:
         voted_attribute = max(voting_dict, key=lambda k: voting_dict[k])
         return voted_attribute
     
-    def aggregate_estimations(self, persons_list: list, faces_list: list, fps, total_area, method="majority", min_occurence=0.03):
+    def aggregate_estimations(self, persons_list: list, faces_list: list, fps, total_area, method="majority", min_occurence=0.03) -> list[dict]:
         self.apply_clusters(persons_list, faces_list)
         aggregated_persons = []
 
         final_label = 0
         total_persons = np.sum([len(persons) for persons in self.persons.values()])
         for label, persons in self.persons.items():
+            logger.debug(f'Aggregation des résultats sur le label: {label}')
             if len(persons) / total_persons >= min_occurence:
+                logger.debug(f'Le label: {label} valide les conditions minimales pour être conservé')
                 match method:
                     case "majority":
                         aggregated_age = self.compute_weighted_vote("age", label)
@@ -120,13 +128,34 @@ class FacesClustering:
                                         for person in persons]
                         persons_ids = [person["person_id"]
                                        for person in persons]
-                        frames_to_bboxes = dict(zip(frames_id, persons_bboxes))
+                        frames_to_bboxes = dict(zip(frames_id, persons_bboxes, strict=False))
                         aggregated_persons.append({"age": aggregated_age, "gender": aggregated_gender, "ethnicity": aggregated_ethnicity,
                                                    "occurence": occurence, "area occupied": area_occupied, "label": final_label, "frames_bboxes": frames_to_bboxes, "persons_ids" : persons_ids})
                         #print(f"Character {final_label} : {occurence:.2f} seconds on screen, {len(persons) / total_persons * 100:.2f}% of the total, age: {aggregated_age}, gender: {aggregated_gender}, ethnicity: {aggregated_ethnicity}")
                     case _:
-                        raise ValueError(f"Method  {method} not supported")
+                        raise ValueError(f"Method {method} not supported")
                 
                 final_label += 1
+            else:
+                logger.debug(f'/!\ Le label: {label} ne valide pas les conditions minimales pour être conservé')
         
         return aggregated_persons
+
+
+def embed_faces(flattened_faces: list[np.ndarray], batch_size: int, device: str) -> np.ndarray:
+    # Embed faces
+    embedding_model = EmbeddingModel(device=device)
+    embedded_faces = embedding_model.get_embedding(
+        batch_size=batch_size, detected_faces=flattened_faces)
+
+    return embedded_faces
+
+
+def cluster_faces(embedded_faces: np.ndarray, model: str, threshold: float, classified_faces: list[dict], method: str, fps: int, effective_area: float) -> list[dict]:
+    # Cluster faces and aggregate predictions for each character
+    faces_clusterer = FacesClusterer(
+        model=model, threshold=threshold)
+    aggregated_estimations = faces_clusterer.aggregate_estimations(
+        classified_faces, embedded_faces, fps, effective_area, method=method)
+
+    return aggregated_estimations

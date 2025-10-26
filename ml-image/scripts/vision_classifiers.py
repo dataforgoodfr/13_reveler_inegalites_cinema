@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms, models
@@ -105,3 +106,36 @@ class VisionClassifier:
                        for ethnicity in ethnicities]
 
         return ages, genders, ethnicities, age_confidences, gender_confidences, ethnicity_confidences
+
+
+def classify_faces(
+        filtered_detections: list[dict], batch_size: int, device: str, source_type: str="trailer", gender_conf_threshold: float = 0.965932283883782, age_conf_threshold: float = 0.5956672158338605, ethnicity_conf_threshold: float = 0.810392266540905
+        ) -> tuple[list[dict], list[np.array]]:
+    # Classify all filtered faces
+    classifier = VisionClassifier(device=device)
+    
+    flattened_faces = [det["cropped_face"] for det in filtered_detections]
+    if len(flattened_faces) > 0:
+        ages, genders, ethnicities, age_confs, gender_confs, ethnicity_confs = classifier.predict_age_gender_ethnicity(
+            flattened_faces, batch_size = batch_size)
+
+        match source_type:
+            case "trailer":
+                for i, det in enumerate(filtered_detections):
+                    det["gender"] = genders[i] if gender_confs[i] >= gender_conf_threshold else "unknown"
+                    det["gender_conf"] = gender_confs[i]
+                    det["age"] = ages[i] if age_confs[i] >= age_conf_threshold else "unknown"
+                    det["age_conf"] = age_confs[i]
+                    det["ethnicity"] = ethnicities[i] if ethnicity_confs[i] >= ethnicity_conf_threshold else "unknown"
+                    det["ethnicity_conf"] = ethnicity_confs[i]
+            
+            case "poster":
+                for i, det in enumerate(filtered_detections):
+                    det["gender"] = genders[i]
+                    det["age"] = ages[i]
+                    det["ethnicity"] = ethnicities[i]
+
+            case _:
+                raise ValueError(f"Invalid source_type: {source_type}. Choose either 'trailer' or 'poster'.")
+    
+    return filtered_detections, flattened_faces

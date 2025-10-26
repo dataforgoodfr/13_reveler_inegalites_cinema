@@ -1,10 +1,4 @@
 models/*
-example/*
-gridsearch.py
 scripts/evaluation_trailers/*
-stored_predictions/*
-stored_videos/*
-visualize_parameters/*
-inference_records/*
-predictions_on_posters.csv
-predictions_on_trailers.csv
+tmp/*
+outputs/*
