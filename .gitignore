@@ -168,3 +168,6 @@ cython_debug/
 
 # misc
 .DS_Store
+
+# Certbot
+certbot/
