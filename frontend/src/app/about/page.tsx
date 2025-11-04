@@ -72,8 +72,8 @@ export default function PageAbout() {
         >
           <div className="w-[897px] h-[379px] flex flex-col justify-around">
             <h1 className="text-4xl text-center font-bold">
-              L&apos;Observatoire de l&apos;inclusion et de l&apos;équité dans l&apos;industrie du
-              cinéma, <span className="text-violet-300">c&apos;est quoi ?</span>
+             L&apos;Observatoire des inégalités dans l&apos;industrie du cinéma,{" "}
+             <span className="text-violet-300">c&apos;est quoi ?</span>
             </h1>
             <div className="flex justify-center">
               <div className="flex flex-col items-center">
@@ -143,64 +143,59 @@ export default function PageAbout() {
               <div className="flex p-5 flex-col gap-5">
                 <div className="flex w-full items-center">
                   <span className="text-4xl pr-2 font-bold text-violet-300">
-                    23%
+                    1/4
                   </span>
                   <span className="text-white">
-                    de films réalisés par des femmes en 2024
+                    de films réalisés par des <span className="text-violet-300 font-bold">femmes</span>{" "}
+                    ces 10 dernières années
                   </span>
                 </div>
                 <div className="flex w-full items-center">
                   <span className="text-4xl pr-2 font-bold text-violet-300">
-                    25%
+                    37%
                   </span>
                   <span className="text-white">
                     de budget <span className="text-violet-300 font-bold">en moins</span>{" "}
-                    pour les réalisatrices
+                    pour les réalisatrices ces 10 dernières années 
                   </span>
                 </div>
                 <div className="flex w-full items-center">
                   <span className="text-4xl pr-2 font-bold text-violet-300">
-                    25%
+                    10%
                   </span>
                   <span className="text-white">
-                    de budget <span className="text-violet-300 font-bold">en moins</span>{" "}
-                    pour les réalisatrices
+                    des récompenses ont été attribuées à des <span className="text-violet-300 font-bold">réalisatrices</span>{" "}
+                    à Cannes, Berlin et Venise
                   </span>
                 </div>
               </div>
             </section>
             <section id="section-3" className="flex flex-col gap-5 scroll-mt-32">
               <h1 className="text-2xl text-violet-300 font-bold">
-                Comment fonctionne l&apos;Observatoire ?
+                Ce que permet l&apos;Observatoire
               </h1>
               <div>
                 <h2 className="text-violet-300 font-bold">
-                  Recherchez un film ou un festival
+                  Rechercher par film
                 </h2>
                 <span>
-                  Lorem ipsum dolor sit amet consectetur. Turpis malesuada
-                  imperdie pharetra ac interdum mauris egestas elit cras. Odio at
-                  at congue aliquet.
+                  Informez-vous sur le degré d&apos;inclusion dans la constitution des équipes techniques et artistiques
                 </span>
               </div>
               <div>
                 <h2 className="text-violet-300 font-bold">
-                  Analysez les données
+                  Analyser les données
                 </h2>
                 <span>
-                  Lorem ipsum dolor sit amet consectetur. Turpis malesuada
-                  imperdie pharetra ac interdum mauris egestas elit cras. Odio at
-                  at congue aliquet.
+                  Vous pouvez croiser des données en utilisant plusieurs filtres : budget, genre cinématographique, diffuseur, chef·fe de poste, etc.
                 </span>
               </div>
               <div>
                 <h2 className="text-violet-300 font-bold">
-                  Visualisez les tendances
+                  Visualiser les tendances
                 </h2>
                 <span>
-                  Lorem ipsum dolor sit amet consectetur. Turpis malesuada
-                  imperdie pharetra ac interdum mauris egestas elit cras. Odio at
-                  at congue aliquet.
+                  La base de données permet d&apos;analyser l&apos;évolution des inégalités sur 20 ans
                 </span>
               </div>
             </section>

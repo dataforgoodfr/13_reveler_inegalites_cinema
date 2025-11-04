@@ -19,21 +19,26 @@ export default function Home() {
         <div className="animate-slide-up flex flex-col items-center gap-8">
           <div>
             <span className="text-5xl md:text-6xl font-bold w-3/4">
+              <span>Seules{" "}</span>
               <span className="text-violet-500">29%</span>
               <span>
                 {" "}
-                des réalisateurs·rices actifs·ves{" "}
+                des cinéastes{" "}
                 <br className="hidden md:block" />
-                ces 10 dernières années sont des{" "}
+                ces dix dernières années sont des{" "}
               </span>
               <span className="text-violet-500">femmes</span>
             </span>
           </div>
+          <Button className="bg-violet-500 cursor-pointer">
+            Rechercher par film
+          </Button>
           <Link href="/statistics">
             <Button className="bg-violet-500 cursor-pointer">
-              Voir les statistiques
+              Voir les statistiques globales
             </Button>
           </Link>
+          <span>Outil d&apos;analyse conçu par le Collectif 5050 et Data4 Good</span>
         </div>
       </main>
     </>

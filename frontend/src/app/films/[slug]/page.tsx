@@ -380,7 +380,7 @@ export default function PageFilm() {
                   className={activeSection === "Distribution" ? 'bg-white text-black' : ''}
                   onClick={() => setActiveSection("Distribution")}
                 >
-                  Distribution
+                  Financement
                 </MenubarTrigger>
               </MenubarMenu>
               <MenubarMenu>
@@ -482,6 +482,20 @@ export default function PageFilm() {
             {activeSection === "Distribution" &&
               (filmData.credits?.distribution ? (
                 <>
+                  <div className="mt-4">
+                    <span
+                      className="block rounded-sm font-bold w-full px-2 py-1"
+                    >
+                      Budget
+                    </span>
+                    <div className="px-2 py-1">
+                      <span>
+                        {filmData.credits.distribution.budget
+                          ? filmData.credits.distribution.budget.toLocaleString() + " €"
+                          : "NC"}
+                      </span>
+                    </div>
+                  </div>
                   {Object.entries(getDistribution(filmData.credits.distribution))
                   .filter(
                     (
@@ -511,20 +525,6 @@ export default function PageFilm() {
                       </div>
                     )
                   )}
-                  <div className="mt-4">
-                    <span
-                      className="block rounded-sm font-bold w-full px-2 py-1"
-                    >
-                      Budget
-                    </span>
-                    <div className="px-2 py-1">
-                      <span>
-                        {filmData.credits.distribution.budget
-                          ? filmData.credits.distribution.budget.toLocaleString() + " €"
-                          : "NC"}
-                      </span>
-                    </div>
-                  </div>
                 </>
               ) : (
                 <div className="mt-4 text-white">

@@ -2,9 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { usePathname } from "next/navigation";
 import { SearchFilmResultDto } from "@/dto/film/search-film-result.dto";
 import Image from "next/image";
 import { API_URL } from "@/utils/api-url";
@@ -17,7 +15,6 @@ const Navbar = ({
 }: Readonly<{
   children: React.ReactNode;
 }>) => {
-  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState(""); // État pour l'input de recherche
@@ -146,14 +143,11 @@ const Navbar = ({
             isOpen ? "flex flex-col h-full bg-zinc-800" : ""
           } md:bg-transparent`}
         >
-          {["/", "/statistics", "/about"].includes(pathname) && !isOpen && (
-            <div className="absolute mx-5 cursor-pointer w-56 pt-6">
-              <Link href="/" className="font-bold text-md">
-                Observatoire des inégalités dans le cinéma,
-                <br />par le Collectif 50/50 et Data For Good
-              </Link>
-            </div>
-          )}
+          <div className="absolute mx-5 cursor-pointer w-56 pt-6">
+            <Link href="/" className="font-bold text-md">
+              Observatoire des inégalités dans le cinéma
+            </Link>
+          </div>
           <div className="mx-auto px-4 w-full">
             <div className="flex items-center justify-end h-16">
               {/* Menu desktop */}
@@ -208,11 +202,6 @@ const Navbar = ({
                       width={36}
                     />
                   </button>
-                  <Link href="mailto:collectif5050x2020@gmail.com?subject=Toolbox%2050%2F50" className="px-3 py-2 rounded-md">
-                    <Button className="bg-white text-black cursor-pointer hover:text-white">
-                      Donnez-nous votre avis 💬
-                    </Button>
-                  </Link>
                 </div>
               </div>
 
@@ -280,17 +269,6 @@ const Navbar = ({
                   onClick={toggleMenu}
                 >
                   À propos
-                </Link>
-              </div>
-              <div className="px-2 pb-3">
-                <Link
-                  href="/"
-                  className="block px-3 py-2 rounded-md"
-                  onClick={toggleMenu}
-                >
-                  <Button className="w-full bg-white text-black hover:text-white cursor-pointer">
-                    Donnez nous votre avis 💬
-                  </Button>
                 </Link>
               </div>
             </div>
