@@ -114,7 +114,7 @@ def classify_faces(
     # Classify all filtered faces
     classifier = VisionClassifier(device=device)
     
-    flattened_faces = [det["cropped_face"] for det in filtered_detections]
+    flattened_faces, flattened_faces_perso_ids = [det["cropped_face"] for det in filtered_detections], [det["perso_id"] for det in filtered_detections]
     if len(flattened_faces) > 0:
         ages, genders, ethnicities, age_confs, gender_confs, ethnicity_confs = classifier.predict_age_gender_ethnicity(
             flattened_faces, batch_size = batch_size)
@@ -138,4 +138,4 @@ def classify_faces(
             case _:
                 raise ValueError(f"Invalid source_type: {source_type}. Choose either 'trailer' or 'poster'.")
     
-    return filtered_detections, flattened_faces
+    return filtered_detections, flattened_faces, flattened_faces_perso_ids

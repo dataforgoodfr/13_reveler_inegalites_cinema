@@ -1,14 +1,17 @@
 import cv2
-import numpy as np
 import os
-import pickle as pkl
+import csv
 import psutil
-from .vision_classifiers import VisionClassifier
-from .vision_detection import VisionDetection
+
+import numpy as np
+import pickle as pkl
+from scripts import vision_classifiers
+from scripts import vision_detection
 
 from copy import deepcopy
 from PIL import Image, ImageDraw, ImageFont
 from .utils import frame_capture
+from loguru import logger
 
 def get_frames(trailer_path: str) -> None:
     (frames, fps) = frame_capture(trailer_path)
@@ -31,9 +34,9 @@ def get_frames(trailer_path: str) -> None:
     video.release()
 
 
-def get_vision_modules() -> tuple[VisionDetection, VisionClassifier]:
-    visiondetector = VisionDetection()
-    visionclassifier = VisionClassifier()
+def get_vision_modules() -> tuple[vision_detection.VisionDetection, vision_classifiers.VisionClassifier]:
+    visiondetector = vision_detection.VisionDetection()
+    visionclassifier = vision_classifiers.VisionClassifier()
     return visiondetector, visionclassifier
 
 
@@ -43,7 +46,7 @@ def sample_frames(indices: list, trailer_path: str) -> tuple[list, list]:
     return subframes
 
 
-def get_faces(subframes: np.ndarray, vision_detector: VisionDetection) -> list:
+def get_faces(subframes: np.ndarray, vision_detector: vision_detection.VisionDetection) -> list:
     detections = vision_detector.crop_areas_of_interest(
         images=subframes, H_original=subframes.shape[1], W_original=subframes.shape[2])
     return detections
@@ -306,3 +309,83 @@ def save_displayed_annotations(trailer_directory: str) -> None:
                       anchor='lb', fill=color, font=font)
         imgdraw.save(os.path.join('evaluation_trailers', trailer_directory,
                      'annotated_frames', f'annotated_frame_{index}.png'))
+
+def register_faces_intermediate_results(intermediate_results_path: str, faces_results: list[dict]) -> None:
+    csv_path = os.path.join(intermediate_results_path, 'intermediate_results_trailer.csv')
+    file_exists = os.path.isfile(csv_path)
+    fieldnames = ['movie_id', 'frame_id', 'bbox', 'conf', 'perso_id', 'clustering_weight',
+                  'pose', 'sharpness', 'area', 'classification_weight',
+                  'gender', 'age', 'ethnicity', 'age_conf', 'gender_conf', 'ethnicity_conf',
+                  'aggregated_gender', 'aggregated_age', 'aggregated_origin', 'cluster_id'] 
+    
+    with open(csv_path, mode='a', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)    
+        
+        if not file_exists:
+            writer.writeheader()
+            
+        for face in faces_results:
+            row = {field: face.get(field, 'nan') for field in fieldnames}
+            writer.writerow(row)
+    
+    logger.info(f'Wrote {len(faces_results)} new lines in {csv_path}')
+
+def register_faces_final_results(intermediate_results_path: str, aggregated_results: list[dict], movie_id: str | None) -> None:
+    csv_path = os.path.join(intermediate_results_path, 'intermediate_results_trailer.csv')
+    if not os.path.isfile(csv_path):
+        raise FileNotFoundError(f"{csv_path} not found. Run intermediate registration first.")
+
+    import pandas as pd
+
+    # Read as strings to avoid dtype surprises for ids
+    df = pd.read_csv(csv_path, dtype=str).fillna('nan')
+
+    # Ensure target columns exist
+    for col in ['aggregated_gender', 'aggregated_age', 'aggregated_origin', 'cluster_id']:
+        if col not in df.columns:
+            df[col] = 'nan'
+
+    updated = 0
+    for element in aggregated_results:
+        perso_ids = element.get('perso_ids', []) or []
+        gender = element.get('gender', 'nan')
+        age = element.get('age', 'nan')
+        origin = element.get('ethnicity', element.get('origin', 'nan'))
+        cluster_label = element.get('label', element.get('cluster_id', 'nan'))
+        # Not used from aggregated_results: 'occurence', 'area occupied', 'frames_bboxes'
+
+        for perso_id in perso_ids:
+            perso_id_str = str(perso_id)
+            mask = (df['perso_id'].astype(str) == perso_id_str) & (df['movie_id'].astype(str) == str(movie_id))
+            if mask.any():
+                df.loc[mask, 'aggregated_gender'] = gender
+                df.loc[mask, 'aggregated_age'] = age
+                df.loc[mask, 'aggregated_origin'] = origin
+                df.loc[mask, 'cluster_id'] = cluster_label
+                updated += int(mask.sum())
+            else:
+                logger.warning(f"No intermediate row for movie_id={movie_id}, perso_id={perso_id_str}")
+
+    df.to_csv(csv_path, index=False)
+    logger.info(f'Updated {updated} rows in {csv_path}')
+
+def register_faces_intermediate_results_poster(intermediate_results_path: str, faces_results: list[dict]) -> None:
+    csv_path = os.path.join(intermediate_results_path, 'intermediate_results_poster.csv')
+    file_exists = os.path.isfile(csv_path)
+    
+    fieldnames = ['movie_id','bbox', 'conf', 'poster_weight', 'gender', 'age', 'ethnicity', 'cluster_id'] # cluster_id = label 
+       
+    with open(csv_path, mode='a', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)    
+        
+        if not file_exists:
+            writer.writeheader()
+            
+        for face in faces_results:
+            row = {field: face.get(field, 'nan') for field in fieldnames}
+            if 'label' in face:
+                row['cluster_id'] = face['label']
+            writer.writerow(row)
+    
+    logger.info(f'Wrote {len(faces_results)} new lines in {csv_path}')
+    

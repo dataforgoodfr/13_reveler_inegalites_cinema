@@ -6,35 +6,25 @@ import numpy as np
 from typing import List, Dict, Callable
 from loguru import logger
 
+from scripts import evaluation_annotation
+
 ### Review: je verrais bien une classe pr chaque filtre (qui hériteraient d'une meme classe abstraite) mais peut etre pas la priorité du projet :p
 
 class DetectionFilter:
-    def __init__(self, simple_filters: List[Callable[[Dict], bool]], complex_filters: List[Callable[[Dict], bool]], area_type : str = 'face', **kwargs) -> None:
-        self.simple_filters = simple_filters
-        self.complex_filters = complex_filters
+    def __init__(self, filters: List[Callable[[Dict], bool]], area_type : str = 'face', **kwargs) -> None:
+        self.filters = filters
+        #self.complex_filters = complex_filters
         self.area_type = area_type # not used for now
         self.kwargs = kwargs
 
-    def apply(self, detections: List[Dict], mode: str = "clustering") -> List[Dict]:
+    def apply(self, detections: List[Dict], mode: str="clustering") -> List[Dict]:
         logger.debug(f"{len(detections)} detections before filtering")
-        match mode:
-            case "clustering":
-                filtered_detections = detections
-                for filter in self.simple_filters + self.complex_filters:
-                    filtered_detections = [det for det in filtered_detections if filter(det, **self.kwargs)]
-                    logger.debug(f"{len(filtered_detections)} detections remaining after filtering {filter.__name__}")
-                
-                return filtered_detections
-            
-            case "classification":
-                detections_vote_weight = np.zeros_like(detections)
-                # Add 1 to count for each passed filters
-                for filter in self.simple_filters + self.complex_filters:
-                    detections_vote_weight = np.add(detections_vote_weight, np.array([filter(det, **self.kwargs) for det in detections]))
-
-                for det, weight in zip(detections, detections_vote_weight, strict=False) :
-                    det["weight"] = weight
-                return detections
+        detections_vote_weight = np.zeros_like(detections)
+        for filter in self.filters: # Add 1 to count for each passed filters
+            detections_vote_weight = np.add(detections_vote_weight, np.array([filter(det, **self.kwargs) for det in detections]))
+        for det, weight in zip(detections, detections_vote_weight, strict=False) :
+            det[f"{mode}_weight"] = weight
+        return detections
     
     def visualize_detection_parameters(self, movie_id: str, detections: List[Dict], storage_folder: str='visualize_parameters') -> None:
         movie_path = os.path.join(storage_folder, movie_id)
@@ -79,6 +69,7 @@ def validates_area_filter(det: Dict, **kwargs) -> bool:
     max_area = kwargs.get("max_area", 1.0)
     total_area = kwargs.get("total_area", 1.0)
     area = compute_area(det["bbox"], total_area)
+    det['area'] = area
     return min_area <= area <= max_area 
 
 def validates_confidence_filter(det: Dict, **kwargs) -> bool:
@@ -92,6 +83,7 @@ def compute_sharpness(image: np.ndarray) -> float:
 def validates_sharpness_filter(det: Dict, **kwargs) -> bool:
     min_sharpness = kwargs.get("min_sharpness", 35.0)
     sharpness = compute_sharpness(det["cropped_face"])
+    det['sharpness'] = sharpness
     return sharpness >= min_sharpness
 
 mp_face_mesh = mp.solutions.face_mesh
@@ -120,6 +112,7 @@ def validates_pose_filter(det: Dict, **kwargs) -> bool:
     
     nose_z = pose
     
+    det['pose'] = pose
     return nose_z <= max_z
 
 def is_face_not_occluded(det: Dict, **kwargs) -> bool:
@@ -137,45 +130,56 @@ def is_face_not_occluded(det: Dict, **kwargs) -> bool:
     return True
 
 
-def filter_detections_poster(detections: list[dict], total_area: float, min_area: float, min_conf: float) -> list[dict]: 
+def filter_detections_poster(detections: list[dict], total_area: float, min_area: float, min_conf: float, mode: str='infer', results_path: str="") -> list[dict]: 
     # Filter detections for poster
-    filters = DetectionFilter(
-        simple_filters=[validates_confidence_filter],
-        complex_filters=[],
+    filters = [validates_confidence_filter]
+    poster_filters = DetectionFilter(
+        filters=filters,
         area_type='face',
         total_area=total_area,
         min_area=min_area,
         min_conf=min_conf
     )    
-    filtered_detections = filters.apply(detections)
+    detections = poster_filters.apply(detections, mode="poster")
+    filtered_detections = [d for d in detections if d["poster_weight"] == len(filters)]
+    not_kept_detections = [d for d in detections if d["poster_weight"] != len(filters)]
 
+    if mode == "eval":
+        evaluation_annotation.register_faces_intermediate_results_poster(results_path, not_kept_detections)
+
+    logger.debug(f"{len(filtered_detections)} detections after filtering")
     return filtered_detections
 
 
-def filter_detections_clustering(detections: list[dict], effective_area: float, min_area: float, max_area: float, min_conf: float) -> list[dict]:
+def filter_detections_clustering(detections: list[dict], effective_area: float, min_area: float, max_area: float, min_conf: float, mode: str='infer', results_path: str="") -> list[dict]:
     # Filter detections
-    filters = DetectionFilter(
-        simple_filters=[validates_area_filter,
-                        validates_confidence_filter],
-        complex_filters=[],
+    filters = [validates_area_filter, validates_confidence_filter]
+
+    clustering_filters = DetectionFilter(
+        filters=filters,
         area_type='face',
         total_area=effective_area,
         min_area=min_area,
         max_area=max_area,
         min_conf=min_conf
     )
-    filtered_detections = filters.apply(detections)
+    detections = clustering_filters.apply(detections)
+    filtered_detections = [d for d in detections if d["clustering_weight"] == len(filters)]
+    not_kept_detections = [d for d in detections if d["clustering_weight"] != len(filters)]
 
-    #TODO: add the results logs pusher.
+    if mode == "eval":
+        evaluation_annotation.register_faces_intermediate_results(results_path, not_kept_detections)
 
+    logger.debug(f"{len(filtered_detections)} detections after filtering")
     return filtered_detections
 
 
-def filter_detections_classifications(detections: list[dict], effective_area: float, min_conf: float, min_sharpness: float, max_z: float, min_mouth_opening: float, movie_id: int | str=None, mode: str="infer") -> list[dict]:
+def filter_detections_classifications(detections: list[dict], effective_area: float, min_conf: float, min_sharpness: float, max_z: float, min_mouth_opening: float, movie_id: int | str=None, mode: str="infer", results_path: str ="") -> list[dict]:
     # Filter detections
-    filters = DetectionFilter(
-        simple_filters=[validates_confidence_filter],
-        complex_filters=[validates_sharpness_filter, validates_pose_filter],
+    filters=[validates_confidence_filter, validates_sharpness_filter, validates_pose_filter]
+
+    classification_filters = DetectionFilter(
+        filters=filters,
         area_type='face',
         total_area=effective_area,
         min_conf=min_conf,
@@ -183,13 +187,13 @@ def filter_detections_classifications(detections: list[dict], effective_area: fl
         max_z=max_z,
         min_mouth_opening=min_mouth_opening
     )    
-    filtered_detections = filters.apply(detections, mode = "classification")
-
-    if mode == "evaluate":
-        filters.visualize_detection_parameters(movie_id=movie_id, detections=detections, storage_folder='visualize_parameters')
+    filtered_detections = classification_filters.apply(detections, mode = "classification")
+    
+    if mode == "eval":
+        evaluation_annotation.register_faces_intermediate_results(results_path, filtered_detections)
+        #classification_filters.visualize_detection_parameters(movie_id=movie_id, detections=detections, storage_folder='visualize_parameters')
 
     return filtered_detections
-
 
 def draw_landmarks(image):
     h, w, _ = image.shape  # Dimensions de l'image

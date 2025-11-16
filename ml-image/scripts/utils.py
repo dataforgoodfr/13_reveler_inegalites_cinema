@@ -1,15 +1,19 @@
 import cv2
 import json
-import numpy as np
 import os
+import csv
+import requests
+
+import numpy as np
 import pandas as pd
 import pickle as pkl
-import requests
 
 from bs4 import BeautifulSoup
 from PIL import Image
 from torch.utils.data import Dataset
 from loguru import logger
+
+from scripts import filter_detections
 
 class ImageDataset(Dataset):
     # Dataset builder for array images for specific PyTorch model compliance
@@ -321,7 +325,7 @@ def load_data_from_links(row, downloaded_media_path, poster_path, trailer_path) 
     return data, source_type
 
 
-def compute_constants(frames: np.ndarray, movie_id: str, source_type: str = "trailer", sharpness_factor: float = 1.0, sharpness_factor_cla: float = 1.0, aspect_ratio: float = 2.478, mode: str = "evaluate") -> tuple:
+def compute_params(frames: np.ndarray, movie_id: str, source_type: str="trailer", sharpness_factor: float=1.0, sharpness_factor_cla: float=1.0, aspect_ratio: float=2.478, mode: str="evaluate", results_path: str="") -> tuple:
     """
     Compute parameters of the given material (e.g., sharpness of frames)
     Args: 
@@ -339,36 +343,38 @@ def compute_constants(frames: np.ndarray, movie_id: str, source_type: str = "tra
         - min_sharpness:
         - min_sharpness_cla:
     """
-    #FIXME: Pas sûr de la qualité de toutes les constantes
-
     match source_type:
         case "trailer":
-            '''
             overall_sharpness = 0
             for frame in frames:
-                overall_sharpness += filter_det.compute_sharpness(frame)/len(frames)
+                overall_sharpness += filter_detections.compute_sharpness(frame)/len(frames)
 
-            min_sharpness = overall_sharpness / sharpness_factor
-            min_sharpness_cla = overall_sharpness / sharpness_factor_cla
-            '''
+            #min_sharpness = overall_sharpness / sharpness_factor
+            #min_sharpness_cla = overall_sharpness / sharpness_factor_cla
             min_sharpness, min_sharpness_cla = 0, 0
 
             H_original, W_original = frames[0].shape[:2] 
-            effective_height = W_original / aspect_ratio # The aspect ratio of the video is the effective area of the video (i.e., the area where the content is present)
+            effective_height = W_original / aspect_ratio
             total_area = effective_height * W_original
 
-            if mode == "evaluate": #FIXME: mettre dans un dossier eval ?
-                movie_folder = os.path.join("visualize_parameters", movie_id)
-                constants_path = os.path.join(movie_folder, "constants.txt")
-                os.makedirs("visualize_parameters", exist_ok=True)
-                os.makedirs(movie_folder, exist_ok=True)
+            if mode == "evaluate":
+                csv_path = os.path.join(results_path,'trailers_params.csv')
+                file_exists = os.path.isfile(csv_path)
 
-                with open(constants_path, mode='w') as constants_file:
-                    #constants_file.write(f"overall sharpness : {overall_sharpness}\n")
-                    constants_file.write(f"minimal sharpness : {min_sharpness}")
-                    constants_file.write(f"total area : {total_area}")
-                    constants_file.close()
-        
+                with open(csv_path, mode='a', newline='') as csvfile:
+                    fieldnames = ['movie_id', 'overall_sharpness', 'total_area', 'effective_height']
+                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                    
+                    if not file_exists:
+                        writer.writeheader()
+                    
+                    writer.writerow({
+                        'movie_id': movie_id,
+                        'overall_sharpness': min_sharpness,
+                        'total_area': total_area,
+                        'effective_height': effective_height
+                    })
+                
         case "poster":
             H_original, W_original = frames.shape[:2]
             total_area = H_original * W_original

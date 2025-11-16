@@ -84,7 +84,7 @@ class VisionDetection:
         return results
 
     def crop_areas_of_interest(
-            self, images: np.ndarray, H_original: int, W_original: int, area_type: str = 'face', batch_size: int = 64) -> list[dict]:
+            self, movie_id: str | int, images: np.ndarray, H_original: int, W_original: int, area_type: str = 'face', batch_size: int = 64) -> list[dict]:
         """
         Create individual subimages for all areas of interest in one image
         """
@@ -96,6 +96,7 @@ class VisionDetection:
         scale_y = H_original / self.H_resized
 
         detections = []
+        perso_id = 0
         for k, area in enumerate(areas_of_interest):
             for i in range(len(area.boxes)):
                 x1, y1, x2, y2 = map(int, area.boxes[i].xyxy[0])
@@ -110,13 +111,15 @@ class VisionDetection:
                         cropped_image = images[k][y1:y2, x1:x2]
                     case _:
                         raise ValueError("Input images must have shape [H, W, C] or [N, H, W, C]")
-                detections.append({"bbox": [
-                     x1, y1, x2, y2], "conf": conf, "frame_id": k, "perso_id": i, f"cropped_{area_type}": cropped_image})
+                detections.append({
+                    "bbox": [x1, y1, x2, y2], "conf": conf, f"cropped_{area_type}": cropped_image,
+                    "frame_id": k, "perso_id": perso_id, "movie_id": movie_id})
+                perso_id += 1 
     
         return detections
 
 def detect_faces(
-        frames: np.array, H_original: int, W_original: int, batch_size: int, device: str, num_cpu_threads: int) -> list[dict]:
+        movie_id: str | int, frames: np.array, H_original: int, W_original: int, batch_size: int, device: str, num_cpu_threads: int) -> list[dict]:
     """
     Detect faces in the video.
     Args:
@@ -135,7 +138,7 @@ def detect_faces(
     vision_detector = VisionDetection(
         device=device, num_cpu_threads=num_cpu_threads)
     detections = vision_detector.crop_areas_of_interest(
-        frames, H_original, W_original, area_type='face', batch_size=batch_size)
+        movie_id, frames, H_original, W_original, area_type='face', batch_size=batch_size)
 
     return detections
 
