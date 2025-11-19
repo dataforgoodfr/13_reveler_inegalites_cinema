@@ -7,6 +7,7 @@ import { SearchFilmResultDto } from "@/dto/film/search-film-result.dto";
 import Image from "next/image";
 import { API_URL } from "@/utils/api-url";
 import { nameToUpperCase } from "@/utils/name-to-uppercase";
+import { useSearchContext } from "@/contexts/SearchContext";
 
 const ABORT_MESSAGE = "A new search was made before the backend could respond";
 
@@ -16,8 +17,8 @@ const Navbar = ({
   children: React.ReactNode;
 }>) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchQuery, setSearchQuery] = useState(""); // État pour l'input de recherche
+  const { isSearching, searchQuery, setSearchQuery, openSearch, closeSearch } =
+    useSearchContext();
   const [filteredFilms, setFilteredFilms] = useState<SearchFilmResultDto[]>([]); // État pour les résultats filtrés
   const abortControllerRef = useRef<AbortController>(null);
 
@@ -26,14 +27,19 @@ const Navbar = ({
   };
 
   const isAbortError = (error: unknown) => {
-    return typeof error === 'object' && error && 'reason' in error && error.reason === ABORT_MESSAGE;
-  }
+    return (
+      typeof error === "object" &&
+      error &&
+      "reason" in error &&
+      error.reason === ABORT_MESSAGE
+    );
+  };
 
   const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value.toLowerCase();
     setSearchQuery(query);
     if (abortControllerRef.current) {
-      abortControllerRef.current.abort({reason: ABORT_MESSAGE});
+      abortControllerRef.current.abort({ reason: ABORT_MESSAGE });
     }
     if (!query) {
       setFilteredFilms([]);
@@ -43,7 +49,7 @@ const Navbar = ({
     abortControllerRef.current = controller;
     try {
       const url = `${API_URL}/search?q=${query}`;
-      const response = await fetch(url, {signal: controller.signal});
+      const response = await fetch(url, { signal: controller.signal });
 
       if (!response.ok) {
         throw new Error(`Erreur HTTP ! statut : ${response.status}`);
@@ -64,8 +70,7 @@ const Navbar = ({
           <div
             className="fixed inset-0 bg-grey bg-opacity-50 backdrop-blur-xl z-10"
             onClick={() => {
-              setSearchQuery("");
-              setIsSearching(false);
+              closeSearch();
               setFilteredFilms([]);
             }} // Réinitialiser la recherche après un clic
           />
@@ -90,8 +95,7 @@ const Navbar = ({
                       href={`/films/${film.id}`}
                       className="block px-4 py-2 hover:bg-gray-200 hover:text-black rounded-md"
                       onClick={() => {
-                        setSearchQuery("");
-                        setIsSearching(false);
+                        closeSearch();
                         setFilteredFilms([]);
                       }} // Réinitialiser la recherche après un clic
                     >
@@ -172,13 +176,11 @@ const Navbar = ({
                     À propos
                   </Link>
                   <div
-                    className="bg-[#2A2A2A] rounded-full hidden lg:block"
-                    onClick={() => setIsSearching(!isSearching)}
+                    className="bg-[#2A2A2A] rounded-full hidden lg:block cursor-pointer"
+                    onClick={openSearch}
                   >
                     <div className="px-4 flex items-center text-[#CBD5E1]">
-                      <button
-                        className="cursor-pointer"
-                      >
+                      <button className="cursor-pointer">
                         <Image
                           src="/search.svg"
                           alt="Rechercher"
@@ -186,14 +188,12 @@ const Navbar = ({
                           width={36}
                         />
                       </button>
-                      <p className="pr-2">
-                        Recherchez un film ou un festival
-                      </p>
+                      <p className="pr-2">Recherchez un film ou un festival</p>
                     </div>
                   </div>
                   <button
                     className="cursor-pointer lg:hidden"
-                    onClick={() => setIsSearching(!isSearching)}
+                    onClick={openSearch}
                   >
                     <Image
                       src="/search.svg"
@@ -210,7 +210,7 @@ const Navbar = ({
                 {!isOpen && (
                   <button
                     className="p-4 rounded-md relative"
-                    onClick={() => setIsSearching(!isSearching)}
+                    onClick={openSearch}
                   >
                     <Image src="/search.svg" alt="Rechercher" fill />
                   </button>

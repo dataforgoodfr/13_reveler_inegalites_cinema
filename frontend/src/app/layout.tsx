@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/atoms/Navbar";
 import { Toaster } from "@/components/ui/sonner";
 import Footer from "@/components/atoms/Footer";
+import { SearchProvider } from "@/contexts/SearchContext";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -32,13 +33,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geist.variable} antialiased bg-red min-h-screen h-full`}
         style={{
-          background: '#0B0C0F'
+          background: "#0B0C0F",
         }}
         suppressHydrationWarning
       >
-        <Navbar>{children}</Navbar>
-        <Footer />
-        <Toaster />
+        <SearchProvider>
+          <Navbar>{children}</Navbar>
+          <Footer />
+          <Toaster />
+        </SearchProvider>
       </body>
     </html>
   );
