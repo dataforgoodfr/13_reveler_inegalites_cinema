@@ -66,16 +66,13 @@ const Navbar = ({
     <>
       {isSearching ? (
         <div className="absolute mx-auto px-4 w-full">
-          {/* Overlay pour masquer le contenu en dessous */}
           <div
             className="fixed inset-0 bg-grey bg-opacity-50 backdrop-blur-xl z-10"
             onClick={() => {
               closeSearch();
               setFilteredFilms([]);
-            }} // Réinitialiser la recherche après un clic
+            }}
           />
-
-          {/* Champ de recherche */}
           <div className="relative py-5 z-20 rounded-md">
             <Input
               type="text"
@@ -97,7 +94,7 @@ const Navbar = ({
                       onClick={() => {
                         closeSearch();
                         setFilteredFilms([]);
-                      }} // Réinitialiser la recherche après un clic
+                      }}
                     >
                       <div className="flex text-white hover:text-black relative">
                         {film.image && film.image !== "" ? (
@@ -143,16 +140,16 @@ const Navbar = ({
         </div>
       ) : (
         <nav
-          className={`text-white text-sm absolute w-full z-10 ${
+          className={`text-white text-lg absolute w-full z-10 ${
             isOpen ? "flex flex-col h-full bg-zinc-800" : ""
           } md:bg-transparent`}
         >
           <div className="absolute mx-5 cursor-pointer w-56 pt-6">
-            <Link href="/" className="font-bold text-md">
-              Observatoire des inégalités dans le cinéma
+            <Link href="/" className="font-bold text-xl">
+              CinéStats 50/50
             </Link>
           </div>
-          <div className="mx-auto px-4 w-full">
+          <div className="mx-auto px-4 pt-2 w-full">
             <div className="flex items-center justify-end h-16">
               {/* Menu desktop */}
               <div className="hidden md:block">
