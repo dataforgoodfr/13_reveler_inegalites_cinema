@@ -17,7 +17,7 @@ export default function Home() {
         }
       ></div>
       <main
-        className="container h-full mx-auto px-4 pt-96 flex flex-col items-center justify-center text-center text-white"
+        className="container h-full mx-auto px-4 md:pt-96 flex flex-col items-center justify-center text-center text-white"
         style={{ background: "unset" }}
       >
         <div className="animate-slide-up flex flex-col items-center gap-8">

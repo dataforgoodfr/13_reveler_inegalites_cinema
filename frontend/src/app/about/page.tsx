@@ -6,13 +6,13 @@ import { ChevronUp, Mouse } from "lucide-react";
 
 export default function PageAbout() {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [activeId, setActiveId] = useState('');
+  const [activeId, setActiveId] = useState("");
   const observer: Ref<IntersectionObserver> = useRef(null);
   const sections = [
-  { id: 'section-1', label: 'Notre mission' },
-  { id: 'section-2', label: 'Les chiffres clés' },
-  { id: 'section-3', label: "Comment fonctionne l'Observatoire ?" }
-];
+    { id: "section-1", label: "Notre mission" },
+    { id: "section-2", label: "Les chiffres clés" },
+    { id: "section-3", label: "Comment fonctionne CinéStats 50/50 ?" },
+  ];
 
   useEffect(() => {
     const handleIntersect: IntersectionObserverCallback = (entries) => {
@@ -24,7 +24,7 @@ export default function PageAbout() {
     };
 
     observer.current = new IntersectionObserver(handleIntersect, {
-      rootMargin: '0px 0px -60% 0px',
+      rootMargin: "0px 0px -60% 0px",
       threshold: 0.1,
     });
 
@@ -63,17 +63,17 @@ export default function PageAbout() {
       ></div>
       <main
         className="container mx-auto px-10 py-16 flex flex-col items-center justify-center text-white"
-        style={{ background: 'unset' }}
+        style={{ background: "unset" }}
       >
         <div
           id="section-top"
           className="w-full flex items-center justify-center"
           style={{ height: "calc(100vh - var(--spacing)* 16)" }}
         >
-          <div className="w-[897px] h-[379px] flex flex-col justify-around">
-            <h1 className="text-4xl text-center font-bold">
-             L&apos;Observatoire des inégalités dans l&apos;industrie du cinéma,{" "}
-             <span className="text-violet-300">c&apos;est quoi ?</span>
+          <div className="flex pt-96 flex-col">
+            <h1 className="text-5xl mb-8 text-center font-bold text-shadow-sm text-shadow-black">
+              CinéStats 50/50,{" "}
+              <span className="text-violet-300">c&apos;est quoi ?</span>
             </h1>
             <div className="flex justify-center">
               <div className="flex flex-col items-center">
@@ -97,7 +97,9 @@ export default function PageAbout() {
                   <a
                     href={`#${id}`}
                     className={`block pl-2 transition-colors ${
-                      activeId === id ? 'text-[#A984FF] font-bold border-l-4 border-[#A984FF]' : 'text-white'
+                      activeId === id
+                        ? "text-[#A984FF] font-bold border-l-4 border-[#A984FF]"
+                        : "text-white"
                     }`}
                   >
                     {label}
@@ -106,38 +108,51 @@ export default function PageAbout() {
               ))}
             </ul>
           </nav>
-          <div className="flex flex-col gap-10">            
-            <section id="section-1" className="flex flex-col gap-5 scroll-mt-32">
+          <div className="flex flex-col gap-10">
+            <section
+              id="section-1"
+              className="flex flex-col gap-5 scroll-mt-32"
+            >
               <h1 className="text-2xl text-violet-300 font-bold">
-                Mesurer pour agir : une boîte à outils au service d&apos;un cinéma plus
-                inclusif
+                Mesurer pour agir : une boîte à outils au service d&apos;un
+                cinéma plus inclusif
               </h1>
               <div className="flex flex-col gap-5">
                 <span>
-                Le cinéma et l&apos;audiovisuel façonnent nos imaginaires collectifs,
-                mais <span className="font-bold">reflètent-ils vraiment la diversité de notre société ?</span>
+                  Le cinéma et l&apos;audiovisuel façonnent nos imaginaires
+                  collectifs, mais{" "}
+                  <span className="font-bold">
+                    reflètent-ils vraiment la diversité de notre société ?
+                  </span>
                 </span>
                 <span>
-                Derrière la caméra comme à l&apos;écran, <span className="font-bold">les inégalités persistent</span> :
-                manque de représentation, faible visibilité des femmes et des
-                minorités…  
+                  Derrière la caméra comme à l&apos;écran,{" "}
+                  <span className="font-bold">les inégalités persistent</span> :
+                  manque de représentation, faible visibilité des femmes et des
+                  minorités…
                 </span>
                 <span>
-                Pour objectiver ces réalités et impulser un changement
-                concret, nous avons créé <span className="font-bold">une boîte à outils data-driven</span>. Cet
-                observatoire analyse, mesure et met en lumière les déséquilibres
-                dans l&apos;industrie du cinéma grâce à des données précises et
-                accessibles.
+                  Pour objectiver ces réalités et impulser un changement
+                  concret, nous avons créé{" "}
+                  <span className="font-bold">
+                    une boîte à outils data-driven
+                  </span>
+                  . Cet observatoire analyse, mesure et met en lumière les
+                  déséquilibres dans l&apos;industrie du cinéma grâce à des
+                  données précises et accessibles.
                 </span>
               </div>
             </section>
-            <section id="section-2" className="flex flex-col gap-5 scroll-mt-32">
+            <section
+              id="section-2"
+              className="flex flex-col gap-5 scroll-mt-32"
+            >
               <h1 className="text-2xl text-violet-300 font-bold">
                 Les chiffres clés
               </h1>
               <span>
-                Malgré une prise de conscience grandissante, ces chiffres montrent
-                à quel point la représentation est encore{" "}
+                Malgré une prise de conscience grandissante, ces chiffres
+                montrent à quel point la représentation est encore{" "}
                 <span className="font-bold">inégale</span>.
               </span>
               <div className="flex p-5 flex-col gap-5">
@@ -146,7 +161,8 @@ export default function PageAbout() {
                     1/4
                   </span>
                   <span className="text-white">
-                    de films réalisés par des <span className="text-violet-300 font-bold">femmes</span>{" "}
+                    de films réalisés par des{" "}
+                    <span className="text-violet-300 font-bold">femmes</span>{" "}
                     ces 10 dernières années
                   </span>
                 </div>
@@ -155,8 +171,9 @@ export default function PageAbout() {
                     37%
                   </span>
                   <span className="text-white">
-                    de budget <span className="text-violet-300 font-bold">en moins</span>{" "}
-                    pour les réalisatrices ces 10 dernières années 
+                    de budget{" "}
+                    <span className="text-violet-300 font-bold">en moins</span>{" "}
+                    pour les réalisatrices ces 10 dernières années
                   </span>
                 </div>
                 <div className="flex w-full items-center">
@@ -164,22 +181,29 @@ export default function PageAbout() {
                     10%
                   </span>
                   <span className="text-white">
-                    des récompenses ont été attribuées à des <span className="text-violet-300 font-bold">réalisatrices</span>{" "}
+                    des récompenses ont été attribuées à des{" "}
+                    <span className="text-violet-300 font-bold">
+                      réalisatrices
+                    </span>{" "}
                     à Cannes, Berlin et Venise
                   </span>
                 </div>
               </div>
             </section>
-            <section id="section-3" className="flex flex-col gap-5 scroll-mt-32">
+            <section
+              id="section-3"
+              className="flex flex-col gap-5 scroll-mt-32"
+            >
               <h1 className="text-2xl text-violet-300 font-bold">
-                Ce que permet l&apos;Observatoire
+                Ce que permet CinéStats 50/50
               </h1>
               <div>
                 <h2 className="text-violet-300 font-bold">
                   Rechercher par film
                 </h2>
                 <span>
-                  Informez-vous sur le degré d&apos;inclusion dans la constitution des équipes techniques et artistiques
+                  Informez-vous sur le degré d&apos;inclusion dans la
+                  constitution des équipes techniques et artistiques
                 </span>
               </div>
               <div>
@@ -187,7 +211,9 @@ export default function PageAbout() {
                   Analyser les données
                 </h2>
                 <span>
-                  Vous pouvez croiser des données en utilisant plusieurs filtres : budget, genre cinématographique, diffuseur, chef·fe de poste, etc.
+                  Vous pouvez croiser des données en utilisant plusieurs filtres
+                  : budget, genre cinématographique, diffuseur, chef·fe de
+                  poste, etc.
                 </span>
               </div>
               <div>
@@ -195,7 +221,8 @@ export default function PageAbout() {
                   Visualiser les tendances
                 </h2>
                 <span>
-                  La base de données permet d&apos;analyser l&apos;évolution des inégalités sur 20 ans
+                  La base de données permet d&apos;analyser l&apos;évolution des
+                  inégalités sur 20 ans
                 </span>
               </div>
             </section>
