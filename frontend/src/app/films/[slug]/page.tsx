@@ -130,7 +130,7 @@ export default function PageFilm() {
 
   if (isLoading || !filmData) {
     return (
-      <main className="p-20 h-full bg-transparent text-white flex justify-center items-center">
+      <main className="p-20 min-h-screen h-full bg-transparent text-white flex justify-center items-center">
         <p>Chargement...</p>
       </main>
     );
@@ -138,43 +138,86 @@ export default function PageFilm() {
 
   if (hasError) {
     return (
-      <main className="p-20 h-full bg-transparent text-white flex justify-center items-center">
+      <main className="p-20 min-h-screen h-full bg-transparent text-white flex justify-center items-center">
         <h1 className="text-4xl font-bold">404 - Film non trouvé</h1>
       </main>
     );
   }
 
   return (
-    <main className="p-10 md:p-20 min-h-screen bg-transparent text-white">
-      <div
-        className="background-image"
-        style={
-          {
-            "--background-image-url": `url(${filmData.poster_image_base64})`,
-          } as React.CSSProperties
-        }
-      ></div>
+    <main className="p-10 md:p-20 min-h-screen text-white">
       <div className="flex flex-col items-center md:items-start md:flex-row gap-10">
-        <div className="pt-5 md:pt-0 relative">
-          {filmData.poster_image_base64 &&
-          filmData.poster_image_base64 !== "" ? (
-            <Image
-              loader={({ src }) => src}
-              style={{ height: "fit-content" }}
-              src={filmData.poster_image_base64}
-              alt="Affiche"
-              width={257.45}
-              height={0}
-            />
-          ) : (
-            <Image
-              style={{ height: "fit-content" }}
-              src="/placeholder_image.svg"
-              alt="Image indisponible"
-              width={257.45}
-              height={0}
-            />
-          )}
+        <div className="pt-5 md:pt-0 flex flex-col gap-4">
+          <div className="relative shadow-[0_0_40px_rgba(255,255,255,0.2)] rounded-md">
+            {filmData.poster_image_base64 &&
+            filmData.poster_image_base64 !== "" ? (
+              <Image
+                loader={({ src }) => src}
+                className="rounded-md"
+                style={{ height: "fit-content" }}
+                src={filmData.poster_image_base64}
+                alt="Affiche"
+                width={257.45}
+                height={0}
+              />
+            ) : (
+              <Image
+                className="rounded-md"
+                style={{ height: "fit-content" }}
+                src="/placeholder_image.svg"
+                alt="Image indisponible"
+                width={257.45}
+                height={0}
+              />
+            )}
+            <div className="flex absolute md:hidden flex-col gap-2 bottom-2 right-2 text-black">
+              <Drawer open={openDrawer} onOpenChange={setOpenDrawer}>
+                <DrawerTrigger asChild>
+                  <Button variant="outline" size="icon" style={{ opacity: 0.8 }}>
+                    ...
+                  </Button>
+                </DrawerTrigger>
+                {openDrawer && (
+                  <DrawerContent className="bg-[#1D1F20] text-white">
+                    <DrawerTitle />
+                    <DrawerDescription />
+                    <div className="p-10 flex flex-col gap-10">
+                      <div
+                        className="flex items-center gap-5"
+                        onClick={() => {
+                          setOpenPosterDialog(true);
+                          setOpenDrawer(false);
+                        }}
+                      >
+                        <FrameSearch size={30}/>
+                        <span className="text-xl">Analyser l&apos;affiche du film</span>
+                      </div>
+                      <div
+                        className="flex items-center gap-5"
+                        onClick={() => {
+                          setOpenTrailerDialog(true);
+                          setOpenDrawer(false);
+                        }}
+                      >
+                        <VideoSearch size={30}/>
+                        <span className="text-xl">Analyser la bande-annonce</span>
+                      </div>
+                      <div
+                        className="flex items-center gap-5"
+                        onClick={() => {
+                          setOpenShareDialog(true);
+                          setOpenDrawer(false);
+                        }}
+                      >
+                        <Share size={30}/>
+                        <span className="text-xl">Partager la fiche du film</span>
+                      </div>
+                    </div>
+                  </DrawerContent>
+                )}
+              </Drawer>
+            </div>
+          </div>
           <PosterAnalysisDialog
             open={openPosterDialog}
             setOpen={setOpenPosterDialog}
@@ -204,78 +247,31 @@ export default function PageFilm() {
             setOpen={setOpenShareDialog}
             imageSource={filmData.poster_image_base64}
           />
-          <div className="hidden absolute md:flex flex-col gap-2 bottom-2 left-2">
+          <div className="hidden md:flex flex-col gap-2 left-2">
             <Button
-              variant="outline"
-              size="icon"
+              className="w-full bg-zinc-700 justify-start"
               style={{ opacity: 0.8 }}
               onClick={() => setOpenPosterDialog(true)}
             >
-              <FrameSearch size={24} color="black" />
+              <FrameSearch size={24} color="white" />
+              Analyser l&apos;affiche du film
             </Button>
             <Button
-              variant="outline"
-              size="icon"
+              className="w-full bg-zinc-700 justify-start"
               style={{ opacity: 0.8 }}
               onClick={() => setOpenTrailerDialog(true)}
             >
-              <VideoSearch size={24} color="black" />
+              <VideoSearch size={24} color="white" />
+              Analyser la bande annonce
             </Button>
             <Button
-              variant="outline"
-              size="icon"
+              className="w-full bg-zinc-700 justify-start"
               style={{ opacity: 0.8 }}
               onClick={() => setOpenShareDialog(true)}
             >
-              <Share size={24} color="black" />
+              <Share size={24} color="white" />
+              <p>Partager le film</p>
             </Button>
-          </div>
-          <div className="flex absolute md:hidden flex-col gap-2 bottom-2 right-2 text-black">
-            <Drawer open={openDrawer} onOpenChange={setOpenDrawer}>
-              <DrawerTrigger asChild>
-                <Button variant="outline" size="icon" style={{ opacity: 0.8 }}>
-                  ...
-                </Button>
-              </DrawerTrigger>
-              {openDrawer && (
-                <DrawerContent className="bg-[#1D1F20] text-white">
-                  <DrawerTitle />
-                  <DrawerDescription />
-                  <div className="p-10 flex flex-col gap-10">
-                    <div
-                      className="flex items-center gap-5"
-                      onClick={() => {
-                        setOpenPosterDialog(true);
-                        setOpenDrawer(false);
-                      }}
-                    >
-                      <FrameSearch size={30}/>
-                      <span className="text-xl">Analyser l&apos;affiche du film</span>
-                    </div>
-                    <div
-                      className="flex items-center gap-5"
-                      onClick={() => {
-                        setOpenTrailerDialog(true);
-                        setOpenDrawer(false);
-                      }}
-                    >
-                      <VideoSearch size={30}/>
-                      <span className="text-xl">Analyser la bande-annonce</span>
-                    </div>
-                    <div
-                      className="flex items-center gap-5"
-                      onClick={() => {
-                        setOpenShareDialog(true);
-                        setOpenDrawer(false);
-                      }}
-                    >
-                      <Share size={30}/>
-                      <span className="text-xl">Partager la fiche du film</span>
-                    </div>
-                  </div>
-                </DrawerContent>
-              )}
-            </Drawer>
           </div>
         </div>
         <div className="w-full flex md:block flex-col">
@@ -289,70 +285,91 @@ export default function PageFilm() {
               )
             </span>
           </h1>
-          <h2>
-            Réalisé par{" "}
-            <span className="font-bold">
-              {filmData.credits?.key_roles
-                ? filmData.credits.key_roles
-                    .filter((c: Credit) => c.role === "director")
-                    .map((c: Credit) => !c.name ? '' : c.name.split(' ').map(nameToUpperCase).join(' '))
-                    .join(", ")
-                : "NC"}
-            </span>
-          </h2>
-          <p className="text-sm mb-2">
-            {filmData.release_date
-              ? `Sorti le ${getDate(filmData.release_date)} en salle | `
-              : "Date inconnue | "}
-            {filmData.duration || "Durée inconnue"}
-          </p>
-          <p className="text-sm mb-2">
-            Pays d&apos;origine:{" "}
-            {filmData.countries_sorted_by_budget?.length
-              ? filmData.countries_sorted_by_budget.join(", ")
-              : "NC"}
-          </p>
-          <div className="flex mb-4 gap-2">
-            {filmData.genres?.length ? (
-              filmData.genres.map((genre, index) => (
-                <Badge key={index} className="bg-zinc-700">
-                  {genre}
-                </Badge>
-              ))
-            ) : (
-              <span className="text-white">Genres non renseignés</span>
-            )}
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-col">
+              <span className="text-sm text-[#CBD5E1]">
+                Réalisé par
+              </span>
+              <span className="font-bold">
+                {filmData.credits?.key_roles
+                  ? filmData.credits.key_roles
+                      .filter((c: Credit) => c.role === "director")
+                      .map((c: Credit) => !c.name ? '' : c.name.split(' ').map(nameToUpperCase).join(' '))
+                      .join(", ")
+                  : "NC"}
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm text-[#CBD5E1]">
+                Sortie le
+              </span>
+              <span className="font-bold">
+                {filmData.release_date
+                  ? `${getDate(filmData.release_date)} en salle`
+                  : "Date inconnue"}
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm text-[#CBD5E1]">
+                Durée
+              </span>
+              <span className="font-bold">
+                {filmData.duration || "Durée inconnue"}
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm text-[#CBD5E1]">
+                Pays de production
+              </span>
+              <span className="font-bold">
+                {filmData.countries_sorted_by_budget?.length
+                  ? filmData.countries_sorted_by_budget.join(", ")
+                  : "NC"}
+              </span>
+            </div>
+            <div className="flex mb-4 gap-2">
+              {filmData.genres?.length ? (
+                filmData.genres.map((genre: string, index: number) => (
+                  <Badge key={index} className="bg-zinc-700 rounded-full">
+                    {genre}
+                  </Badge>
+                ))
+              ) : (
+                <span className="text-white">Genres non renseignés</span>
+              )}
+            </div>
+            {filmData.parity_bonus ? (
+                <Button className="bg-green-200 hover:bg-green-200 text-green-950 rounded-full w-fit">
+                  Bonus parité du CNC
+                  <div className="cursor-pointer" onClick={() => setOpenCncDialog(!openCncDialog)}>
+                    <Image
+                      src="/info.svg"
+                      alt="Rechercher"
+                      width={24}
+                      height={24}
+                    />
+                  </div>
+                </Button>
+              ) : (
+                <Button className="bg-red-200 hover:bg-red-200 text-red-950 rounded-full w-fit">
+                  Film non éligible au bonus parité du CNC
+                  <div className="cursor-pointer" onClick={() => setOpenCncDialog(!openCncDialog)}>
+                    <Image
+                      src="/info.svg"
+                      alt="Rechercher"
+                      width={24}
+                      height={24}
+                    />
+                  </div>
+                </Button>
+              )}
           </div>
-          {filmData.parity_bonus ? (
-              <Button className="bg-green-200 hover:bg-green-200 text-green-950 rounded-full">
-                Bonus parité du CNC
-                <div className="cursor-pointer" onClick={() => setOpenCncDialog(!openCncDialog)}>
-                  <Image
-                    src="/info.svg"
-                    alt="Rechercher"
-                    width={24}
-                    height={24}
-                  />
-                </div>
-              </Button>
-            ) : (
-              <Button className="bg-red-200 hover:bg-red-200 text-red-950 rounded-full">
-                Film non éligible au bonus parité du CNC
-                <div className="cursor-pointer" onClick={() => setOpenCncDialog(!openCncDialog)}>
-                  <Image
-                    src="/info.svg"
-                    alt="Rechercher"
-                    width={24}
-                    height={24}
-                  />
-                </div>
-              </Button>
-            )}
           <CncDialog open={openCncDialog} setOpen={setOpenCncDialog}/>
           <div className="mt-8">
-            <Menubar className="w-full md:w-fit text-black overflow-y-hidden">
+            <Menubar className="w-full md:w-fit overflow-y-hidden">
               <MenubarMenu>
                 <MenubarTrigger
+                  className={activeSection === "Statistiques" ? 'bg-white text-black' : ''}
                   onClick={() => setActiveSection("Statistiques")}
                 >
                   Statistiques
@@ -360,26 +377,33 @@ export default function PageFilm() {
               </MenubarMenu>
               <MenubarMenu>
                 <MenubarTrigger
+                  className={activeSection === "Distribution" ? 'bg-white text-black' : ''}
                   onClick={() => setActiveSection("Distribution")}
                 >
-                  Distribution
+                  Financement
                 </MenubarTrigger>
               </MenubarMenu>
               <MenubarMenu>
                 <MenubarTrigger
-                  className="whitespace-nowrap"
+                  className={"whitespace-nowrap" + activeSection === "Casting" ? ' bg-white text-black' : ''}
                   onClick={() => setActiveSection("Equipe du film")}
                 >
                   Equipe du film
                 </MenubarTrigger>
               </MenubarMenu>
               <MenubarMenu>
-                <MenubarTrigger onClick={() => setActiveSection("Casting")}>
+                <MenubarTrigger 
+                  className={activeSection === "Casting" ? 'bg-white text-black' : ''}
+                  onClick={() => setActiveSection("Casting")}
+                >
                   Casting
                 </MenubarTrigger>
               </MenubarMenu>
               <MenubarMenu>
-                <MenubarTrigger onClick={() => setActiveSection("Palmarès")}>
+                <MenubarTrigger
+                  className={activeSection === "Palmarès" ? 'bg-white text-black' : ''}
+                  onClick={() => setActiveSection("Palmarès")}
+                >
                   Palmarès
                 </MenubarTrigger>
               </MenubarMenu>
@@ -458,6 +482,20 @@ export default function PageFilm() {
             {activeSection === "Distribution" &&
               (filmData.credits?.distribution ? (
                 <>
+                  <div className="mt-4">
+                    <span
+                      className="block rounded-sm font-bold w-full px-2 py-1"
+                    >
+                      Budget
+                    </span>
+                    <div className="px-2 py-1">
+                      <span>
+                        {filmData.credits.distribution.budget
+                          ? filmData.credits.distribution.budget.toLocaleString() + " €"
+                          : "NC"}
+                      </span>
+                    </div>
+                  </div>
                   {Object.entries(getDistribution(filmData.credits.distribution))
                   .filter(
                     (
@@ -472,37 +510,21 @@ export default function PageFilm() {
                       <div key={role_index} className="mt-4">
                         <span
                           className="block rounded-sm font-bold w-full px-2 py-1"
-                          style={{ backgroundColor: "rgba(63, 63, 70, 0.4)" }}
                         >
                           {t(`distribution.${role}`)}
                         </span>
                         <div className="flex flex-wrap">
                           {credits.map((credit: Credit, index: number) => (
                             <div className="px-2 py-1" key={index}>
-                              <Badge className="bg-gray-800">
+                              <span className="bg-gray-800 py-1 px-2 rounded-sm text-slate-300 text-sm">
                                 {credit.name}
-                              </Badge>
+                              </span>
                             </div>
                           ))}
                         </div>
                       </div>
                     )
                   )}
-                  <div className="mt-4">
-                    <span
-                      className="block rounded-sm font-bold w-full px-2 py-1"
-                      style={{ backgroundColor: "rgba(63, 63, 70, 0.4)" }}
-                    >
-                      Budget
-                    </span>
-                    <div className="px-2 py-1">
-                      <span>
-                        {filmData.credits.distribution.budget
-                          ? filmData.credits.distribution.budget.toLocaleString() + " €"
-                          : "NC"}
-                      </span>
-                    </div>
-                  </div>
                 </>
               ) : (
                 <div className="mt-4 text-white">

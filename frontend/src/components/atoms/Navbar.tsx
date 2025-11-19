@@ -2,13 +2,12 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { usePathname } from "next/navigation";
 import { SearchFilmResultDto } from "@/dto/film/search-film-result.dto";
 import Image from "next/image";
 import { API_URL } from "@/utils/api-url";
 import { nameToUpperCase } from "@/utils/name-to-uppercase";
+import { useSearchContext } from "@/contexts/SearchContext";
 
 const ABORT_MESSAGE = "A new search was made before the backend could respond";
 
@@ -17,10 +16,9 @@ const Navbar = ({
 }: Readonly<{
   children: React.ReactNode;
 }>) => {
-  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchQuery, setSearchQuery] = useState(""); // État pour l'input de recherche
+  const { isSearching, searchQuery, setSearchQuery, openSearch, closeSearch } =
+    useSearchContext();
   const [filteredFilms, setFilteredFilms] = useState<SearchFilmResultDto[]>([]); // État pour les résultats filtrés
   const abortControllerRef = useRef<AbortController>(null);
 
@@ -29,14 +27,19 @@ const Navbar = ({
   };
 
   const isAbortError = (error: unknown) => {
-    return typeof error === 'object' && error && 'reason' in error && error.reason === ABORT_MESSAGE;
-  }
+    return (
+      typeof error === "object" &&
+      error &&
+      "reason" in error &&
+      error.reason === ABORT_MESSAGE
+    );
+  };
 
   const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value.toLowerCase();
     setSearchQuery(query);
     if (abortControllerRef.current) {
-      abortControllerRef.current.abort({reason: ABORT_MESSAGE});
+      abortControllerRef.current.abort({ reason: ABORT_MESSAGE });
     }
     if (!query) {
       setFilteredFilms([]);
@@ -46,7 +49,7 @@ const Navbar = ({
     abortControllerRef.current = controller;
     try {
       const url = `${API_URL}/search?q=${query}`;
-      const response = await fetch(url, {signal: controller.signal});
+      const response = await fetch(url, { signal: controller.signal });
 
       if (!response.ok) {
         throw new Error(`Erreur HTTP ! statut : ${response.status}`);
@@ -63,17 +66,13 @@ const Navbar = ({
     <>
       {isSearching ? (
         <div className="absolute mx-auto px-4 w-full">
-          {/* Overlay pour masquer le contenu en dessous */}
           <div
             className="fixed inset-0 bg-grey bg-opacity-50 backdrop-blur-xl z-10"
             onClick={() => {
-              setSearchQuery("");
-              setIsSearching(false);
+              closeSearch();
               setFilteredFilms([]);
-            }} // Réinitialiser la recherche après un clic
+            }}
           />
-
-          {/* Champ de recherche */}
           <div className="relative py-5 z-20 rounded-md">
             <Input
               type="text"
@@ -93,10 +92,9 @@ const Navbar = ({
                       href={`/films/${film.id}`}
                       className="block px-4 py-2 hover:bg-gray-200 hover:text-black rounded-md"
                       onClick={() => {
-                        setSearchQuery("");
-                        setIsSearching(false);
+                        closeSearch();
                         setFilteredFilms([]);
-                      }} // Réinitialiser la recherche après un clic
+                      }}
                     >
                       <div className="flex text-white hover:text-black relative">
                         {film.image && film.image !== "" ? (
@@ -142,23 +140,20 @@ const Navbar = ({
         </div>
       ) : (
         <nav
-          className={`text-white absolute w-full z-10 ${
+          className={`text-white text-lg absolute w-full z-10 ${
             isOpen ? "flex flex-col h-full bg-zinc-800" : ""
           } md:bg-transparent`}
         >
-          {["/", "/statistics"].includes(pathname) && !isOpen && (
-            <div className="absolute mx-16 cursor-pointer md:w-96 w-56 pt-6">
-              <Link href="/" className="font-bold text-xl">
-                Observatoire des inégalités dans le cinéma, par le Collectif
-                50/50 et Data For Good
-              </Link>
-            </div>
-          )}
-          <div className="mx-auto px-4 w-full">
+          <div className="absolute mx-5 cursor-pointer w-56 pt-6">
+            <Link href="/" className="font-bold text-xl">
+              CinéStats 50/50
+            </Link>
+          </div>
+          <div className="mx-auto px-4 pt-2 w-full">
             <div className="flex items-center justify-end h-16">
               {/* Menu desktop */}
               <div className="hidden md:block">
-                <div className="ml-10 flex items-center space-x-4">
+                <div className="ml-10 flex items-center">
                   <Link
                     href="/"
                     className="px-3 py-2 rounded-md cursor-pointer"
@@ -177,9 +172,25 @@ const Navbar = ({
                   >
                     À propos
                   </Link>
+                  <div
+                    className="bg-[#2A2A2A] rounded-full hidden lg:block cursor-pointer"
+                    onClick={openSearch}
+                  >
+                    <div className="px-4 flex items-center text-[#CBD5E1]">
+                      <button className="cursor-pointer">
+                        <Image
+                          src="/search.svg"
+                          alt="Rechercher"
+                          height={36}
+                          width={36}
+                        />
+                      </button>
+                      <p className="pr-2">Recherchez un film ou un festival</p>
+                    </div>
+                  </div>
                   <button
-                    className="px-3 py-2 rounded-md cursor-pointer"
-                    onClick={() => setIsSearching(!isSearching)}
+                    className="cursor-pointer lg:hidden"
+                    onClick={openSearch}
                   >
                     <Image
                       src="/search.svg"
@@ -188,11 +199,6 @@ const Navbar = ({
                       width={36}
                     />
                   </button>
-                  <Link href="mailto:collectif5050x2020@gmail.com?subject=Toolbox%2050%2F50" className="px-3 py-2 rounded-md">
-                    <Button className="cursor-pointer">
-                      Donnez-nous votre avis 💬
-                    </Button>
-                  </Link>
                 </div>
               </div>
 
@@ -201,7 +207,7 @@ const Navbar = ({
                 {!isOpen && (
                   <button
                     className="p-4 rounded-md relative"
-                    onClick={() => setIsSearching(!isSearching)}
+                    onClick={openSearch}
                   >
                     <Image src="/search.svg" alt="Rechercher" fill />
                   </button>
@@ -260,17 +266,6 @@ const Navbar = ({
                   onClick={toggleMenu}
                 >
                   À propos
-                </Link>
-              </div>
-              <div className="px-2 pb-3">
-                <Link
-                  href="/"
-                  className="block px-3 py-2 rounded-md"
-                  onClick={toggleMenu}
-                >
-                  <Button className="w-full bg-white text-black hover:text-white cursor-pointer">
-                    Donnez nous votre avis 💬
-                  </Button>
                 </Link>
               </div>
             </div>

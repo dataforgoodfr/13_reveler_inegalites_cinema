@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/atoms/Navbar";
 import { Toaster } from "@/components/ui/sonner";
 import Footer from "@/components/atoms/Footer";
+import { SearchProvider } from "@/contexts/SearchContext";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -16,7 +17,7 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Cinéma & Inégalités",
+  title: "Observatoire des inégalités dans le cinéma",
   description: "Explorez les inégalités dans l'industrie cinématographique",
   authors: [{ name: "Data4Good" }],
   keywords: ["cinéma", "inégalités", "data", "analyse", "statistiques"],
@@ -28,14 +29,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html className="h-full" lang="fr">
+    <html className="min-h-screen h-full" lang="fr">
       <body
-        className={`${geistSans.variable} ${geist.variable} antialiased bg-black h-full`}
+        className={`${geistSans.variable} ${geist.variable} antialiased bg-red min-h-screen h-full`}
+        style={{
+          background: "#0B0C0F",
+        }}
         suppressHydrationWarning
       >
-        <Navbar>{children}</Navbar>
-        <Footer />
-        <Toaster />
+        <SearchProvider>
+          <Navbar>{children}</Navbar>
+          <Footer />
+          <Toaster />
+        </SearchProvider>
       </body>
     </html>
   );

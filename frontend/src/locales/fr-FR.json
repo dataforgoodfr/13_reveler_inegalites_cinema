@@ -1,9 +1,9 @@
 {
   "distribution": {
-    "production": "Produit par",
-    "distribution": "Distribué par",
-    "co-production": "Co-produit par",
-    "financiers": "Financé par"
+    "production": "Production",
+    "distribution": "Distribution",
+    "co-production": "Co-production",
+    "financiers": "Diffusion"
   },
   "roles": {
     "first_assistant_director": "Assistant·e à la réalisation",
