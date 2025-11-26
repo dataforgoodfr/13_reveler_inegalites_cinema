@@ -21,7 +21,7 @@ jobs:
 
     permissions:
       contents: read
-      packages: write
+      packages: write_package
       attestations: write
       id-token: write
 
