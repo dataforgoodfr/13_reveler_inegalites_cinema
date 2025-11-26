@@ -154,3 +154,7 @@
 .animate-slide-up {
   animation: slide-up 1s ease-out;
 }
+
+main {
+  background: linear-gradient(#1E1E1E, #0B0C0F)
+}

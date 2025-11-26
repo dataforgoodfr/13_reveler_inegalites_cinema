@@ -78,7 +78,7 @@ export default function PageFilm() {
 
   if (isLoading || !festivalData) {
     return (
-      <main className="p-20 h-full bg-transparent text-white flex justify-center items-center">
+      <main className="p-20 min-h-screen h-full bg-transparent text-white flex justify-center items-center">
         <p>Chargement...</p>
       </main>
     );
@@ -86,41 +86,43 @@ export default function PageFilm() {
 
   if (hasError) {
     return (
-      <main className="p-20 h-full bg-transparent text-white flex justify-center items-center">
+      <main className="p-20 min-h-screen h-full bg-transparent text-white flex justify-center items-center">
         <h1 className="text-4xl font-bold">404 - Festival non trouvé</h1>
       </main>
     );
   }
 
   return (
-    <main className="p-5 pt-20 bg-zinc-800 text-white min-h-screen">
+    <main className="p-5 pt-20 text-white min-h-screen">
       <div className="flex flex-col md:items-start md:flex-row gap-10">
         <div className="flex flex-col gap-10 w-full md:w-1/4">
-          {festivalData.festival.image_base64 &&
-          festivalData.festival.image_base64.trim() !== "" ? (
-            <Image
-              loader={() => festivalData.festival.image_base64}
-              style={{ height: "fit-content" }}
-              src={festivalData.festival.image_base64.trim()}
-              alt="Affiche"
-              width={300}
-              height={0}
-            />
-          ) : (
-            <Image
-              style={{ height: "fit-content" }}
-              src="/placeholder_image.svg"
-              alt="Image indisponible"
-              width={300}
-              height={0}
-            />
-          )}
+          <div className="bg-white">
+            {festivalData.festival.image_base64 &&
+            festivalData.festival.image_base64.trim() !== "" ? (
+              <Image
+                loader={() => festivalData.festival.image_base64}
+                style={{ height: "fit-content" }}
+                src={festivalData.festival.image_base64.trim()}
+                alt="Affiche"
+                width={300}
+                height={0}
+              />
+            ) : (
+              <Image
+                style={{ height: "fit-content" }}
+                src="/placeholder_image.svg"
+                alt="Image indisponible"
+                width={300}
+                height={0}
+              />
+            )}
+          </div>
           <h1 className="md:hidden text-4xl font-bold">
             {festivalData.festival.name}
           </h1>
 
           {festivalData.festival.description && (
-            <Card className="bg-gray-950 border-0">
+            <Card className="bg-[#17181C] border-0">
               <CardHeader>
                 <CardDescription className="text-white">
                   {festivalData.festival.description}
@@ -232,9 +234,10 @@ export default function PageFilm() {
               </div>
               {typeof selectedAward === "number" && (
                 <div className="mt-8 flex flex-col gap-5">
-                  <Menubar className="w-fit text-black">
+                  <Menubar className="md:w-fit">
                     <MenubarMenu>
                       <MenubarTrigger
+                        className={`w-1/2 justify-center ${activeSection === "Gagnants" ? 'bg-white text-black' : ''}`}
                         onClick={() => setActiveSection("Gagnants")}
                       >
                         Gagnants
@@ -242,6 +245,7 @@ export default function PageFilm() {
                     </MenubarMenu>
                     <MenubarMenu>
                       <MenubarTrigger
+                        className={`w-1/2 justify-center ${activeSection === "Nommés" ? 'bg-white text-black' : ''}`}
                         onClick={() => setActiveSection("Nommés")}
                       >
                         Nommés
@@ -358,9 +362,9 @@ export default function PageFilm() {
                                               : "NC"}
                                           </CardTitle>
                                           <CardDescription className="text-white">
-                                            de femmes au sein des{" "}
+                                            Part de femmes au sein des{" "}
                                             <span className="font-bold text-violet-300">
-                                              cheffes de postes
+                                              chef·fe·s de poste
                                             </span>
                                           </CardDescription>
                                         </CardHeader>
