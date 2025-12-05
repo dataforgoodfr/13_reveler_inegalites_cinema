@@ -59,7 +59,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.image }}
           tags: |
-            type=raw,value=${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.image }}:latest
+            type=raw,value=latest
             type=sha
 
       - name: Build and push ${{ matrix.name }}
