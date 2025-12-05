@@ -47,7 +47,6 @@ const TrailerAnalysisDialog = ({
     return [minPart, secPart].filter(Boolean).join(" ");
   };
 
-  // Gestion des valeurs manquantes ou nulles
   const safeReleaseYear =
     releaseDate && releaseDate !== "null" ? releaseDate.split("-")[0] : "NC";
   const safeTrailerUrl =
@@ -94,32 +93,9 @@ const TrailerAnalysisDialog = ({
                 </CarouselItem>
                 <CarouselItem>
                   <div className="font-bold gap-50 text-left">
-                    <div>
-                      <div>
-                        <span>
-                          Temps d&apos;écran des personnages perçus comme{" "}
-                        </span>
-                        <span className="text-violet-500">femmes</span>
-                      </div>
-                      <span className="text-violet-500">
-                        {typeof femaleScreenTimeInTrailer === "number"
-                          ? formatTime(femaleScreenTimeInTrailer)
-                          : "NC"}
-                      </span>
-                    </div>
-                    <div>
-                      <div>
-                        <span>
-                          Temps d&apos;écran des personnages perçus comme{" "}
-                        </span>
-                        <span className="text-violet-500">non blancs</span>
-                      </div>
-                      <span className="text-violet-500">
-                        {typeof nonWhiteScreenTimeInTrailer === "number"
-                          ? formatTime(nonWhiteScreenTimeInTrailer)
-                          : "NC"}
-                      </span>
-                    </div>
+                    <span className="text-violet-500">
+                      Statistiques non disponibles pour le moment.
+                    </span>
                   </div>
                 </CarouselItem>
               </CarouselContent>
@@ -167,28 +143,9 @@ const TrailerAnalysisDialog = ({
               </span>
             )}
             <div className="flex font-bold gap-50">
-              <div>
-                <div>
-                  <span>Temps d&apos;écran des personnages perçus comme </span>
-                  <span className="text-violet-500">femmes</span>
-                </div>
-                <span className="text-violet-500">
-                  {typeof femaleScreenTimeInTrailer === "number"
-                    ? formatTime(femaleScreenTimeInTrailer)
-                    : "NC"}
-                </span>
-              </div>
-              <div>
-                <div>
-                  <span>Temps d&apos;écran des personnages perçus comme </span>
-                  <span className="text-violet-500">non blancs</span>
-                </div>
-                <span className="text-violet-500">
-                  {typeof nonWhiteScreenTimeInTrailer === "number"
-                    ? formatTime(nonWhiteScreenTimeInTrailer)
-                    : "NC"}
-                </span>
-              </div>
+              <span className="text-violet-500">
+                Statistiques non disponibles pour le moment.
+              </span>
             </div>
           </div>
         </DialogHeader>
