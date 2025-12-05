@@ -77,7 +77,7 @@ const Navbar = ({
           <div className="relative py-5 z-20 rounded-md">
             <Input
               type="text"
-              placeholder="Rechercher un film ou un festival..."
+              placeholder="Rechercher un film..."
               value={searchQuery}
               onChange={handleSearch}
               className="px-3 py-5 rounded-md text-black bg-white"
@@ -186,7 +186,7 @@ const Navbar = ({
                           width={36}
                         />
                       </button>
-                      <p className="pr-2">Recherchez un film ou un festival</p>
+                      <p className="pr-2">Recherchez un film</p>
                     </div>
                   </div>
                   <button
