@@ -1,54 +1,14 @@
 "use client";
 
-import { Ref, useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronUp, Mouse } from "lucide-react";
+import { Mouse } from "lucide-react";
 
 export default function PageAbout() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [activeId, setActiveId] = useState("");
-  const observer: Ref<IntersectionObserver> = useRef(null);
-  const sections = [
-    { id: "section-1", label: "Notre mission" },
-    { id: "section-2", label: "Les chiffres clés" },
-    { id: "section-3", label: "Comment fonctionne CinéStats 50/50 ?" },
-  ];
+  const sectionBelowRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    const handleIntersect: IntersectionObserverCallback = (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          setActiveId(entry.target.id);
-        }
-      });
-    };
-
-    observer.current = new IntersectionObserver(handleIntersect, {
-      rootMargin: "0px 0px -60% 0px",
-      threshold: 0.1,
-    });
-
-    sections.forEach(({ id }) => {
-      const el = document.getElementById(id);
-      if (el && observer.current) observer.current.observe(el);
-    });
-
-    return () => {
-      if (observer.current) observer.current.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 0);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const scrollToSection = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  const scrollToSectionBelow = () => {
+    sectionBelowRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
@@ -66,7 +26,6 @@ export default function PageAbout() {
         style={{ background: "unset" }}
       >
         <div
-          id="section-top"
           className="w-full flex items-center justify-center"
           style={{ height: "calc(100vh - var(--spacing)* 16)" }}
         >
@@ -81,7 +40,7 @@ export default function PageAbout() {
                 <Button
                   className="bg-transparent hover:bg-transparent text-white"
                   size={"icon"}
-                  onClick={() => scrollToSection("section-below")}
+                  onClick={scrollToSectionBelow}
                 >
                   <Mouse />
                 </Button>
@@ -89,30 +48,9 @@ export default function PageAbout() {
             </div>
           </div>
         </div>
-        <div id="section-below" className="py-16 flex">
-          <nav className="hidden md:block w-64 sticky top-0 p-3 text-white h-fit">
-            <ul className="space-y-4 border-l-2">
-              {sections.map(({ id, label }) => (
-                <li key={id}>
-                  <a
-                    href={`#${id}`}
-                    className={`block pl-2 transition-colors ${
-                      activeId === id
-                        ? "text-[#A984FF] font-bold border-l-4 border-[#A984FF]"
-                        : "text-white"
-                    }`}
-                  >
-                    {label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
+        <div ref={sectionBelowRef} className="py-16 w-full flex justify-center">
           <div className="flex flex-col gap-10">
-            <section
-              id="section-1"
-              className="flex flex-col gap-5 scroll-mt-32"
-            >
+            <section className="flex flex-col gap-5">
               <h1 className="text-2xl text-violet-300 font-bold">
                 Mesurer pour agir : une boîte à outils au service d&apos;un
                 cinéma plus inclusif
@@ -143,10 +81,7 @@ export default function PageAbout() {
                 </span>
               </div>
             </section>
-            <section
-              id="section-2"
-              className="flex flex-col gap-5 scroll-mt-32"
-            >
+            <section className="flex flex-col gap-5">
               <h1 className="text-2xl text-violet-300 font-bold">
                 Les chiffres clés
               </h1>
@@ -190,10 +125,7 @@ export default function PageAbout() {
                 </div>
               </div>
             </section>
-            <section
-              id="section-3"
-              className="flex flex-col gap-5 scroll-mt-32"
-            >
+            <section className="flex flex-col gap-5">
               <h1 className="text-2xl text-violet-300 font-bold">
                 Ce que permet CinéStats 50/50
               </h1>
@@ -228,15 +160,9 @@ export default function PageAbout() {
             </section>
           </div>
         </div>
-        {isScrolled && (
-          <Button
-            size={"icon"}
-            className="fixed right-5 bottom-5 rounded-full bg-violet-300 hover:bg-violet-300 text-black"
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          >
-            <ChevronUp />
-          </Button>
-        )}
+        <p className="text-sm text-white/80 text-center">
+          Photo d’illustration : © Lilies Films – ARTE France
+        </p>
       </main>
     </>
   );
