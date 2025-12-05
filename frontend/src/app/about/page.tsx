@@ -27,7 +27,7 @@ export default function PageAbout() {
       >
         <div
           className="w-full flex items-center justify-center"
-          style={{ height: "calc(100vh - var(--spacing)* 16)" }}
+          style={{ height: "calc(100vh - var(--spacing) * 16)" }}
         >
           <div className="flex pt-96 flex-col">
             <h1 className="text-5xl mb-8 text-center font-bold text-shadow-sm text-shadow-black">

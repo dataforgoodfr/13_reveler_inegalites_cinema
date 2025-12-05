@@ -20,7 +20,7 @@ const Footer = () => {
               width={500}
               height={0}
             />
-            <Image src={"/logo_d4g.png"} alt="" width={70} height={0} />
+            <Image src={"/logo_d4g.png"} alt="Logo Data For Good" width={70} height={0} />
           </div>
         )}
         <div className="flex flex-col gap-5 md:gap-3 justify-center w-full">
@@ -28,7 +28,7 @@ const Footer = () => {
             <Image
               src="/logo_5050.png"
               className="w-3/4 md:w-full"
-              alt=""
+              alt="Logo du collectif 50/50"
               width={500}
               height={100}
             />
@@ -113,7 +113,7 @@ const Footer = () => {
         </div>
         <div className="flex flex-col gap-5 w-full">
           {isMobile && (
-            <Image src={"/logo_d4g.png"} alt="" width={70} height={0} />
+            <Image src={"/logo_d4g.png"} alt="Logo Data For Good" width={70} height={0} />
           )}
           <h1 className="font-bold">Data For Good</h1>
           <a
@@ -155,7 +155,7 @@ const Footer = () => {
         </div>
         <div className="flex flex-col justify-center w-full">
           <Link
-            href="mailto:collectif5050x2020@gmail.com?subject=Cin%C3%A9Stats%2050%2F50"
+            href="mailto:collectif5050x2020@gmail.com?subject=Cin%C3%A9stats%2050%2F50"
             className="rounded-md"
           >
             <Button className="bg-white text-black cursor-pointer hover:text-white">
