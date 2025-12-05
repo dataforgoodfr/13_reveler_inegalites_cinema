@@ -13,7 +13,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 pandas = "^2.2.3"
-fastapi = "^0.115.11"
+fastapi = "^0.123.9"
 uvicorn = "^0.34.0"
 sqlalchemy = "^2.0.38"
 psycopg = {extras = ["binary"], version = "^3.2.9"}
