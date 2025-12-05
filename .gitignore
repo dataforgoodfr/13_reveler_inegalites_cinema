@@ -169,5 +169,10 @@ cython_debug/
 # misc
 .DS_Store
 
-# Certbot
-certbot/
+# Certbot: keep Dockerfile/entrypoint, ignore generated data
+certbot/*
+!certbot/Dockerfile
+!certbot/entrypoint.sh
+certbot/conf/*
+certbot/www/*
+certbot/logs/*
