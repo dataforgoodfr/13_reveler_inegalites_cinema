@@ -27,7 +27,7 @@ export default function Home() {
               <span className="text-violet-500">29%</span>
               <span>
                 {" "}
-                des cinéastes <br className="hidden md:block" />
+                des cinéastes de <br className="hidden md:block" />
                 ces dix dernières années sont des{" "}
               </span>
               <span className="text-violet-500">femmes</span>
@@ -42,7 +42,7 @@ export default function Home() {
             </Button>
           </Link>
           <span>
-            Outil d&apos;analyse conçu par le Collectif 5050 et Data4 Good
+            Outil d&apos;analyse conçu par le Collectif 50/50 et Data For Good
           </span>
         </div>
       </main>

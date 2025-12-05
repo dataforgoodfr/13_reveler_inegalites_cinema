@@ -710,8 +710,3 @@ export default function PageFilm() {
     </main>
   );
 }
-
-// Note: Dans Next.js 13+ avec le répertoire app :
-// - Les fichiers nommés page.tsx dans un dossier deviennent automatiquement des routes
-// - Le dossier [slug] crée un segment de route dynamique
-// - Le paramètre sera accessible via le hook useParams()
