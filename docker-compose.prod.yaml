@@ -28,7 +28,9 @@ services:
       - web
 
   nginx:
-    image: nginx:alpine3.21-slim
+    image: ${DOCKERHUB_USERNAME:-nicorvl}/ric-nginx:latest
+    build:
+      context: ./nginx
     ports:
       - "80:80"
       - "443:443"
@@ -41,16 +43,16 @@ services:
       - backend
     networks:
       - web
-    command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
 
   certbot:
-    image: certbot/certbot
+    image: ${DOCKERHUB_USERNAME:-nicorvl}/ric-certbot:latest
+    build:
+      context: ./certbot
     restart: unless-stopped
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
       - ./certbot/logs:/var/log/letsencrypt
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --quiet; sleep 12h & wait $${!}; done;'"
     depends_on:
       - nginx
     networks:
