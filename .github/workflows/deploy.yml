@@ -58,6 +58,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.image }}
+          tags: |
+            type=raw,value=${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.image }}:latest
+            type=sha
 
       - name: Build and push ${{ matrix.name }}
         uses: docker/build-push-action@v6
