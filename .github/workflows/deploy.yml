@@ -83,6 +83,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Test SSH connectivity
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: echo "SSH connection ok"
+
+      - name: Ensure remote target directory exists
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            if [ -d /opt/ric ]; then
+              echo "Remote directory /opt/ric exists"
+            else
+              echo "Remote directory /opt/ric is missing" >&2
+              exit 1
+            fi
+
       - name: Copy docker compose prod file via SSH
         uses: appleboy/scp-action@v1
         with:
