@@ -49,6 +49,7 @@ const Navbar = ({
     abortControllerRef.current = controller;
     try {
       const url = `${API_URL}/search?q=${query}`;
+      console.log("Fetching URL:", url);
       const response = await fetch(url, { signal: controller.signal });
 
       if (!response.ok) {
