@@ -46,11 +46,11 @@ export default function StatisticsPage() {
   }
 
   return (
-    <main className="flex flex-col items-center justify-center bg-gray-950 text-white md:h-[calc(100vh-(237px))] h-screen">
+    <main className="flex flex-col items-center justify-center bg-gray-950 text-white h-screen">
       <div className="p-10 pt-20 w-full h-full">
         <h1 className="pl-5 text-4xl font-bold">Statistiques</h1>
         <div className="h-full py-8">
-          <iframe src={iFrameUrl} width="100%" height="100%" allowFullScreen />
+          <iframe src={iFrameUrl} width="100%" height="100%"  allowFullScreen />
         </div>
       </div>
     </main>
