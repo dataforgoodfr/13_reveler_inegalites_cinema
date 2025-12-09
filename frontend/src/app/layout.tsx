@@ -5,6 +5,7 @@ import Navbar from "@/components/atoms/Navbar";
 import { Toaster } from "@/components/ui/sonner";
 import Footer from "@/components/atoms/Footer";
 import { SearchProvider } from "@/contexts/SearchContext";
+import Script from "next/script";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -17,7 +18,7 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Observatoire des inégalités dans le cinéma",
+  title: "Cinestats5050",
   description: "Explorez les inégalités dans l'industrie cinématographique",
   authors: [{ name: "Data4Good" }],
   keywords: ["cinéma", "inégalités", "data", "analyse", "statistiques"],
@@ -30,6 +31,13 @@ export default function RootLayout({
 }>) {
   return (
     <html className="min-h-screen h-full" lang="fr">
+      <head>
+        <Script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id="996668f1-b9bd-4892-974d-b9a0bb145082"
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geist.variable} antialiased bg-red min-h-screen h-full`}
         style={{
