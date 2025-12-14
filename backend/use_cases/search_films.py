@@ -11,6 +11,7 @@ class SearchFilms:
         stmt = (
             select(Film)
             .where(func.lower(Film.original_name).ilike(f"%{query.lower()}%"))
+            .where(Film.visa_number.isnot(None))
             .order_by(func.length(Film.original_name))  # shorter titles show up first
             .limit(limit)
         )
