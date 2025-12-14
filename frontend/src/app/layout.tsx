@@ -18,7 +18,7 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Cinestats5050",
+  title: "CinéStats 50/50",
   description: "Explorez les inégalités dans l'industrie cinématographique",
   authors: [{ name: "Data4Good" }],
   keywords: ["cinéma", "inégalités", "data", "analyse", "statistiques"],
