@@ -93,7 +93,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "docker-compose.prod.yaml"
-          target: /opt/ric
+          target: ~/cinestats5050
 
       - name: Copy nginx config via SSH
         uses: appleboy/scp-action@master
@@ -102,7 +102,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "nginx"
-          target: /opt/ric
+          target: ~/cinestats5050
 
       - name: Copy certbot scaffolding via SSH
         uses: appleboy/scp-action@master
@@ -111,7 +111,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "certbot"
-          target: /opt/ric
+          target: ~/cinestats5050
 
       - name: Deploy application via SSH
         uses: appleboy/ssh-action@v1
@@ -120,7 +120,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /opt/ric
+            cd ~/cinestats5050
             mkdir -p certbot/conf certbot/www certbot/logs
             echo "ALLOWED_ORIGINS=${{ vars.ALLOWED_ORIGINS }}" > .env
             echo "BACKEND_PORT=${{ vars.BACKEND_PORT }}" >> .env
