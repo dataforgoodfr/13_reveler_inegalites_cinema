@@ -121,7 +121,7 @@ tzdata==2025.1
 ultralytics==8.3.83
 ultralytics-thop==2.0.14
 uri-template==1.3.0
-urllib3==2.3.0
+urllib3==2.6.3
 wcwidth==0.2.13
 webcolors==24.11.1
 webencodings==0.5.1
