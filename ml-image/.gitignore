@@ -1,5 +1,5 @@
 models/*
+scripts/evaluation_trailers/*
+tmp/*
+outputs/*
 example/*
-grid_search_generator.py
-main_grid.py
-grid_search.json

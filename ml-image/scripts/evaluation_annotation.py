@@ -1,18 +1,36 @@
 import cv2
+<<<<<<< HEAD
 import numpy as np
+=======
+import os
+import csv
+import psutil
+
+import numpy as np
+import pandas as pd
+import pickle as pkl
+from scripts import vision_classifiers
+from scripts import vision_detection
+
+>>>>>>> ML/features/evaluate
 from copy import deepcopy
 import psutil
 import pickle as pkl
 import os
 from PIL import Image, ImageDraw, ImageFont
+<<<<<<< HEAD
 
 from utils import frame_capture
 from scripts import vision_classifiers
 import vision_detection
 
+=======
+from scripts.utils import frame_capture, download_video_from_link
+from loguru import logger
+>>>>>>> ML/features/evaluate
 
 def get_frames(trailer_path: str) -> None:
-    frames = frame_capture(trailer_path)
+    (frames, fps) = frame_capture(trailer_path)
     height, width, _ = frames[0].shape
     for i in range(len(frames)):
         frame = frames[i]
@@ -39,7 +57,7 @@ def get_vision_modules() -> tuple[vision_detection.VisionDetection, vision_class
 
 
 def sample_frames(indices: list, trailer_path: str) -> tuple[list, list]:
-    frames = frame_capture(trailer_path)
+    (frames, fps) = frame_capture(trailer_path)
     subframes = frames[indices, :, :, :]
     return subframes
 
@@ -198,7 +216,7 @@ def evaluate_trailer(trailer_directory: str, evaluation_type: str = 'binary') ->
 
         frame_scores.extend(score_evaluation(
             frame_annotations, evaluation_type))
-    return np.mean(frame_scores)
+    return np.mean(frame_scores[0,:]), np.mean(frame_scores[1,:])
 
 
 def score_evaluation(frame_annotations: dict, evaluation_type: str = 'binary') -> list:
@@ -222,26 +240,62 @@ def score_evaluation(frame_annotations: dict, evaluation_type: str = 'binary') -
     rev_ethnicity_labels = {
         ethnicity_labels[key]: key for key in sorted(ethnicity_labels)}
 
-    annotation_scores = []
+    annotation_scores = np.zeros((0, 2))
     keys = ['age', 'gender', 'ethnicity']
     feat_dicts = [rev_age_labels, rev_gender_labels, rev_ethnicity_labels]
     for annotation in frame_annotations.values():
-        score = 0
+        score_tot = 0
+        score_kept_frames = 0
         for key, feat_dict in zip(keys, feat_dicts, strict=False):
-            if annotation[key] == annotation[f'predicted_{key}']:
-                score += 0
-            else:
+            if f'predicted_{key}' not in annotation:
+                score_tot += 1
+            elif annotation[key] != annotation[f'predicted_{key}']:
                 match evaluation_type:
                     case 'binary':
-                        score += 1
+                        score_kept_frames += 1
+                        score_tot += 1
                     case _:
                         annot_idx = feat_dict[annotation[key]]
-                        score += 1 - \
+                        score_kept_frames += 1 - \
+                            annotation[f'predicted_{key}_confs'][annot_idx]
+                        score_tot += 1 - \
                             annotation[f'predicted_{key}_confs'][annot_idx]
 
-        annotation_scores.append(score / len(keys))
+        annotation_scores = np.append(annotation_scores, [[score_tot / len(keys), score_kept_frames / len(keys)]], axis=0) 
     return annotation_scores
 
+def evaluate_trailer_whole_pipeline(trailer_path: str, predictions, evaluation_type: str = 'binary') -> float:
+    trailer_path_no_ext = trailer_path[:-4]
+    with open(f'{trailer_path_no_ext}_annotated.pkl', 'rb') as infile:
+        annotations = pkl.load(infile)
+    infile.close()
+    indices = sorted([int(key.split('_')[1]) for key in annotations])
+    frame_scores = np.zeros((0,2))
+    for i in indices:
+        frame_annotations = annotations[f'frame_{i}']
+        frame_predictions = [pred for pred in predictions if i in pred['frames_bboxes'].keys()]
+        annotated_centroids = [frame_annotations[k]['face_centroid']
+                               for k in range(len(frame_annotations))]
+        matches = {}
+        for j in range(len(frame_predictions)):
+            x1, y1, x2, y2 = frame_predictions[j]['frames_bboxes'][i]
+            det_centroid = ((x2 + x1) / 2, (y2 + y1) / 2)
+            dists = [np.abs(det_centroid[0] - annotated_centroids[k][0]) + np.abs(det_centroid[1] - annotated_centroids[k][1])
+                     for k in range(len(annotated_centroids))]
+            mindist, mindist_id = min(dists), np.argmin(dists)
+            if mindist < 3:
+                matches[j] = mindist_id
+
+        for j in matches:
+            frame_annotations[matches[j]
+                              ]['predicted_age'] = frame_predictions[j]['age']
+            frame_annotations[matches[j]
+                              ]['predicted_gender'] = frame_predictions[j]['gender']
+            frame_annotations[matches[j]
+                              ]['predicted_ethnicity'] = frame_predictions[j]['ethnicity']
+        frame_scores = np.append(frame_scores, score_evaluation(
+            frame_annotations, evaluation_type), axis=0)
+    return np.mean(frame_scores[:,0]), np.mean(frame_scores[:,1])
 
 def save_displayed_annotations(trailer_directory: str) -> None:
     trailer_path = os.path.join(
@@ -252,7 +306,7 @@ def save_displayed_annotations(trailer_directory: str) -> None:
         annotations = pkl.load(infile)
     infile.close()
     frames_indices = [int(key.split('_')[1]) for key in annotations]
-    frames = frame_capture(f'{trailer_path}.mp4')
+    (frames, fps) = frame_capture(f'{trailer_path}.mp4')
     for index in frames_indices:
         frame_annotations = annotations[f'frame_{index}']
         frame = frames[index]
@@ -273,3 +327,152 @@ def save_displayed_annotations(trailer_directory: str) -> None:
                       anchor='lb', fill=color, font=font)
         imgdraw.save(os.path.join('evaluation_trailers', trailer_directory,
                      'annotated_frames', f'annotated_frame_{index}.png'))
+
+def register_faces_intermediate_results(intermediate_results_path: str, faces_results: list[dict]) -> None:
+    csv_path = os.path.join(intermediate_results_path, 'intermediate_results_trailer.csv')
+    file_exists = os.path.isfile(csv_path)
+    fieldnames = ['movie_id', 'frame_id', 'bbox', 'conf', 'perso_id', 'clustering_weight',
+                  'pose', 'sharpness', 'area', 'classification_weight',
+                  'gender', 'age', 'ethnicity', 'age_conf', 'gender_conf', 'ethnicity_conf',
+                  'aggregated_gender', 'aggregated_age', 'aggregated_origin', 'cluster_id'] 
+    
+    with open(csv_path, mode='a', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)    
+        
+        if not file_exists:
+            writer.writeheader()
+            
+        for face in faces_results:
+            row = {field: face.get(field, 'nan') for field in fieldnames}
+            writer.writerow(row)
+    
+    logger.info(f'Wrote {len(faces_results)} new lines in {csv_path}')
+
+def register_faces_final_results(intermediate_results_path: str, aggregated_results: list[dict], movie_id: str | None) -> None:
+    csv_path = os.path.join(intermediate_results_path, 'intermediate_results_trailer.csv')
+    if not os.path.isfile(csv_path):
+        raise FileNotFoundError(f"{csv_path} not found. Run intermediate registration first.")
+
+    import pandas as pd
+
+    # Read as strings to avoid dtype surprises for ids
+    df = pd.read_csv(csv_path, dtype=str).fillna('nan')
+
+    # Ensure target columns exist
+    for col in ['aggregated_gender', 'aggregated_age', 'aggregated_origin', 'cluster_id']:
+        if col not in df.columns:
+            df[col] = 'nan'
+
+    updated = 0
+    for element in aggregated_results:
+        perso_ids = element.get('perso_ids', []) or []
+        gender = element.get('gender', 'nan')
+        age = element.get('age', 'nan')
+        origin = element.get('ethnicity', element.get('origin', 'nan'))
+        cluster_label = element.get('label', element.get('cluster_id', 'nan'))
+        # Not used from aggregated_results: 'occurence', 'area occupied', 'frames_bboxes'
+
+        for perso_id in perso_ids:
+            perso_id_str = str(perso_id)
+            mask = (df['perso_id'].astype(str) == perso_id_str) & (df['movie_id'].astype(str) == str(movie_id))
+            if mask.any():
+                df.loc[mask, 'aggregated_gender'] = gender
+                df.loc[mask, 'aggregated_age'] = age
+                df.loc[mask, 'aggregated_origin'] = origin
+                df.loc[mask, 'cluster_id'] = cluster_label
+                updated += int(mask.sum())
+            else:
+                logger.warning(f"No intermediate row for movie_id={movie_id}, perso_id={perso_id_str}")
+
+    df.to_csv(csv_path, index=False)
+    logger.info(f'Updated {updated} rows in {csv_path}')
+
+def register_faces_intermediate_results_poster(intermediate_results_path: str, faces_results: list[dict]) -> None:
+    csv_path = os.path.join(intermediate_results_path, 'intermediate_results_poster.csv')
+    file_exists = os.path.isfile(csv_path)
+    
+    fieldnames = ['movie_id','bbox', 'conf', 'poster_weight', 'gender', 'age', 'ethnicity', 'cluster_id'] # cluster_id = label 
+       
+    with open(csv_path, mode='a', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)    
+        
+        if not file_exists:
+            writer.writeheader()
+            
+        for face in faces_results:
+            row = {field: face.get(field, 'nan') for field in fieldnames}
+            if 'label' in face:
+                row['cluster_id'] = face['label']
+            writer.writerow(row)
+    
+    logger.info(f'Wrote {len(faces_results)} new lines in {csv_path}')
+
+    
+def annotate_complete_trailer(movie_id:int, source_db: pd.DataFrame, csv_path: str) -> None:
+    df = pd.read_csv(csv_path)
+    df = df[df['movie_id'] == movie_id]
+    df = df[df['conf'] >= .7]
+    df['character'] = ['' for _ in range(df.shape[0])]
+    
+    trailer_url = source_db.loc[movie_id]['trailer_url']
+    if f'{movie_id}.mp4' not in os.listdir('example'):
+        print(f'Downloading movie {movie_id}...')
+        download_video_from_link(trailer_url, f'example/{movie_id}.mp4')
+
+    frame_ids = df['frame_id'].tolist()
+    bboxes = [eval(bbox) for bbox in df['bbox'].tolist()]
+    df['x0'] = [bbox[0] for bbox in bboxes]
+    df['y0'] = [bbox[1] for bbox in bboxes]
+    df['x1'] = [bbox[2] for bbox in bboxes]
+    df['y1'] = [bbox[3] for bbox in bboxes]
+    
+    (frames, fps) = frame_capture(f'example/{movie_id}.mp4')
+    height, width, _ = frames[0].shape
+
+    updated_ids = []
+    indices = []
+    for i, frame in enumerate(frames):
+        if i in frame_ids:
+            subdf = df[df['frame_id'] == i]
+            # Sort detections by 'x0' to get roughly consistent label for indivudal faces in the same sequence
+            subdf.sort_values('x0', inplace=True)
+            for j, row in enumerate(subdf.iloc):
+                bbox = eval(row['bbox'])
+                # cluster_id = str(row['cluster_id'])
+                # text = f'{cluster_id}'
+                text = f'{100 + j}'
+                updated_ids.append(text)
+                cv2.rectangle(
+                    frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 0, 255), 2)
+                cv2.putText(frame, text, (bbox[0], bbox[1] - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+
+            # Keep indices to be able to add data to the original DataFrame
+            indices += subdf.index.tolist()
+
+        cv2.putText(frame, f'Frame {i}', (int(0.8*width), int(0.8*height)),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+        
+    # Reorder 'updated_ids' to match detections in the original DataFrame
+    updated_ids = [updated_id for _, updated_id in sorted(zip(indices, updated_ids, strict=False))]
+    
+    df['updated_ids'] = updated_ids
+
+    # Reorder DataFrame columns for easier annotation
+    ordered_cols = ['updated_ids', 'frame_id', 'character']
+    df = df[ordered_cols + [col for col in df.columns if col not in ordered_cols]]
+    # Sort values first by ascending 'updated_id', then by ascending 'frame_id'
+    df.sort_values(['updated_ids', 'frame_id'], ascending=[True, True], inplace=True)
+    df.to_csv(os.path.join('example', f'{movie_id}.csv'))
+    
+    output_name = f'{movie_id}_with_frames.mp4'
+    output_path = os.path.join('example', output_name)
+    video = cv2.VideoWriter(output_path, cv2.VideoWriter_fourcc(
+        *'DIVX'), fps, (width, height))
+    
+    # Write each frame to the video file
+    for frame in frames:
+        video.write(frame)
+
+    # Release the VideoWriter object
+    video.release()         
