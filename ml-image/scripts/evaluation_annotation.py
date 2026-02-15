@@ -4,13 +4,14 @@ import csv
 import psutil
 
 import numpy as np
+import pandas as pd
 import pickle as pkl
 from scripts import vision_classifiers
 from scripts import vision_detection
 
 from copy import deepcopy
 from PIL import Image, ImageDraw, ImageFont
-from .utils import frame_capture
+from scripts.utils import frame_capture, download_video_from_link
 from loguru import logger
 
 def get_frames(trailer_path: str) -> None:
@@ -388,4 +389,73 @@ def register_faces_intermediate_results_poster(intermediate_results_path: str, f
             writer.writerow(row)
     
     logger.info(f'Wrote {len(faces_results)} new lines in {csv_path}')
+
     
+def annotate_complete_trailer(movie_id:int, source_db: pd.DataFrame, csv_path: str) -> None:
+    df = pd.read_csv(csv_path)
+    df = df[df['movie_id'] == movie_id]
+    df = df[df['conf'] >= .7]
+    df['character'] = ['' for _ in range(df.shape[0])]
+    
+    trailer_url = source_db.loc[movie_id]['trailer_url']
+    if f'{movie_id}.mp4' not in os.listdir('example'):
+        print(f'Downloading movie {movie_id}...')
+        download_video_from_link(trailer_url, f'example/{movie_id}.mp4')
+
+    frame_ids = df['frame_id'].tolist()
+    bboxes = [eval(bbox) for bbox in df['bbox'].tolist()]
+    df['x0'] = [bbox[0] for bbox in bboxes]
+    df['y0'] = [bbox[1] for bbox in bboxes]
+    df['x1'] = [bbox[2] for bbox in bboxes]
+    df['y1'] = [bbox[3] for bbox in bboxes]
+    
+    (frames, fps) = frame_capture(f'example/{movie_id}.mp4')
+    height, width, _ = frames[0].shape
+
+    updated_ids = []
+    indices = []
+    for i, frame in enumerate(frames):
+        if i in frame_ids:
+            subdf = df[df['frame_id'] == i]
+            # Sort detections by 'x0' to get roughly consistent label for indivudal faces in the same sequence
+            subdf.sort_values('x0', inplace=True)
+            for j, row in enumerate(subdf.iloc):
+                bbox = eval(row['bbox'])
+                # cluster_id = str(row['cluster_id'])
+                # text = f'{cluster_id}'
+                text = f'{100 + j}'
+                updated_ids.append(text)
+                cv2.rectangle(
+                    frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 0, 255), 2)
+                cv2.putText(frame, text, (bbox[0], bbox[1] - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+
+            # Keep indices to be able to add data to the original DataFrame
+            indices += subdf.index.tolist()
+
+        cv2.putText(frame, f'Frame {i}', (int(0.8*width), int(0.8*height)),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+        
+    # Reorder 'updated_ids' to match detections in the original DataFrame
+    updated_ids = [updated_id for _, updated_id in sorted(zip(indices, updated_ids, strict=False))]
+    
+    df['updated_ids'] = updated_ids
+
+    # Reorder DataFrame columns for easier annotation
+    ordered_cols = ['updated_ids', 'frame_id', 'character']
+    df = df[ordered_cols + [col for col in df.columns if col not in ordered_cols]]
+    # Sort values first by ascending 'updated_id', then by ascending 'frame_id'
+    df.sort_values(['updated_ids', 'frame_id'], ascending=[True, True], inplace=True)
+    df.to_csv(os.path.join('example', f'{movie_id}.csv'))
+    
+    output_name = f'{movie_id}_with_frames.mp4'
+    output_path = os.path.join('example', output_name)
+    video = cv2.VideoWriter(output_path, cv2.VideoWriter_fourcc(
+        *'DIVX'), fps, (width, height))
+    
+    # Write each frame to the video file
+    for frame in frames:
+        video.write(frame)
+
+    # Release the VideoWriter object
+    video.release()         

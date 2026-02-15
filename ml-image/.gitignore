@@ -2,3 +2,4 @@ models/*
 scripts/evaluation_trailers/*
 tmp/*
 outputs/*
+example/*
