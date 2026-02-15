@@ -1,7 +1,4 @@
 import cv2
-<<<<<<< HEAD
-import numpy as np
-=======
 import os
 import csv
 import psutil
@@ -12,22 +9,10 @@ import pickle as pkl
 from scripts import vision_classifiers
 from scripts import vision_detection
 
->>>>>>> ML/features/evaluate
 from copy import deepcopy
-import psutil
-import pickle as pkl
-import os
 from PIL import Image, ImageDraw, ImageFont
-<<<<<<< HEAD
-
-from utils import frame_capture
-from scripts import vision_classifiers
-import vision_detection
-
-=======
 from scripts.utils import frame_capture, download_video_from_link
 from loguru import logger
->>>>>>> ML/features/evaluate
 
 def get_frames(trailer_path: str) -> None:
     (frames, fps) = frame_capture(trailer_path)
@@ -62,7 +47,7 @@ def sample_frames(indices: list, trailer_path: str) -> tuple[list, list]:
     return subframes
 
 
-def get_faces(subframes:np.ndarray, vision_detector:vision_detection.VisionDetection) -> list:
+def get_faces(subframes: np.ndarray, vision_detector: vision_detection.VisionDetection) -> list:
     detections = vision_detector.crop_areas_of_interest(
         images=subframes, H_original=subframes.shape[1], W_original=subframes.shape[2])
     return detections
@@ -152,8 +137,6 @@ def annotate_trailer(trailer_directory: str) -> None:
         'evaluation_trailers', trailer_directory, trailer_directory)
     print(
         f'Outputting frame-numbered trailer to {trailer_path}_with_frames.avi')
-    if os.path.isfile(f'{trailer_path}_with_frames.avi'):
-        print(f'Outputting frame-numbered trailer to {trailer_path}_with_frames.avi')
     if os.path.isfile(f'{trailer_path}_with_frames.avi'):
         print(f'{trailer_path}_with_frames.avi already exists, moving on')
     else:
