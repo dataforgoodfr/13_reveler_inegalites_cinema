@@ -24,11 +24,6 @@ Inclus:
 5. Exposition de tables/vues finales et intégration backend SQLAlchemy.
 6. Encapsulation des scripts de scraping existants dans des connecteurs Airbyte custom.
 
-Hors périmètre V1:
-
-1. Workflow d'approbation applicatif complet (UI interne dédiée).
-2. Écriture en retour vers les systèmes source externes.
-3. Refonte complète du modèle métier historique.
 
 ## 3. Architecture cible
 
@@ -66,7 +61,7 @@ Règles:
 2. `visa_number` obligatoire et non nul.
 3. Les colonnes du contrat doivent rester stables.
 
-Colonnes minimales V1:
+Colonnes minimales V1 [TODO: A COMPLETER]:
 
 1. `visa_number` (string)
 2. `original_name` (string)
@@ -114,6 +109,7 @@ Note sur `status`:
    - conservation des deux colonnes:
      - valeur source (`original_name_source`)
      - valeur corrigée (`original_name_curated`).
+     [TODO: ça peut etre sympa de presenter les deux valeurs cote a cote dans Metabase pour faciliter la validation métier et la traçabilité des corrections, ou meme dans le front si le collectif trouve pertinent @NicolasRevel]
 
 ## 5.2 User Story B - Corrections multi-entités
 
@@ -152,13 +148,15 @@ Règle générale:
 1. seules les colonnes explicitement autorisées par entité peuvent être corrigées;
 2. toute autre ligne est rejetée et tracée.
 
+TODO: valider ces règles avec les équipes métier et ajuster selon les besoins spécifiques de chaque entité.
+
 ## 6. Tests dbt à implémenter
 
 ## 6.1 Tests sources / ingestion
 
 1. fraîcheur des sources (`source freshness`) par flux critique;
 2. non-null sur colonnes clés (`visa_number`, `id`, `column_name`, `new_value`, `modification_date`, `requested_by`);
-3. volumétrie anormale (alerting sur chute/pic).
+3. volumétrie anormale (alerting sur chute/pic). ????
 
 ## 6.2 Tests de qualité staging
 
@@ -180,7 +178,7 @@ Règle générale:
 3. test de non-régression du nombre de lignes vs source métier;
 4. test de cohérence "source vs curated" (delta explicable).
 
-## 7. Gestion des erreurs et observabilité
+## 7. Gestion des erreurs et observabilité (Optionnel V1, mais sympa pour alerter en cas de problèmes)
 
 1. Table `mart_data_corrections_rejected` avec motif de rejet:
    - colonne non autorisée,
@@ -205,7 +203,7 @@ Créer/mettre à jour les modèles SQLAlchemy nécessaires pour consommer la cou
 3. adaptation des use cases (`GetFilmDetails`, `SearchFilms`, etc.) pour privilégier les champs curated;
 4. maintenir la rétrocompatibilité API (même contrat de réponse).
 
-## 9. Airbyte custom connectors pour scraping
+## 9. Airbyte custom connectors pour scraping (OPTIONNEL V1)
 
 Objectif: intégrer les scripts existants (Allociné, MUBI, autres) dans Airbyte.
 
@@ -270,6 +268,6 @@ Approche:
 1. un nouvel onglet CNC annuel se propage en production sans intervention SQL manuelle;
 2. une correction métier valide dans `Modification data` est visible en sortie au prochain cycle;
 3. aucune donnée brute n'est perdue;
-4. les rejets sont visibles et actionnables;
+4. les rejets sont visibles et actionnables; (OPTIONNEL V1)
 5. Metabase + frontend utilisent la même couche curated.
 
