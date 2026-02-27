@@ -1,4 +1,3 @@
-Owner: Data Team + Product
 Last reviewed: 2026-02-27
 Status: draft
 
