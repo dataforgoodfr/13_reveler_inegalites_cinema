@@ -1,4 +1,3 @@
-Owner: Product Ops + Data Governance
 Last reviewed: 2026-02-27
 Status: draft
 
