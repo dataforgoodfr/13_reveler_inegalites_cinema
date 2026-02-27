@@ -1,4 +1,3 @@
-Owner: Data Platform Team
 Last reviewed: 2026-02-27
 Status: draft
 
