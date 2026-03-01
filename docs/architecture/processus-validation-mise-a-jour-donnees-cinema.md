@@ -1,5 +1,7 @@
 Created by: Hugo Laurens, Joel Teixeira
+
 Last reviewed: 2026-03-01
+
 Status: draft
 
 # Processus proposé de mise à jour des données (version validation métier)

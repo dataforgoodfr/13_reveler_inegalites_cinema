@@ -1,5 +1,7 @@
 Created by: Hugo Laurens, Joel Teixeira
+
 Last reviewed: 2026-03-01
+
 Status: draft
 
 # Spécification technique - Airbyte + dbt pour mises à jour CNC et corrections métier
