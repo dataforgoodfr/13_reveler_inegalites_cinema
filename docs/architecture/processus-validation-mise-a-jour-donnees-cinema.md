@@ -50,16 +50,25 @@ Important: les données brutes sont conservées. Les corrections sont appliquée
 
 ```mermaid
 flowchart LR
-    GS[Google Sheets] --> AB[Airbyte]
-    AB --> RAW[Raw Tables]
+    SCRAP[Scraping Algorithms] --> RAW[Raw Data Tables]
+    GS[Google Sheets - Modifications] --> AB[Airbyte]
+    AB --> UPD[Updates / Modifications Tables]
+
+    subgraph PG[PostgreSQL Database]
+        RAW
+        UPD
+        CUR[Curated Tables]
+    end
+
     RAW --> DBT[dbt Transformations]
-    DBT --> CUR[Curated Tables]
+    UPD --> DBT
+    DBT --> CUR
     CUR --> META[Metabase]
     CUR --> API[Backend API]
     CUR --> FE[Frontend Webapp]
 ```
 
-![Schéma architecture Airbyte dbt](./schema_archi_airbyte_dbt.png)
+![Schéma architecture Airbyte dbt](./archi_airbyte_dbt.png)
 
 
 ## 5. Bénéfices attendus
