@@ -1,4 +1,5 @@
-Last reviewed: 2026-02-27
+Created by: Hugo Laurens, Joel Teixeira
+Last reviewed: 2026-03-01
 Status: draft
 
 # Processus proposé de mise à jour des données (version validation métier)
@@ -43,30 +44,20 @@ Important: les données brutes sont conservées. Les corrections sont appliquée
 4. Airbyte ingère la ligne.
 5. dbt applique la correction sur la couche finale exposée aux outils de consultation.
 
-## 4. Brouillon de schéma à dessiner (version non technique)
+## 4. Architecture technique cible
 
-Tu peux dessiner le schéma en 5 blocs:
+```mermaid
+flowchart LR
+    GS[Google Sheets] --> AB[Airbyte]
+    AB --> RAW[Raw Tables]
+    RAW --> DBT[dbt Transformations]
+    DBT --> CUR[Curated Tables]
+    CUR --> META[Metabase]
+    CUR --> API[Backend API]
+    CUR --> FE[Frontend Webapp]
+```
 
-1. **Sources métier (Google Sheets)**
-   - `AGREEMENT CNC` (1 onglet par année)
-   - `Modification data` (1 onglet par entité)
-2. **Ingestion (Airbyte)**
-   - Synchronisation planifiée vers tables raw
-3. **Transformation (dbt)**
-   - Normalisation
-   - Contrôles qualité
-   - Application des corrections
-4. **Données publiées**
-   - Tables/vues "curated"
-5. **Consommateurs**
-   - Metabase
-   - API backend
-   - Front webapp
-
-Flèches à indiquer:
-`Google Sheets -> Airbyte -> Raw -> dbt -> Curated -> Metabase/API/Frontend`
-
-<pre> ```mermaid flowchart LR GS[Google Sheets] --> AB[Airbyte] AB --> RAW[Raw Tables] RAW --> DBT[dbt Transformations] DBT --> CUR[Curated Tables] CUR --> META[Metabase] CUR --> API[Backend API] CUR --> FE[Frontend Webapp] ``` </pre>
+![Schéma architecture Airbyte dbt](./schema_archi_airbyte_dbt.png)
 
 
 ## 5. Bénéfices attendus

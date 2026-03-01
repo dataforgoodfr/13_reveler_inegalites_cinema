@@ -1,4 +1,5 @@
-Last reviewed: 2026-02-27
+Created by: Hugo Laurens, Joel Teixeira
+Last reviewed: 2026-03-01
 Status: draft
 
 # Gouvernance Google Sheets pour mises à jour de données
