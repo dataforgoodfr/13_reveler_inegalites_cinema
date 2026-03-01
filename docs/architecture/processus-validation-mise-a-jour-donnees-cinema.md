@@ -66,6 +66,9 @@ Tu peux dessiner le schéma en 5 blocs:
 Flèches à indiquer:
 `Google Sheets -> Airbyte -> Raw -> dbt -> Curated -> Metabase/API/Frontend`
 
+<pre> ```mermaid flowchart LR GS[Google Sheets] --> AB[Airbyte] AB --> RAW[Raw Tables] RAW --> DBT[dbt Transformations] DBT --> CUR[Curated Tables] CUR --> META[Metabase] CUR --> API[Backend API] CUR --> FE[Frontend Webapp] ``` </pre>
+
+
 ## 5. Bénéfices attendus
 
 1. Processus répétable d'année en année.
