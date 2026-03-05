@@ -50,10 +50,10 @@ Important: les données brutes sont conservées. Les corrections sont appliquée
 
 ```mermaid
 flowchart LR
-    SCRAP[Scraping Algorithms] --> RAW[Raw Data Tables]
-    GS[Google Sheets - Modifications] --> AB[Airbyte]
+    SCRAP[Scraping Algorithms] --> AB[Airbyte]
+    GS[Google Sheets - Modifications] --> AB
     AB --> UPD[Updates / Modifications Tables]
-
+    AB --> RAW
     subgraph PG[PostgreSQL Database]
         RAW
         UPD
