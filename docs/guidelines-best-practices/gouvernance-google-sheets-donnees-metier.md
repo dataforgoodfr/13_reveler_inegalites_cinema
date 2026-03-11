@@ -1,6 +1,6 @@
 Created by: Hugo Laurens, Joel Teixeira
 
-Last reviewed: 2026-03-01
+Last reviewed: 2026-03-11
 
 Status: draft
 
@@ -32,9 +32,10 @@ Définir des règles simples pour que les équipes non techniques puissent saisi
 
 ## 4.1 `AGREEMENT CNC`
 
-1. un onglet par année (`2024`, `2025`, `2026`, etc.);
-2. colonnes figées selon le dictionnaire validé;
-3. `visa_number` obligatoire.
+1. un seul onglet CNC, avec un nom stable dans le temps;
+2. les nouvelles lignes annuelles sont ajoutées en bas du tableau, sans créer de nouvel onglet;
+3. colonnes figées selon le dictionnaire validé;
+4. `visa_number` obligatoire.
 
 ## 4.2 `Modification data`
 
@@ -74,7 +75,7 @@ Définir des règles simples pour que les équipes non techniques puissent saisi
 
 ## 8. Convention de nommage
 
-1. nom des onglets CNC: `YYYY`;
+1. nom de l'onglet CNC: unique et stable dans le temps (pas de suffixe annuel);
 2. nom des onglets corrections: nom exact de l'entité (`CreditHolder`, `Film`);
 3. pas d'espaces de fin, pas d'accents variables dans les noms techniques.
 
@@ -120,4 +121,3 @@ Règle d'application côté pipeline:
 1. template Google Sheets verrouillé;
 2. dictionnaire de données (colonnes, type, règles);
 3. guide rapide "Comment corriger une donnée en 2 minutes".
-

@@ -1,6 +1,6 @@
 Created by: Hugo Laurens, Joel Teixeira
 
-Last reviewed: 2026-03-01
+Last reviewed: 2026-03-11
 
 Status: draft
 
@@ -17,7 +17,7 @@ Objectif: permettre aux équipes non techniques de proposer des mises à jour de
 Le nouveau processus repose sur 3 briques:
 
 1. Google Sheets: point d'entrée des mises à jour métier (saisie par les équipes non-data).
-2. Airbyte: ingestion automatique des onglets Google Sheets vers la base de données (zone brute).
+2. Airbyte: ingestion automatique des Google Sheets vers la base de données (zone brute), avec un onglet unique pour `AGREEMENT CNC` et un onglet par entité pour `Modification data`.
 3. dbt: application des règles métier pour produire des données "corrigées" prêtes pour Metabase et le site web.
 
 Important: les données brutes sont conservées. Les corrections sont appliquées en couche "curated" (pas d'écrasement direct de la source brute).
@@ -27,8 +27,8 @@ Important: les données brutes sont conservées. Les corrections sont appliquée
 ### User Story A (fichier CNC annuel)
 
 1. Bob reçoit le fichier `agreement CNC 2026.csv`.
-2. Bob copie les données dans le Google Sheet `AGREEMENT CNC`, onglet `2026`.
-3. Airbyte synchronise l'onglet vers la base (zone raw).
+2. Bob copie les données dans le Google Sheet `AGREEMENT CNC`, dans l'onglet unique du fichier, en ajoutant les nouvelles lignes en bas du tableau.
+3. Airbyte synchronise cet onglet unique vers la base (zone raw).
 4. dbt applique les règles de consolidation avec les données existantes (clé de jointure: `visa_number`).
 5. Les nouveaux titres corrigés sont visibles dans Metabase et dans l'application web.
 
@@ -51,7 +51,8 @@ Important: les données brutes sont conservées. Les corrections sont appliquée
 ```mermaid
 flowchart LR
     SCRAP[Scraping Algorithms] --> AB[Airbyte]
-    GS[Google Sheets - Modifications] --> AB
+    GSCNC[Google Sheets - AGREEMENT CNC\nonglet unique] --> AB
+    GSMOD[Google Sheets - Modification data] --> AB
     AB --> UPD[Updates / Modifications Tables]
     AB --> RAW
     subgraph PG[PostgreSQL Database]
@@ -87,7 +88,7 @@ flowchart LR
 
 ## 7. Points de validation à faire côté métier
 
-1. Validation des noms d'onglets et du format exact des colonnes.
+1. Validation du nom unique de l'onglet CNC, des onglets de `Modification data`, et du format exact des colonnes.
 2. Validation des rôles d'accès Google Sheets (qui peut éditer, qui peut seulement voir).
 3. Validation des délais de prise en compte (ex: toutes les nuits, ou plusieurs fois par jour).
 4. Validation des règles métier prioritaires (ex: si plusieurs corrections existent pour la même cellule).
@@ -96,4 +97,3 @@ flowchart LR
 
 Pour les mises à jour CNC, la clé de correspondance est `visa_number`.
 Le titre (`original_name`) est un attribut modifiable, pas une clé d'identification.
-

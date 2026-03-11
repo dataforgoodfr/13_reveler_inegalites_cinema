@@ -1,6 +1,6 @@
 Created by: Hugo Laurens, Joel Teixeira
 
-Last reviewed: 2026-03-01
+Last reviewed: 2026-03-11
 
 Status: draft
 
@@ -10,7 +10,7 @@ Status: draft
 
 Mettre en place un pipeline pérenne pour:
 
-1. intégrer les nouveaux jeux de données CNC annuels via Google Sheets;
+1. intégrer les nouveaux jeux de données CNC annuels via un Google Sheet unique alimenté en ajout de lignes;
 2. appliquer des corrections ciblées métier sur plusieurs entités (ex: `CreditHolder`);
 3. préserver l'historique brut;
 4. exposer une couche "curated" unique pour Metabase + backend + frontend.
@@ -19,7 +19,7 @@ Mettre en place un pipeline pérenne pour:
 
 Inclus:
 
-1. Source Google Sheets `AGREEMENT CNC` (onglets annuels).
+1. Source Google Sheets `AGREEMENT CNC` (1 onglet unique, alimenté en append côté métier).
 2. Source Google Sheets `Modification data` (1 onglet par entité).
 3. Ingestion Airbyte vers PostgreSQL raw.
 4. Transformation dbt en couches `raw -> staging -> marts`.
@@ -31,7 +31,7 @@ Inclus:
 
 ## 3.1 Flux global
 
-1. Bob alimente Google Sheets.
+1. Bob alimente Google Sheets, avec ajout annuel de nouvelles lignes dans l'onglet unique `AGREEMENT CNC`.
 2. Airbyte synchronise vers schéma raw (`ab_raw` ou équivalent).
 3. dbt construit:
    - `stg_*`: normalisation des types et colonnes,
@@ -59,9 +59,10 @@ Inclus:
 
 Règles:
 
-1. 1 onglet par année (`2024`, `2025`, `2026`, etc.).
-2. `visa_number` obligatoire et non nul.
-3. Les colonnes du contrat doivent rester stables.
+1. 1 seul onglet métier, stable dans le temps.
+2. Bob ajoute les nouvelles lignes CNC chaque année en fin de table (append), sans créer de nouvel onglet.
+3. `visa_number` obligatoire et non nul.
+4. Les colonnes du contrat doivent rester stables.
 
 Colonnes minimales V1 [TODO: A COMPLETER]:
 
@@ -100,11 +101,13 @@ Note sur `status`:
 
 ## 5.1 User Story A - Titres CNC corrigés
 
-1. `stg_agreement_cnc_all_years`:
-   - union de tous les onglets annuels;
-   - ajout de `sheet_year`, `ingested_at`.
+1. `stg_agreement_cnc`:
+   - lecture de l'onglet unique `AGREEMENT CNC`;
+   - cast/normalisation des colonnes;
+   - ajout de `ingested_at`.
 2. `int_agreement_cnc_latest_by_visa`:
-   - déduplication par `visa_number` (dernière version).
+   - déduplication par `visa_number` (dernière version);
+   - l'année métier provient de `cnc_agrement_year`, pas du nom d'onglet.
 3. `mart_films_curated`:
    - left join `ric_films` + `int_agreement_cnc_latest_by_visa`;
    - `original_name_curated = coalesce(cnc.original_name, films.original_name)`;
@@ -238,7 +241,7 @@ Approche:
 ## 11.2 Phase 2 - Ingestion
 
 1. créer connexions Airbyte Google Sheets -> Postgres raw;
-2. configurer synchro incrémentale/append quand possible;
+2. configurer la connexion Airbyte sur l'onglet CNC unique et vérifier la reprise correcte des nouvelles lignes ajoutées chaque année;
 3. tester la reprise après incident.
 
 ## 11.3 Phase 3 - dbt
@@ -267,9 +270,8 @@ Approche:
 
 ## 12. Critères d'acceptation
 
-1. un nouvel onglet CNC annuel se propage en production sans intervention SQL manuelle;
+1. de nouvelles lignes CNC ajoutées annuellement dans l'onglet unique se propagent en production sans intervention SQL manuelle;
 2. une correction métier valide dans `Modification data` est visible en sortie au prochain cycle;
 3. aucune donnée brute n'est perdue;
 4. les rejets sont visibles et actionnables; (OPTIONNEL V1)
 5. Metabase + frontend utilisent la même couche curated.
-
