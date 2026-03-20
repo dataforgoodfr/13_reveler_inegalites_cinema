@@ -1,17 +1,17 @@
-name: "ric"
-version: "1.0.0"
+name: ric
+version: 1.0.0
 config-version: 2
 
-profile: "ric"
+profile: ric
 
-model-paths: ["models"]
-seed-paths: ["seeds"]
-test-paths: ["tests"]
+model-paths: [models]
+seed-paths: [seeds]
+test-paths: [tests]
 
-target-path: "target"
+target-path: target
 clean-targets:
-  - "target"
-  - "dbt_packages"
+  - target
+  - dbt_packages
 
 models:
   ric:
