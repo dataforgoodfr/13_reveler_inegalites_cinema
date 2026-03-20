@@ -72,7 +72,15 @@ python3 --version
 
 ## 6. Environment Variable Contract
 
-Create a local file (not committed) called `.env`. Use `.env.example` as template and fill in values.
+Create a local file (not committed) called `.env`. Use `.env.example` as template:
+
+```
+cp .env.example .env
+```
+
+then fillup missing values.
+
+
 Set `POSTGRES_*` values to the target environment (`test` or `prod`) before running commands.
 Set `AIRBYTE_PORT` to an available local port. Keep `AIRBYTE_URL` aligned with `AIRBYTE_HOST` + `AIRBYTE_PORT`.
 
