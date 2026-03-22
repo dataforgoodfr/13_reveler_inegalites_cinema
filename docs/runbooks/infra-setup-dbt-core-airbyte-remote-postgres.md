@@ -100,6 +100,7 @@ Run with DBA/admin account on Postgres (adapt database name if needed).
 CREATE USER pipeline_user WITH PASSWORD '<replace>';
 
 GRANT CONNECT ON DATABASE reveler_inegalites_cinema TO pipeline_user;
+GRANT CREATE ON DATABASE reveler_inegalites_cinema TO pipeline_user;
 
 CREATE SCHEMA IF NOT EXISTS ab_raw AUTHORIZATION pipeline_user;
 CREATE SCHEMA IF NOT EXISTS marts AUTHORIZATION pipeline_user;
@@ -143,12 +144,21 @@ Open `AIRBYTE_URL` and sign in with credentials from `abctl local credentials`.
 
 ## 9. Airbyte Connection Setup (reproducible steps)
 
+Requires Google Sheets sources to be already created and shared with service account email.
+
+### Step 0 - Configure GCP service account 
+
+1. Create a new project in GCP or use existing one.
+2. Allow Google Sheets API for the project.
+3. Create a service account with "Viewer" role.
+4. Create and download a JSON key for the service account.
+5. Share sheets with service-account email in read access.
+
 ### Step 1 - Create sources
 
 1. Create Google Sheets source `src_gsheet_agreement_cnc`
 2. Create Google Sheets source `src_gsheet_modification_data`
 3. Use service account authentication
-4. Share sheets with service-account email in read access
 
 ### Step 2 - Create Postgres destination
 
