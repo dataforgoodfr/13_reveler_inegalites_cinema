@@ -1,0 +1,35 @@
+version: 2
+
+models:
+  - name: stg_agreement_cnc
+    description: Typed and normalized staging model for the Airbyte-loaded Agreement CNC sheet.
+    columns:
+      - name: visa_number
+        tests:
+          - not_null
+
+  - name: stg_raw_ric_films
+    description: Typed staging projection of the current historical application film table.
+    columns:
+      - name: film_id
+        tests:
+          - not_null
+          - unique
+
+  - name: int_agreement_cnc_latest_by_visa
+    description: Latest Agreement CNC record per visa number, based on Airbyte extraction metadata.
+    columns:
+      - name: visa_number
+        tests:
+          - not_null
+          - unique
+
+  - name: mart_cnc_films_for_scraping
+    description: Consolidated CNC film list merging historical raw films with the latest Agreement CNC load and exposing scraping flags.
+    columns:
+      - name: visa_number
+        tests:
+          - not_null
+          - unique
+      - name: should_scrape_allocine
+        description: Indicates whether the film should go through the Allocine matching and enrichment workflow.

@@ -107,6 +107,10 @@ CREATE SCHEMA IF NOT EXISTS marts AUTHORIZATION pipeline_user;
 
 GRANT USAGE, CREATE ON SCHEMA ab_raw TO pipeline_user;
 GRANT USAGE, CREATE ON SCHEMA marts TO pipeline_user;
+
+-- Required by the first dbt merge flow, which reads historical films from raw.ric_films
+GRANT USAGE ON SCHEMA raw TO pipeline_user;
+GRANT SELECT ON TABLE raw.ric_films TO pipeline_user;
 ```
 
 If SSL is mandatory, ensure root certificate/trust chain is distributed to developers and configured in client options.
@@ -264,7 +268,7 @@ Every developer follows this order:
 2. Reload env vars (`set -a; source .env; set +a`).
 3. Ensure Airbyte local is running (`abctl local status`).
 4. Trigger or wait for Airbyte sync to the configured Postgres DB.
-5. Run `dbt build --profile ric`.
+5. Run `dbt build --profile ric  --project-dir dbt`.
 6. Validate marts consumed by backend/BI in the targeted environment.
 
 ## 12. Environment Switch (test <-> prod)
@@ -283,8 +287,8 @@ A new developer setup is valid only if all checks pass:
 1. `abctl version` matches team-approved version.
 2. `dbt --version` shows `1.11.7` core + postgres adapter.
 3. Airbyte can sync both Google Sheets sources to `${AB_RAW_SCHEMA}` in configured DB.
-4. `dbt debug --profile ric` succeeds.
-5. `dbt build --profile ric` succeeds.
+4. `dbt debug --profile ric  --project-dir dbt` succeeds.
+5. `dbt build --profile ric  --project-dir dbt` succeeds.
 6. At least one model is queryable in `${DBT_SCHEMA}` in configured DB.
 
 ## 14. Common Issues
