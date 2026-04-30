@@ -108,7 +108,7 @@ CREATE SCHEMA IF NOT EXISTS marts AUTHORIZATION pipeline_user;
 GRANT USAGE, CREATE ON SCHEMA ab_raw TO pipeline_user;
 GRANT USAGE, CREATE ON SCHEMA marts TO pipeline_user;
 
--- Required by the first dbt merge flow, which reads historical films from raw.ric_films
+-- Required by the partial CNC dbt flow, which reads historical films from raw.ric_films
 GRANT USAGE ON SCHEMA raw TO pipeline_user;
 GRANT SELECT ON TABLE raw.ric_films TO pipeline_user;
 ```

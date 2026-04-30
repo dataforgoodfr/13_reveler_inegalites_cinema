@@ -180,3 +180,5 @@ certbot/conf/*
 certbot/www/*
 certbot/logs/*
 .github/copilot-instructions.md
+.codex
+database/data/allocine/*.csv

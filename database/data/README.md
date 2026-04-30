@@ -8,7 +8,6 @@ Ils utilisent en general:
 - BeautifulSoup: parsing du HTML rendu par Playwright;
 - CSV locaux: stockage intermediaire avant seed ou controle.
 
-Pour configurer le navigateur Chromium distant, voir [database/README.md](../README.md).
 
 ## Scrapers principaux
 

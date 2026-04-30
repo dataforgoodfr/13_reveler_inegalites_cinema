@@ -1,6 +1,9 @@
 from playwright.async_api import async_playwright
 from os import getenv
 import random
+import json
+from urllib.parse import urlparse, urlunparse
+from urllib.request import urlopen
 
 # Define this variable in docker-compose environment (see database/README)
 CHROMIUM_WS_ENDPOINT = getenv("PLAYWRIGHT_WS_ENDPOINT")
@@ -30,10 +33,45 @@ class AsyncBrowserSession:
         self.context = None
         self.page = None
 
+    def _resolve_cdp_endpoint(self) -> str:
+        if not self.ws_endpoint:
+            raise RuntimeError("PLAYWRIGHT_WS_ENDPOINT is not set")
+
+        parsed = urlparse(self.ws_endpoint)
+
+        # Accept a direct websocket CDP endpoint as-is when a non-root path is provided.
+        if parsed.scheme in {"ws", "wss"} and parsed.path not in {"", "/"}:
+            return self.ws_endpoint
+
+        if parsed.scheme not in {"http", "https", "ws", "wss"}:
+            raise RuntimeError(
+                f"Unsupported PLAYWRIGHT_WS_ENDPOINT scheme: {parsed.scheme or 'missing'}"
+            )
+
+        http_scheme = "https" if parsed.scheme in {"https", "wss"} else "http"
+        version_url = urlunparse((http_scheme, parsed.netloc, "/json/version", "", "", ""))
+
+        try:
+            with urlopen(version_url, timeout=5) as response:
+                payload = json.load(response)
+        except Exception as exc:
+            raise RuntimeError(
+                f"Failed to resolve CDP websocket from {version_url}: {exc}"
+            ) from exc
+
+        ws_url = payload.get("webSocketDebuggerUrl")
+        if not ws_url:
+            raise RuntimeError(
+                f"No webSocketDebuggerUrl found in {version_url} response"
+            )
+        return ws_url
+
     async def __aenter__(self):
         """Setup browser session with anti-bot scripts and open a new page."""
         self.playwright = await async_playwright().start()
-        self.browser = await self.playwright.chromium.connect_over_cdp(self.ws_endpoint)
+        self.browser = await self.playwright.chromium.connect_over_cdp(
+            self._resolve_cdp_endpoint()
+        )
         self.context = await self.browser.new_context(
             user_agent=self.user_agent,
             viewport=DEFAULT_VIEWPORT,

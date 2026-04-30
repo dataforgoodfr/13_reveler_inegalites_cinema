@@ -59,7 +59,7 @@ class AllocineFilmEnricher:
             writer_needs_header = False  # File already has header
 
         with open(self.output_csv_path, mode="a", newline="", encoding="utf-8") as f_out:
-            writer = csv.DictWriter(f_out, fieldnames=self.CSV_HEADERS)
+            writer = csv.DictWriter(f_out, fieldnames=self.CSV_HEADERS, extrasaction="ignore")
 
             if writer_needs_header:
                 writer.writeheader()

@@ -1,31 +1,31 @@
-# Airbyte + dbt Core Workspace
+# Workspace Airbyte + dbt Core
 
-This directory isolates data-pipeline assets from the main application code.
+Ce dossier isole les assets de pipeline de donnees du code applicatif principal.
 
-## Current State
+## Etat actuel
 
-The first dbt merge flow is now implemented for the CNC agreement use case with these assumptions:
+Le flux dbt des agrements CNC est partiellement structure, mais le mart final n'est pas encore implemente. Hypotheses actuelles:
 
-1. Airbyte Google Sheets ingestion is already configured.
-2. The Google Sheet `AGREEMENT CNC` lands in `ab_raw.agreement_cnc`.
-3. The current historical application film dataset is available in `raw.ric_films`.
+1. L'ingestion Airbyte depuis Google Sheets est deja configuree.
+2. Le Google Sheet `AGREEMENT CNC` arrive dans `ab_raw.agreement_cnc`.
+3. Le jeu de donnees historique applicatif des films est disponible dans `raw.ric_films`.
 
-Implemented models:
+Modeles implementes:
 
-1. `stg_agreement_cnc`: normalization and typing of `ab_raw.agreement_cnc`.
-2. `stg_raw_ric_films`: projection of the existing historical film table.
-3. `int_agreement_cnc_latest_by_visa`: latest Agreement CNC record per `visa_number`.
-4. `mart_cnc_films_for_scraping`: merged dataset used to drive downstream scraping decisions.
+1. `stg_agreement_cnc`: normalisation et typage de `ab_raw.agreement_cnc`.
+2. `stg_raw_ric_films`: projection de la table historique existante des films.
+3. `int_agreement_cnc_latest_by_visa`: derniere ligne Agreement CNC par `visa_number`.
+4. `mart_cnc_films_for_scraping`: modele placeholder uniquement. Il lit actuellement `stg_raw_ric_films` et utilise une logique temporaire pour `should_scrape_allocine`; il ne fusionne pas encore les lignes CNC Airbyte avec les films historiques.
 
-The final model keeps both source values and merged values, and exposes operational flags such as:
+Comportement cible encore a implementer dans le mart final:
 
 1. `is_new_film`
 2. `has_cnc_payload_change`
 3. `should_scrape_allocine`
 
-## Start Here
+## Demarrage
 
-From repository root, enter this workspace before running setup commands:
+Depuis la racine du repository, entrer dans ce workspace avant de lancer les commandes de setup:
 
 ```bash
 cd airbyte_dbt
@@ -33,22 +33,22 @@ cd airbyte_dbt
 
 ## Structure
 
-- `airbyte/`: Airbyte-related configuration/assets
-- `dbt/`: dbt Core project
+- `airbyte/`: configuration et assets lies a Airbyte
+- `dbt/`: projet dbt Core
 
-Within `dbt/models/`:
+Dans `dbt/models/`:
 
-1. `staging/`: source normalization
-2. `intermediate/`: latest-per-key consolidation
-3. `marts/`: published merged dataset for orchestration and scraping
+1. `staging/`: normalisation des sources
+2. `intermediate/`: consolidation de la derniere version par cle
+3. `marts/`: datasets publies cibles pour l'orchestration et le scraping; le mart CNC est actuellement partiel
 
 ## Runbook
 
-See [infra setup runbook](../docs/runbooks/infra-setup-dbt-core-airbyte-remote-postgres.md) for step-by-step setup and troubleshooting.
+Voir le [runbook de setup infra](../docs/runbooks/infra-setup-dbt-core-airbyte-remote-postgres.md) pour les etapes de configuration et le troubleshooting.
 
-## Run the models
+## Lancer les modeles
 
-From `airbyte_dbt/`:
+Depuis `airbyte_dbt/`:
 
 ```bash
 set -a
@@ -58,4 +58,4 @@ set +a
 dbt build --profile ric --project-dir dbt --select +mart_cnc_films_for_scraping
 ```
 
-This builds the staging, intermediate, and final merge model.
+Cette commande construit les modeles staging, intermediate et le mart placeholder actuel. Ne pas considerer `mart_cnc_films_for_scraping` comme pret pour la production tant que la logique de fusion n'est pas terminee.
