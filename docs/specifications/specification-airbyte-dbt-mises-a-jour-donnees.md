@@ -15,6 +15,8 @@ Mettre en place un pipeline pérenne pour:
 3. préserver l'historique brut;
 4. exposer une couche "curated" unique pour Metabase + backend + frontend.
 
+Ce document décrit le contrat cible: sources attendues, colonnes, règles métier, modèles dbt attendus, tests et critères d'acceptation. Le setup opérationnel est dans le runbook; la trajectoire de migration est dans le plan d'architecture.
+
 ## 2. Périmètre (V1)
 
 Inclus:

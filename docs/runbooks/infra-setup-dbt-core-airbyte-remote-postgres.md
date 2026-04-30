@@ -14,6 +14,8 @@ This runbook standardizes how developers set up and run:
 
 Goal: every developer gets the same setup, same commands, and same expected behavior.
 
+This document is operational. It owns setup commands, environment variables, validation steps, and troubleshooting. Data contracts are documented in the specification; migration sequencing is documented in the architecture plan.
+
 ## 2. Standard Topology (for all developers)
 
 Use this topology in all environments:

@@ -2,6 +2,8 @@
 
 Ce dossier regroupe les assets d'ingestion et de transformation de donnees, separes du code applicatif principal.
 
+Ce README sert de point d'entree rapide: statut courant, structure et commandes usuelles. Pour le setup complet, les contrats cible ou la roadmap, voir les liens en fin de document.
+
 ## Etat actuel
 
 Le flux dbt des agrements CNC est partiellement structure, mais le mart final n'est pas encore implemente. Hypotheses actuelles:
@@ -59,3 +61,9 @@ dbt build --profile ric --project-dir dbt --select +mart_cnc_films_for_scraping
 ```
 
 Cette commande construit les modeles staging, intermediate et le mart placeholder actuel. Ne pas considerer `mart_cnc_films_for_scraping` comme pret pour la production tant que la logique de fusion n'est pas terminee.
+
+## Documentation detaillee
+
+1. [Runbook infra](../docs/runbooks/infra-setup-dbt-core-airbyte-remote-postgres.md): installation et exploitation locale Airbyte/dbt/PostgreSQL.
+2. [Specification Airbyte/dbt](../docs/specifications/specification-airbyte-dbt-mises-a-jour-donnees.md): contrats cible et criteres d'acceptation.
+3. [Plan d'automatisation](../docs/architecture/plan-automatisation-pipeline-ingestion.md): etat actuel, ecarts et roadmap de migration.

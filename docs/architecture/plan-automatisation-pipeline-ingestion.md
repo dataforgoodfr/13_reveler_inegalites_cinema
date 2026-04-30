@@ -16,6 +16,8 @@ Ce document synthétise l'existant dans le repository, explique comment les briq
 4. cette liste consolidée alimente les algorithmes de scraping, qui enrichissent ensuite la base applicative;
 5. l'ensemble est déclenché à la demande via un orchestrateur.
 
+Ce document est une roadmap d'architecture: il décrit l'état actuel, les écarts, les arbitrages et les phases de migration. Les commandes de setup restent dans le runbook; les contrats de données restent dans la spécification.
+
 ## 2. Lecture du repository
 
 ### 2.1 Ce qui existe déjà
@@ -137,7 +139,7 @@ Injection en base:
 4. il crée les genres et les liens film-genre;
 5. il crée les crédits film associés au casting, à la direction, à la production, à la distribution et aux sociétés.
 
-Ce que cela veut dire: le point d'entrée Allocine n'est plus la table historique brute, mais la liste consolidée publiée par dbt. Le handoff CSV entre matching et enrichissement reste encore manuel.
+Ce que cela veut dire: le point d'entrée cible Allocine n'est plus la table historique brute, mais la liste consolidée publiée par dbt. Aujourd'hui, cette liste est encore partielle car `mart_cnc_films_for_scraping` reste un placeholder. Le handoff CSV entre matching et enrichissement reste encore manuel.
 
 ### 4.3 MUBI
 
