@@ -126,9 +126,9 @@ celerybeat.pid
 # Environments
 .env
 .env.test
-airbyte_dbt/.env*
-airbyte_dbt/.venv-dbt
-!airbyte_dbt/.env*.example
+ingestion/.env*
+ingestion/.venv-dbt
+!ingestion/.env*.example
 .venv
 env/
 venv/

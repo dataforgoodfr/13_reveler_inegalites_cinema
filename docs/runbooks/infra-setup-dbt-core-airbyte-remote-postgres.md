@@ -26,8 +26,8 @@ Use this topology in all environments:
    - (optional) local Postgres for isolated testing, but not required.
 4. Environment selection (`test` or `prod`) is done only by values set in `POSTGRES_*` variables.
 5. Repository layout is standardized:
-   - `airbyte_dbt/airbyte` for Airbyte assets
-   - `airbyte_dbt/dbt` for dbt assets
+   - `ingestion/airbyte` for Airbyte assets
+   - `ingestion/dbt` for dbt assets
 
 ### This is reproducible
 
@@ -44,10 +44,10 @@ Consistency is enforced by:
 By default, developers start in repository root. Before running setup commands in this runbook, move into the dedicated workspace:
 
 ```bash
-cd airbyte_dbt
+cd ingestion
 ```
 
-Unless explicitly stated otherwise, commands below assume current directory is `airbyte_dbt/`.
+Unless explicitly stated otherwise, commands below assume current directory is `ingestion/`.
 
 ## 4. Prerequisites
 
@@ -242,7 +242,7 @@ Use `POSTGRES_SSLMODE=require` only if your Postgres server supports/requires SS
 ### Step 4 - Validate connectivity
 
 ```bash
-# Run from `airbyte_dbt/`
+# Run from `ingestion/`
 set -a
 source .env
 set +a
@@ -251,7 +251,7 @@ test -f dbt/dbt_project.yml
 dbt debug --profile ric --project-dir dbt
 ```
 
-If you are already inside `airbyte_dbt/dbt`, load env with `source ../.env` and run `dbt debug --profile ric`.
+If you are already inside `ingestion/dbt`, load env with `source ../.env` and run `dbt debug --profile ric`.
 
 ### Step 5 - Run transforms and tests
 

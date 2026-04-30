@@ -69,7 +69,7 @@ flowchart LR
     CUR --> FE[Frontend Webapp]
 ```
 
-![Schéma architecture Airbyte dbt](./archi_airbyte_dbt.png)
+![Schéma architecture Airbyte dbt](./archi_ingestion.png)
 
 
 ## 5. Bénéfices attendus

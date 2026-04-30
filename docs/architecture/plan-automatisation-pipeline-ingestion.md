@@ -24,7 +24,7 @@ Le projet est déjà structuré autour de quatre couches bien séparées:
 
 1. `database/`: schéma PostgreSQL, migrations Alembic, extracteurs, scrapers et scripts de seed.
 2. `backend/`: API FastAPI, repositories SQLAlchemy, use cases métier.
-3. `airbyte_dbt/`: workspace dédié à Airbyte et dbt.
+3. `ingestion/`: workspace dédié à Airbyte et dbt.
 4. `ml-image/`: pipeline de vision par ordinateur pour enrichir trailers et posters.
 
 ### 2.2 Interprétation globale
@@ -64,12 +64,12 @@ Conséquence: tant que la couche dbt n'est pas branchée au backend, la vérité
 
 La direction cible est déjà documentée et une première implémentation partielle dbt existe désormais pour le flux CNC:
 
-1. `airbyte_dbt/dbt/dbt_project.yml` existe et configure un projet dbt minimal;
-2. `airbyte_dbt/dbt/models/staging/stg_agreement_cnc.sql` normalise `ab_raw.agreement_cnc`;
-3. `airbyte_dbt/dbt/models/staging/stg_raw_ric_films.sql` projette `raw.ric_films`;
-4. `airbyte_dbt/dbt/models/intermediate/int_agreement_cnc_latest_by_visa.sql` déduplique la dernière version par `visa_number`;
-5. `airbyte_dbt/dbt/models/marts/mart_cnc_films_for_scraping.sql` existe, mais reste un placeholder: il ne fusionne pas encore l'historique `raw.ric_films` et la dernière charge Airbyte;
-6. `airbyte_dbt/airbyte/` reste vide côté versionnement de connecteurs ou manifests;
+1. `ingestion/dbt/dbt_project.yml` existe et configure un projet dbt minimal;
+2. `ingestion/dbt/models/staging/stg_agreement_cnc.sql` normalise `ab_raw.agreement_cnc`;
+3. `ingestion/dbt/models/staging/stg_raw_ric_films.sql` projette `raw.ric_films`;
+4. `ingestion/dbt/models/intermediate/int_agreement_cnc_latest_by_visa.sql` déduplique la dernière version par `visa_number`;
+5. `ingestion/dbt/models/marts/mart_cnc_films_for_scraping.sql` existe, mais reste un placeholder: il ne fusionne pas encore l'historique `raw.ric_films` et la dernière charge Airbyte;
+6. `ingestion/airbyte/` reste vide côté versionnement de connecteurs ou manifests;
 7. `docs/specifications/specification-airbyte-dbt-mises-a-jour-donnees.md` décrit la cible fonctionnelle;
 8. `docs/runbooks/infra-setup-dbt-core-airbyte-remote-postgres.md` décrit l'installation d'Airbyte OSS et dbt Core.
 
@@ -353,12 +353,12 @@ Etapes:
 2. créer la destination Postgres `dst_pg` sur le schéma `ab_raw`;
 3. créer la connexion `cnx_agreement_cnc_to_pg`;
 4. valider qu'un ajout de lignes annuel est bien répliqué sans casser l'historique;
-5. versionner dans `airbyte_dbt/airbyte/` la configuration exportée ou les manifestes nécessaires.
+5. versionner dans `ingestion/airbyte/` la configuration exportée ou les manifestes nécessaires.
 
 Modifications attendues dans le repo:
 
 1. peu ou pas de changement dans `database/` à ce stade;
-2. ajout d'assets Airbyte versionnés dans `airbyte_dbt/airbyte/`;
+2. ajout d'assets Airbyte versionnés dans `ingestion/airbyte/`;
 3. documentation d'exploitation pour la source Google Sheets.
 
 ## Phase 2 - Construction dbt de la liste CNC consolidée
@@ -377,14 +377,14 @@ Etapes:
 
 Etat actuel:
 
-1. les modèles staging et intermédiaire existent dans `airbyte_dbt/dbt/models/`;
+1. les modèles staging et intermédiaire existent dans `ingestion/dbt/models/`;
 2. le mart final est seulement un placeholder et ne réalise pas la fusion CNC Airbyte + historique;
 3. le matcher Allocine lit maintenant ce mart, donc son périmètre dépend d'une logique temporaire;
 4. la prochaine étape utile est d'implémenter réellement le mart avant de supprimer les handoffs CSV manuels ou d'introduire une queue de scraping.
 
 Modifications attendues dans le repo:
 
-1. création de modèles dans `airbyte_dbt/dbt/models/`;
+1. création de modèles dans `ingestion/dbt/models/`;
 2. ajout de `sources.yml`, `schema.yml` et tests associés;
 3. éventuelle création d'un seed dbt pour les mappings métier stables.
 
@@ -435,7 +435,7 @@ Etapes:
 
 Modifications attendues dans le repo:
 
-1. ajout de code dans `airbyte_dbt/airbyte/` si connecteurs custom;
+1. ajout de code dans `ingestion/airbyte/` si connecteurs custom;
 2. sinon ajout d'un dossier dédié d'orchestration, par exemple `orchestration/`.
 
 ## Phase 6 - Orchestration on-demand

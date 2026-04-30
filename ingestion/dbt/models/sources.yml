@@ -1,0 +1,21 @@
+version: 2
+
+sources:
+  - name: ab_raw
+    schema: ab_raw
+    description: Raw tables loaded by Airbyte.
+    tables:
+      - name: agreement_cnc
+        description: Annual CNC agreement dataset loaded from Google Sheets via Airbyte.
+
+  - name: app_raw
+    schema: raw
+    description: Existing application raw tables used by the current backend and seeders.
+    tables:
+      - name: ric_films
+        description: Historical film table currently populated by the manual seeding pipeline.
+        columns:
+          - name: id
+            tests:
+              - not_null
+              - unique
