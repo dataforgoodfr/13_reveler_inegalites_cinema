@@ -4,16 +4,6 @@ Last reviewed: 2026-05-05
 
 Status: Etat actuel du projet + draft d'architecture pour airbyte et dbt.
 
-
-
-# Schéma ingestion, seeds, Airbyte et dbt
-
-Ce schéma montre les relations entre scripts de seed, tables PostgreSQL, connecteurs Airbyte et modèles dbt.
-
-Important:
-
-1. `ingestion/airbyte/` ne contient aujourd'hui qu'un `.gitkeep`; les connecteurs Airbyte sont documentés comme configuration externe, pas encore versionnés dans le repo.
-
 ## Diagramme de flux global actuel
 
 ```mermaid
@@ -150,72 +140,186 @@ flowchart LR
     
 ```
 
-## Diagramme de flux focalisé sur Airbyte et dbt
+## Architecture cible
+
 
 ```mermaid
 flowchart LR
 
-    %% External sources
-    subgraph EXTERNAL_SOURCES[External sources]
+    subgraph GOOGLE_SHEETS[Google Sheets]
         direction TB
-        GS_CNC[Google Sheet AGREEMENT CNC]
-        GS_MOD[Google Sheet Modification data]
-        GS_ID_MATCHING[Google Sheet Film ID matching]
+        GS_CNC[GSheet AGREEMENT CNC]
+        GS_ID_MATCHING[GSheet Film ID matching]
+        GS_FILM_CREDITS[GSheet Fix Film credits]
+        GS_FILM_GENRES[GSheet Fix Film genres]
+        GS_FILMS_COUNTRY_BUDGET_ALLOCATION[GSheet Fix Film country budget allocation]
+        GS_AWARD_NOMINATIONS[GSheet Fix award nominations]
+        GS_CREDIT_HOLDERS[GSheet Fix credit holders]
+        GS_ROLES[GSheet Fix roles]
+        GS_GENRES[GSheet Fix genres]
+        GS_COUNTRIES[GSheet Fix countries]
+        GS_FESTIVAL[GSheet Fix festivals]
+        GS_FESTIVAL_AWARDS[GSheet Fix festival awards]
     end
 
-    subgraph INGESTION[Ingestion module]
+    subgraph AIRBYTE_FLOW[Airbyte flow]
         direction TB
-        %% Airbyte
-        SRC_GS_CNC[src_gsheet_agreement_cnc<br/>external config]
-        SRC_GS_MOD[src_gsheet_modification_data<br/>external config]
-        SRC_GS_ID_MATCHING[src_gsheet_film_id_matching<br/>external config]
+        SRC_GS_CNC[src_gsheet_agreement_cnc]
+        SRC_GS_ID_MATCHING[src_gsheet_film_id_matching]
 
-        %% Raw and dbt
-        AB_AGREEMENT[(ab_raw.agreement_cnc)]
-        AB_MOD[(ab_raw.modification_data)]
-        AB_ID_MATCHING[(ab_raw.film_id_matching)]
+        SRC_GS_FILM_CREDITS[src_gsheet_fix_film_credits]
+        SRC_GS_FILM_GENRES[src_gsheet_fix_film_genres]
+        SRC_GS_FILMS_COUNTRY_BUDGET_ALLOCATION[src_gsheet_fix_film_country_budget_allocation]
+        SRC_GS_AWARD_NOMINATIONS[src_gsheet_fix_award_nominations]
+        SRC_GS_CREDIT_HOLDERS[src_gsheet_fix_credit_holders]
+        SRC_GS_ROLES[src_gsheet_fix_roles]
+        SRC_GS_GENRES[src_gsheet_fix_genres]
+        SRC_GS_COUNTRIES[src_gsheet_fix_countries]
+        SRC_GS_FESTIVAL[src_gsheet_fix_festivals]
+        SRC_GS_FESTIVAL_AWARDS[src_gsheet_fix_festival_awards]
 
-        STG_CNC(stg_agreement_cnc)
-        STG_MOD(stg_modification_data)
-        STG_ID_MATCHING(stg_film_id_matching)
+        AB_AGREEMENT[(ab_raw.films)]
+        AB_ID_MATCHING[(ab_raw.id_matching)]
 
-        %% Airbyte/DBT flow
-        GS_CNC --> SRC_GS_CNC --> AB_AGREEMENT --> STG_CNC
-        GS_MOD --> SRC_GS_MOD --> AB_MOD --> STG_MOD
-        GS_ID_MATCHING --> SRC_GS_ID_MATCHING --> AB_ID_MATCHING --> STG_ID_MATCHING
+        AB_FILM_CREDITS[(ab_raw.fix_film_credits)]
+        AB_FILM_GENRES[(ab_raw.fix_film_genres)]
+        AB_FILMS_COUNTRY_BUDGET_ALLOCATION[(ab_raw.fix_films_country_budget_allocation)]
+        AB_AWARD_NOMINATIONS[(ab_raw.fix_award_nominations)]
+        AB_CREDIT_HOLDERS[(ab_raw.fix_credit_holders)]
+        AB_ROLES[(ab_raw.fix_roles)]
+        AB_GENRES[(ab_raw.fix_genres)]
+        AB_COUNTRIES[(ab_raw.fix_countries)]
+        AB_FESTIVAL[(ab_raw.fix_festivals)]
+        AB_FESTIVAL_AWARDS[(ab_raw.fix_festival_awards)]
+
     end
+
+    subgraph SCRAPING_FLOW[Scraping flow]
+        direction TB
+        SCRAPE_ALLOCINE[Allocine scraper<br/>scraping_allocine.py]
+        SCRAPE_MUBI[MUBI scraper<br/>scraping_mubi.py]
+        AB_ALLOCINE[(ab_raw.allocine_data)]
+        AB_MUBI[(ab_raw.mubi_data)]
+    end
+
+    subgraph DBT_FLOW[dbt flow]
+        direction TB
+        STG_FILMS(stg_films)
+        STG_FILM_CREDITS(stg_film_credits)
+        STG_GENRES(stg_genres)
+        STG_FILM_GENRES(stg_film_genres)
+        STG_COUNTRIES(stg_countries)
+        STG_BUDGET_ALLOC(stg_film_country_budget_allocation)
+        STG_ROLES(stg_roles)
+        STG_CREDIT_HOLDERS(stg_credit_holders)
+        STG_AWARD_NOMINATIONS(stg_award_nominations)
+        STG_FESTIVALS(stg_festivals)
+        STG_FESTIVAL_AWARDS(stg_festival_awards)
+
+        FNL_FILMS(fnl_films)
+        FNL_GENRES(fnl_genres)
+        FNL_FILM_CREDITS(fnl_film_credits)
+        FNL_FILMS_GENRES(fnl_films_genres)
+        FNL_COUNTRIES(fnl_countries)
+        FNL_BUDGET_ALLOC(fnl_film_country_budget_allocation)
+        FNL_ROLES(fnl_roles)
+        FNL_CREDIT_HOLDERS(fnl_credit_holders)
+        FNL_AWARD_NOMINATIONS(fnl_award_nominations)
+        FNL_FESTIVALS(fnl_festivals)
+        FNL_FESTIVAL_AWARDS(fnl_festival_awards)
+    end
+
+    subgraph FRONT_METABASE[Front + Metabase]
+        direction TB
+        FRONT_APP[Frontend app]
+        METABASE_APP[Metabase]
+    end
+
+
+    %% Scraping flow
+    AB_ID_MATCHING --> SCRAPE_ALLOCINE
+    AB_ALLOCINE --> SCRAPE_ALLOCINE --> AB_ALLOCINE
+
+    AB_ID_MATCHING --> SCRAPE_MUBI
+    AB_MUBI --> SCRAPE_MUBI --> AB_MUBI
+
+
+    %% Airbyte/DBT flow
+    GS_CNC --> SRC_GS_CNC --> AB_AGREEMENT --> STG_FILMS --> FNL_FILMS
+    GS_ID_MATCHING --> SRC_GS_ID_MATCHING --> AB_ID_MATCHING
+    GS_FILM_CREDITS --> SRC_GS_FILM_CREDITS --> AB_FILM_CREDITS --> STG_FILM_CREDITS --> FNL_FILM_CREDITS
+    GS_FILM_GENRES --> SRC_GS_FILM_GENRES --> AB_FILM_GENRES --> STG_FILM_GENRES --> FNL_FILMS_GENRES
+    GS_FILMS_COUNTRY_BUDGET_ALLOCATION --> SRC_GS_FILMS_COUNTRY_BUDGET_ALLOCATION --> AB_FILMS_COUNTRY_BUDGET_ALLOCATION --> STG_BUDGET_ALLOC --> FNL_BUDGET_ALLOC
+    GS_AWARD_NOMINATIONS --> SRC_GS_AWARD_NOMINATIONS --> AB_AWARD_NOMINATIONS --> STG_AWARD_NOMINATIONS --> FNL_AWARD_NOMINATIONS
+    GS_CREDIT_HOLDERS --> SRC_GS_CREDIT_HOLDERS --> AB_CREDIT_HOLDERS --> STG_CREDIT_HOLDERS --> FNL_CREDIT_HOLDERS
+    GS_ROLES --> SRC_GS_ROLES --> AB_ROLES --> STG_ROLES --> FNL_ROLES
+    GS_GENRES --> SRC_GS_GENRES --> AB_GENRES --> STG_GENRES --> FNL_GENRES
+    GS_COUNTRIES --> SRC_GS_COUNTRIES --> AB_COUNTRIES --> STG_COUNTRIES --> FNL_COUNTRIES
+    GS_FESTIVAL --> SRC_GS_FESTIVAL --> AB_FESTIVAL --> STG_FESTIVALS --> FNL_FESTIVALS
+    GS_FESTIVAL_AWARDS --> SRC_GS_FESTIVAL_AWARDS --> AB_FESTIVAL_AWARDS --> STG_FESTIVAL_AWARDS --> FNL_FESTIVAL_AWARDS
+
+    AB_ALLOCINE --> FNL_FILMS
+    AB_ALLOCINE --> FNL_GENRES
+    AB_ALLOCINE --> FNL_FILM_CREDITS
+    AB_ALLOCINE --> FNL_FILMS_GENRES
+    AB_ALLOCINE --> FNL_COUNTRIES
+    AB_ALLOCINE --> FNL_BUDGET_ALLOC
+    AB_ALLOCINE --> FNL_ROLES
+    AB_ALLOCINE --> FNL_CREDIT_HOLDERS
+    AB_ALLOCINE --> FNL_AWARD_NOMINATIONS
+    AB_ALLOCINE --> FNL_FESTIVALS
+    AB_ALLOCINE --> FNL_FESTIVAL_AWARDS
+
+    AB_MUBI --> FNL_FILMS
+    AB_MUBI --> FNL_CREDIT_HOLDERS
+    AB_MUBI --> FNL_AWARD_NOMINATIONS
+    AB_MUBI --> FNL_FESTIVALS
+    AB_MUBI --> FNL_FESTIVAL_AWARDS
+
+    FNL_FILMS --> FRONT_METABASE
+    FNL_GENRES --> FRONT_METABASE
+    FNL_FILM_CREDITS --> FRONT_METABASE
+    FNL_FILMS_GENRES --> FRONT_METABASE
+    FNL_COUNTRIES --> FRONT_METABASE
+    FNL_BUDGET_ALLOC --> FRONT_METABASE
+    FNL_ROLES --> FRONT_METABASE
+    FNL_CREDIT_HOLDERS --> FRONT_METABASE
+    FNL_AWARD_NOMINATIONS --> FRONT_METABASE
+    FNL_FESTIVALS --> FRONT_METABASE
+    FNL_FESTIVAL_AWARDS --> FRONT_METABASE
+
 
     classDef googleSheet fill:#bbf7d0,stroke:#15803d,color:#111827;
-    class GS_CNC,GS_MOD,GS_ID_MATCHING googleSheet;
-    
+    class GS_CNC,GS_ID_MATCHING,GS_FILM_CREDITS,GS_FILM_GENRES,GS_FILMS_COUNTRY_BUDGET_ALLOCATION,GS_AWARD_NOMINATIONS,GS_CREDIT_HOLDERS,GS_ROLES,GS_GENRES,GS_COUNTRIES,GS_FESTIVAL,GS_FESTIVAL_AWARDS googleSheet;
+
     classDef dbtModel fill:#fed7aa,stroke:#f97316,color:#111827;
-    class STG_CNC,STG_MOD,STG_ID_MATCHING dbtModel;
+    class STG_FILM_CREDITS,STG_GENRES,STG_FILM_GENRES,STG_COUNTRIES,STG_BUDGET_ALLOC,STG_ROLES,STG_CREDIT_HOLDERS,STG_AWARD_NOMINATIONS,STG_FESTIVALS,STG_FESTIVAL_AWARDS,STG_FILMS dbtModel;
+    class FNL_FILMS,FNL_GENRES,FNL_FILM_CREDITS,FNL_FILMS_GENRES,FNL_COUNTRIES,FNL_BUDGET_ALLOC,FNL_ROLES,FNL_CREDIT_HOLDERS,FNL_AWARD_NOMINATIONS,FNL_FESTIVALS,FNL_FESTIVAL_AWARDS dbtModel;
 
     classDef airbyteNode fill:#f5d0fe,stroke:#c026d3,color:#111827;
-    class SRC_GS_CNC,SRC_GS_MOD,SRC_GS_ID_MATCHING airbyteNode;
+    class SRC_GS_CNC,SRC_GS_ID_MATCHING,SRC_GS_FILM_CREDITS,SRC_GS_FILM_GENRES,SRC_GS_FILMS_COUNTRY_BUDGET_ALLOCATION,SRC_GS_AWARD_NOMINATIONS,SRC_GS_CREDIT_HOLDERS,SRC_GS_ROLES,SRC_GS_GENRES,SRC_GS_COUNTRIES,SRC_GS_FESTIVAL,SRC_GS_FESTIVAL_AWARDS airbyteNode;
 
+    classDef pythonScript fill:#fde047,stroke:#a16207,color:#111827;
+    class SCRAPE_ALLOCINE,SCRAPE_MUBI pythonScript;
 ```
-## Lecture rapide
 
-1. Le diagramme global montre une chaîne de dépendances centrée sur `ric_films`: le seed CNC crée l'inventaire de base, puis les briques Allocine, MUBI et ML ajoutent chacune leur enrichissement sur des tables `ric_*` déjà peuplées.
-2. Le flux Allocine est en deux temps: matching vers `allocine_matches.csv`, enrichissement vers `allocine_matches_enriched.csv`, puis injection finale dans `ric_films`, `ric_posters`, `ric_trailers`, `ric_genres`, `ric_films_genres`, `ric_credit_holders` et `ric_film_credits`.
-3. Le flux MUBI part des pages web, passe par des CSV intermédiaires, puis alimente surtout les dimensions festivals, prix, nominations et une partie des crédits, avec possibilité de créer un film minimal si aucun film applicatif ne matche.
-4. Le flux ML ne remonte pas directement depuis `ml-image/main.py` vers la base: dans l'état actuel documenté, les seeds lisent surtout les CSV de prédictions déjà disponibles et recréent `ric_poster_characters` et `ric_trailer_characters`.
-5. Le diagramme Airbyte/dbt isole une autre couche: Google Sheets alimente `ab_raw`, puis dbt normalise chaque source via `stg_agreement_cnc`, `stg_modification_data` et `stg_film_id_matching` avant toute consolidation métier.
-6. Ce second diagramme décrit donc une cible d'ingestion et de préparation, pas encore le chaînage complet vers les seeds applicatifs visibles dans le diagramme global.
-7. Le point de jonction cible entre les deux mondes reste la consolidation CNC par `visa_number`: une fois publiée par dbt, elle doit redevenir l'entrée fiable du seed CNC puis des scrapers.
-8. Les fichiers statiques actuellement versionnés sont:
-   - `database/data/cnc/dataset5050_cnc_films_agrees_2003_2024.xlsx`
-   - `database/data/mubi/films_all_awards.csv`
-   - `database/data/machine_learning_predictions/poster_predictions.csv`
-   - `database/data/machine_learning_predictions/trailer_predictions.csv`
+## Lecture rapide de l'architecture cible
 
-## Points de vigilance
+1. Les Google Sheets restent les points d'entrée des corrections métier, puis Airbyte les charge dans `ab_raw`.
+2. dbt normalise ces tables brutes en `stg_*`, puis publie des tables finales `fnl_*` consommées par le frontend et Metabase.
+3. Les scrapers sont prévus comme des exécutions Airbyte, tandis que Prefect orchestre l'ordre global des runs, les dépendances, les relances et le déclenchement bout en bout.
+4. Les scrapers n'utilisent pas uniquement `id_matching`: ils lisent aussi la table dans laquelle ils écrivent déjà pour savoir ce qui a déjà été traité.
+5. Pour Allociné, le scraper charge `ab_raw.allocine_data` pour récupérer les IDs déjà scrapés.
+6. Il charge en parallèle `ab_raw.id_matching` pour obtenir la liste complète des IDs à traiter.
+7. Il compare les deux listes et isole les IDs présents dans `id_matching` mais absents de `allocine_data`.
+8. Le scraping cible ne porte donc que sur les IDs manquants, puis les nouvelles données scrapées sont ajoutées à la table existante.
+9. Le même principe s'applique au flux MUBI: la table de sortie existante sert de mémoire d'exécution, et `id_matching` sert de liste de référence.
 
-1. Le diagramme Airbyte/dbt ne montre aujourd'hui que les modèles de staging; la fusion réelle entre historique CNC, nouvelles charges Airbyte et éventuelles corrections métier n'apparaît pas encore dans le schéma ni dans le code versionné.
-2. La dépendance globale à `ric_films` impose un ordre strict: seed CNC d'abord, enrichissement Allocine ensuite, seed MUBI et seeds ML seulement quand les médias et films existent déjà.
-3. Le handoff par CSV reste un point fragile pour Allocine, MUBI et ML: ces fichiers intermédiaires peuvent devenir obsolètes, être régénérés partiellement, ou diverger de la base si aucune orchestration ne fige l'ordre d'exécution.
-4. `ingestion/airbyte/` ne versionne toujours pas les connecteurs ni les connexions; le diagramme de cible repose donc sur une configuration externe qui peut dériver du repo.
-5. Le Google Sheet `Film ID matching` apparaît dans le schéma Airbyte/dbt, mais son usage aval n'est pas encore raccordé explicitement au matching applicatif dans le diagramme global.
-6. `ml-image/main.py` n'est pas, à lui seul, la garantie de production des CSV de prédictions affichés dans le schéma; il faut documenter ou automatiser clairement la génération de ces artefacts pour éviter une confusion entre inputs existants et sorties réelles.
-7. Les rôles et crédits sont alimentés par plusieurs flux (`seed_cnc_movies.py`, `seed_allocine_movies_details.py`, `seed_film_awards.py`); sans règles de précédence explicites, le risque est d'écraser ou dupliquer des informations métier.
+## Points de vigilance sur le scraping cible
+
+1. La logique de comparaison suppose que les IDs portés par `id_matching`, `allocine_data` et `mubi_data` soient strictement homogènes en format et en clé métier.
+2. Si la table de sortie contient des lignes partielles, en erreur ou obsolètes, le scraper peut considérer à tort un ID comme déjà traité.
+3. Ajouter uniquement les IDs manquants évite de retraiter tout l'historique, mais impose une stratégie claire de rescraping quand une donnée source change ou quand un scraping précédent était incomplet.
+4. La table de sortie devient à la fois un stockage de résultats et un registre d'avancement; il faut donc tracer les erreurs, dates de scraping et éventuels statuts de reprise.
+5. Le découpage Airbyte exécution / Prefect orchestration doit rester net: Airbyte lance les connecteurs de scraping, mais Prefect garde la responsabilité du chaînage global, des retries inter-étapes et de la supervision.
+6. Si plusieurs runs s'exécutent en parallèle, le calcul des IDs manquants peut produire des doublons d'écriture sans verrouillage ou contrainte d'unicité adaptée.
