@@ -4,6 +4,8 @@ Last reviewed: 2026-03-11
 
 Status: draft
 
+Note de cadrage 2026-04-30: ce document décrit la cible fonctionnelle. Pour l'état réel du repo et la trajectoire V1 retenue, se référer en priorité à `docs/architecture/plan-automatisation-pipeline-ingestion.md` et `docs/architecture/schema1-ingestion-seeds-airbyte-dbt.md`. En particulier, le backend lit encore `ric_*`, les scrapers restent des jobs Python manuels/orchestrables, et les connecteurs Airbyte custom pour scraping restent optionnels.
+
 # Spécification technique - Airbyte + dbt pour mises à jour CNC et corrections métier
 
 ## 1. Contexte et objectifs
@@ -116,7 +118,7 @@ Note sur `status`:
    - conservation des deux colonnes:
      - valeur source (`original_name_source`)
      - valeur corrigée (`original_name_curated`).
-     [TODO: ça peut etre sympa de presenter les deux valeurs cote a cote dans Metabase pour faciliter la validation métier et la traçabilité des corrections, ou meme dans le front si le collectif trouve pertinent @NicolasRevel]
+     [TODO: ça peut être sympa de présenter les deux valeurs côte à côte dans Metabase pour faciliter la validation métier et la traçabilité des corrections, ou même dans le front si le collectif trouve pertinent @NicolasRevel]
 
 ## 5.2 User Story B - Corrections multi-entités
 

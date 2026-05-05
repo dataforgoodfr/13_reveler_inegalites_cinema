@@ -4,17 +4,17 @@ Ces scripts cherchent les films dans Allocine, recuperent leurs pages, puis tran
 
 ## Algorithme
 
-1. [allocine_film_matcher.py](allocine_film_matcher.py) lit le mart dbt `marts.mart_cnc_films_for_scraping` via SQLAlchemy.
-2. Il ne traite que les lignes ou `should_scrape_allocine = true`.
-3. Attention: ce mart est actuellement partiel. Sa logique de fusion CNC Airbyte + historique n'est pas implémentée et `should_scrape_allocine` reste temporaire.
-4. Pour chaque film, il construit une recherche Allocine avec le titre original consolide et l'annee d'agrement CNC.
-5. [scraping_browser.py](../scraping_browser.py) ouvre la page avec Playwright, attend, scrolle, puis retourne le HTML.
-6. [allocine_scraper.py](allocine_scraper.py) parse le premier resultat film et extrait `allocine_id`, titre et URL.
-7. Le matcher ajoute le resultat dans `allocine_matches.csv`.
-8. [allocine_film_enricher.py](allocine_film_enricher.py) relit ce CSV et visite deux pages par film:
+1. [allocine_film_matcher.py](allocine_film_matcher.py) lit les films applicatifs en base via SQLAlchemy.
+2. Il ignore les visas deja presents dans le CSV de matching pour permettre une reprise incrementale.
+3. Pour chaque film, il construit une recherche Allocine avec le titre original et l'annee d'agrement CNC.
+4. [scraping_browser.py](../scraping_browser.py) ouvre la page avec Playwright, attend, scrolle, puis retourne le HTML.
+5. [allocine_scraper.py](allocine_scraper.py) parse le premier resultat film et extrait `allocine_id`, titre et URL.
+6. Le matcher ajoute le resultat dans `allocine_matches.csv`.
+7. [allocine_film_enricher.py](allocine_film_enricher.py) relit ce CSV et visite deux pages par film:
    - fiche film: visa, affiche, date de sortie, duree, genres, trailer;
    - page casting: realisation, acteurs, scenario, production, equipe, musique, distribution, societes.
-9. L'enricher ecrit un CSV suffixe `_enriched.csv`.
+8. L'enricher ecrit un CSV suffixe `_enriched.csv`.
+9. `seed_allocine_movies_details.py` injecte le CSV enrichi en base, met a jour `allocine_id`, la fiche film et les relations associees.
 
 ## Fichiers
 
@@ -35,12 +35,9 @@ poetry run python -m database.data.allocine.allocine_runner --enricher --csv dat
 
 Prerequis: base PostgreSQL accessible, backend configure, Chromium distant lance, variable `PLAYWRIGHT_WS_ENDPOINT` definie.
 
-Prerequis supplementaire: le schema `marts` et la table `marts.mart_cnc_films_for_scraping` doivent exister et etre lisibles par le role utilise dans `DATABASE_URL`.
-
 ## Limites connues
 
 - Le matcher garde le premier resultat Allocine trouve; un controle manuel peut etre necessaire.
-- Le matcher depend maintenant du mart dbt; un `dbt build` doit avoir ete execute avant le scraping.
-- Le mart dbt est partiel: il ne doit pas encore etre considere comme source fiable pour un scraping complet.
+- Le matcher depend de `ric_films`: le seed CNC doit avoir ete execute avant le scraping.
 - Les selecteurs CSS dependent du HTML Allocine.
 - L'enricher ignore l'enrichissement quand le numero de visa Allocine contredit le visa CNC.

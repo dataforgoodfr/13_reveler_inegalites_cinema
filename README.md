@@ -26,14 +26,14 @@ Techniquement, l'application sera composée de :
 
 ## Documentation
 
-Points d'entree principaux:
+Points d'entrée principaux:
 
 1. [frontend/README.md](frontend/README.md): application Next.js, commandes locales, structure frontend.
 2. [backend/README.md](backend/README.md): API FastAPI, routes, variables d'environnement, acces base.
-3. [database/README.md](database/README.md): modeles SQLAlchemy, migrations Alembic, seeds et donnees historiques.
+3. [database/README.md](database/README.md): modèles SQLAlchemy, migrations Alembic, seeds et données historiques.
 4. [ingestion/README.md](ingestion/README.md): statut rapide du workspace Airbyte/dbt et commandes dbt courantes.
 5. [docs/runbooks/infra-setup-dbt-core-airbyte-remote-postgres.md](docs/runbooks/infra-setup-dbt-core-airbyte-remote-postgres.md): setup operationnel Airbyte OSS, dbt Core et PostgreSQL.
-6. [docs/specifications/specification-airbyte-dbt-mises-a-jour-donnees.md](docs/specifications/specification-airbyte-dbt-mises-a-jour-donnees.md): contrats cible Google Sheets, Airbyte, dbt et criteres d'acceptation.
+6. [docs/specifications/specification-airbyte-dbt-mises-a-jour-donnees.md](docs/specifications/specification-airbyte-dbt-mises-a-jour-donnees.md): contrats cible Google Sheets, Airbyte, dbt et critères d'acceptation.
 7. [docs/architecture/plan-automatisation-pipeline-ingestion.md](docs/architecture/plan-automatisation-pipeline-ingestion.md): etat actuel, ecarts et roadmap de migration vers une ingestion automatisee.
 
 

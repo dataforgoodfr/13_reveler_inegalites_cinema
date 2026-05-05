@@ -2,24 +2,12 @@ import csv
 import os
 from tqdm import tqdm
 from sqlalchemy.orm import Session
-from sqlalchemy import text
+from sqlalchemy import select
 
 from database.database import SessionLocal
+from database.models import Film
 from database.data.allocine.allocine_scraper import AllocineScraper
 from database.data.scraping_browser import AsyncBrowserSession
-
-MART_CNC_FILMS_FOR_SCRAPING_QUERY = text(
-    """
-    select
-        film_id,
-        visa_number,
-        original_name,
-        cnc_agrement_year
-    from marts.mart_cnc_films_for_scraping
-    where should_scrape_allocine is true
-    order by cnc_agrement_year nulls last, visa_number
-    """
-)
 
 class AllocineFilmMatcher:
     """
@@ -34,15 +22,6 @@ class AllocineFilmMatcher:
         self.scraper = AllocineScraper()
         self.db: Session = SessionLocal()
 
-    def get_films_to_match(self) -> list[dict]:
-        return list(self.db.execute(MART_CNC_FILMS_FOR_SCRAPING_QUERY).mappings())
-
-    def _format_error_message(self, error: Exception, max_length: int = 500) -> str:
-        message = " ".join(str(error).split())
-        if len(message) > max_length:
-            return f"{message[:max_length - 3]}..."
-        return message
-
     async def find_allocine_film_by_name(self, name: str, year: str) -> dict:
         url_name = self.scraper._reformat_str_for_url(f"{name} {year}")
         filters = {"film_title_url_styled": url_name}
@@ -54,7 +33,9 @@ class AllocineFilmMatcher:
         return self.scraper.extract_searched_first_film(html)
 
     async def run(self):
-        films = self.get_films_to_match()
+        films = self.db.execute(
+            select(Film)
+        ).scalars().all()
 
         # Load already-processed film names
         existing_visas = set()
@@ -74,10 +55,9 @@ class AllocineFilmMatcher:
                 writer.writerow(self.CSV_HEADERS)
 
             for film in tqdm(films, desc="Searching Allociné"):
-                film_id = film["film_id"]
-                original_name = film["original_name"]
-                cnc_agrement_year = film["cnc_agrement_year"]
-                visa_number = film["visa_number"]
+                original_name = film.original_name
+                cnc_agrement_year = film.cnc_agrement_year
+                visa_number = film.visa_number
 
                 if visa_number in existing_visas:
                     continue
@@ -86,7 +66,7 @@ class AllocineFilmMatcher:
                     allocine_film = await self.find_allocine_film_by_name(original_name, cnc_agrement_year)
                     if allocine_film:
                         writer.writerow([
-                            film_id,
+                            film.id,
                             visa_number,
                             original_name,
                             cnc_agrement_year,
@@ -96,7 +76,7 @@ class AllocineFilmMatcher:
                         ])
                     else:
                         writer.writerow([
-                            film_id,
+                            film.id,
                             visa_number,
                             original_name,
                             cnc_agrement_year,
@@ -108,14 +88,6 @@ class AllocineFilmMatcher:
                     existing_visas.add(visa_number)
                 except Exception as e:
                     print(f"❌ Error processing '{original_name}': {e}")
-                    writer.writerow([
-                        film_id,
-                        visa_number,
-                        original_name,
-                        cnc_agrement_year,
-                        "Error",
-                        "Error",
-                        self._format_error_message(e),
-                    ])
+                    writer.writerow([film.id, visa_number, original_name, cnc_agrement_year, "Error", "Error", str(e)])
 
         print("✅ Done! Results saved to", self.csv_path)

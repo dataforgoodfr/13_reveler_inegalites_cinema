@@ -1,6 +1,6 @@
 Created by: Hugo Laurens, Joel Teixeira
 
-Last reviewed: 2026-03-11
+Last reviewed: 2026-05-05
 
 Status: draft
 
@@ -71,6 +71,14 @@ flowchart LR
 
 ![Schéma architecture Airbyte dbt](./archi_ingestion.png)
 
+## 4.1 Lecture rapide du diagramme
+
+1. Le point d'entrée métier est double: `AGREEMENT CNC` pour les nouvelles lignes CNC et `Modification data` pour les corrections ponctuelles.
+2. Airbyte joue ici uniquement le rôle de passerelle d'ingestion vers PostgreSQL: il charge à la fois la zone brute (`RAW`) et les tables de modifications (`UPD`).
+3. dbt lit ensuite ces deux couches pour produire une couche `CUR` qui concentre les règles de consolidation et de correction.
+4. Les usages finaux partent tous de `CUR`: Metabase, l'API backend et la webapp consultent la même version consolidée des données.
+5. Le diagramme montre donc un principe important: on ne corrige pas la source brute directement; on conserve l'historique et on applique les règles dans la couche curated.
+
 
 ## 5. Bénéfices attendus
 
@@ -92,6 +100,14 @@ flowchart LR
 2. Validation des rôles d'accès Google Sheets (qui peut éditer, qui peut seulement voir).
 3. Validation des délais de prise en compte (ex: toutes les nuits, ou plusieurs fois par jour).
 4. Validation des règles métier prioritaires (ex: si plusieurs corrections existent pour la même cellule).
+
+## 7.1 Points de vigilance techniques et fonctionnels
+
+1. Le diagramme fait converger plusieurs sources vers Airbyte; cela suppose des schémas de colonnes stables, sinon la synchronisation et les modèles dbt casseront au premier changement de feuille.
+2. `UPD` est volontairement séparé de `RAW`; il faut garder cette frontière pour conserver la traçabilité des demandes et éviter des écrasements silencieux.
+3. La couche `CUR` devient un point d'autorité unique pour trois consommateurs différents; toute règle de correction ambiguë ou non déterministe y aura un impact immédiat sur Metabase, l'API et le frontend.
+4. Le diagramme ne montre pas de mécanisme d'orchestration, de fréquence de sync ni de contrôle qualité; sans cela, le délai entre saisie métier et publication restera difficile à garantir.
+5. Le bloc `Scraping Algorithms` apparaît comme une source vers Airbyte; si cette partie est conservée dans la cible, il faut expliciter quel type de données est produit par ces scrapers, dans quelles tables, et avec quelles clés de rapprochement avec le flux CNC.
 
 ## 8. Règle métier clé à communiquer
 

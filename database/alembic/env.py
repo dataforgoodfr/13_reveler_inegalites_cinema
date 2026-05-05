@@ -3,11 +3,13 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from sqlalchemy import create_engine
+from sqlalchemy import text
 
 from alembic import context
 
 from database.database import Base
 from database.database import DATABASE_URL
+from database.database import DATABASE_SCHEMA
 from database.models import *  # noqa: F403
 
 # this is the Alembic Config object, which provides
@@ -30,6 +32,12 @@ config.set_section_option('alembic', 'sqlalchemy.url', DATABASE_URL)
 # ... etc.
 
 
+def set_schema_search_path(connection) -> None:
+    schema = connection.dialect.identifier_preparer.quote_schema(DATABASE_SCHEMA)
+    connection.execute(text(f"SET search_path TO {schema}, public"))
+    connection.commit()
+
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
@@ -46,6 +54,7 @@ def run_migrations_offline() -> None:
     context.configure(
         url=url,
         target_metadata=target_metadata,
+        version_table_schema="public",
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
     )
@@ -68,8 +77,11 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
+        set_schema_search_path(connection)
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection,
+            target_metadata=target_metadata,
+            version_table_schema="public",
         )
 
         with context.begin_transaction():

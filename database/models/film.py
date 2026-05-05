@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Date, Float, Boolean, Index
 from sqlalchemy.orm import relationship
 from database.database import Base
+from database.models.film_genre import FilmGenre
 
 class Film(Base):
     __tablename__ = "ric_films"
@@ -30,7 +31,7 @@ class Film(Base):
     broadcasters = Column(String, nullable=True)
     is_french_financed = Column(Boolean, nullable=True, default=False)
 
-    genres = relationship('Genre', secondary='ric_films_genres', back_populates='films')
+    genres = relationship("Genre", secondary=lambda: FilmGenre.__table__, back_populates="films")
     country_budget_allocations = relationship("FilmCountryBudgetAllocation", back_populates="film")
     trailer = relationship("Trailer", back_populates="film")
     poster = relationship("Poster", back_populates="film")

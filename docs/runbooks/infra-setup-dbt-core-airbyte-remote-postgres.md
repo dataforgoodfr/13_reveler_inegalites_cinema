@@ -1,5 +1,7 @@
 Owner: Joel Teixeira
-Last reviewed: 2026-03-18
+
+Last reviewed: 2026-04-30
+
 Status: active
 
 # Reproducible Infra Setup - Airbyte OSS + dbt Core with Remote Postgres

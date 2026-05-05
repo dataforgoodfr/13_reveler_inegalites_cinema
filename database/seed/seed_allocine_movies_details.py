@@ -26,7 +26,6 @@ def seed():
             if not film:
                 continue
 
-            # Skip if already enriched
             if film.release_date is not None and film.duration_minutes is not None:
                 continue
 
@@ -45,7 +44,7 @@ def seed():
 
             # Genres
             try:
-                genres = eval(row['genres']) if row['genres'] else []
+                genres = ast.literal_eval(row['genres']) if row['genres'] else []
                 film.genre_categories = FilmEntity.genre_categories(genres)
 
                 for genre_name in genres:
