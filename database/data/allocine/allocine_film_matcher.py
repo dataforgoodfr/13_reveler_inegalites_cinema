@@ -16,11 +16,25 @@ class AllocineFilmMatcher:
     from Allociné and saves the results to a CSV file.
     """
     CSV_HEADERS = ["film_id", "visa_number", "original_name", "cnc_agrement_year", "allocine_id", "allocine_title", "allocine_url"]
+    BACKUP_ENRICHED_CSV_PATH = "database/data/allocine/allocine_matches_enriched.csv"
 
     def __init__(self, csv_path: str):
         self.csv_path = csv_path
         self.scraper = AllocineScraper()
         self.db: Session = SessionLocal()
+        self.backup_rows_by_visa = self._load_backup_rows_by_visa()
+
+    def _load_backup_rows_by_visa(self) -> dict:
+        if not os.path.exists(self.BACKUP_ENRICHED_CSV_PATH):
+            return {}
+
+        with open(self.BACKUP_ENRICHED_CSV_PATH, mode="r", encoding="utf-8") as backup_file:
+            reader = csv.DictReader(backup_file)
+            return {
+                row["visa_number"]: row
+                for row in reader
+                if row.get("visa_number")
+            }
 
     async def find_allocine_film_by_name(self, name: str, year: str) -> dict:
         url_name = self.scraper._reformat_str_for_url(f"{name} {year}")
@@ -60,6 +74,21 @@ class AllocineFilmMatcher:
                 visa_number = film.visa_number
 
                 if visa_number in existing_visas:
+                    continue
+
+                backup_row = self.backup_rows_by_visa.get(visa_number)
+                if backup_row:
+                    writer.writerow([
+                        film.id,
+                        visa_number,
+                        original_name,
+                        cnc_agrement_year,
+                        backup_row.get("allocine_id", "Not found"),
+                        backup_row.get("allocine_title", "Not found"),
+                        backup_row.get("allocine_url", "Not found"),
+                    ])
+                    csvfile.flush()
+                    existing_visas.add(visa_number)
                     continue
 
                 try:

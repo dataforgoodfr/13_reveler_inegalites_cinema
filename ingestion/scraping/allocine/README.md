@@ -8,6 +8,7 @@
 
 | Date       | Author         | Observations                                |
 |------------|----------------|---------------------------------------------|
+| 2026-05-07 | OpenAI Codex   | Mise a jour de la doc de configuration: `config.json` versionne, suppression des references a `config.template.json` |
 | 2026-05-07 | Joel Teixeira | Implementation initiale |
 
 # Scraping Allocine
@@ -64,31 +65,24 @@ Exemple minimal:
 
 Si `database_url` est fourni, il remplace les champs Postgres individuels.
 
-Le fichier versionné `config.template.json` sert uniquement de modèle. Chaque utilisateur doit le cloner vers `config.json`, fichier local non versionné utilisé au runtime.
-
-Exemple:
-
-```bash
-cp ingestion/scraping/allocine/config.template.json ingestion/scraping/allocine/config.json
-```
+Le fichier `config.json` du dossier est le fichier de configuration runtime utilise par les commandes locales et Docker. Il est versionne dans ce repo.
 
 Les valeurs au format `${ENV_VAR:-default}` du `config.json` sont résolues depuis l'environnement du runtime.
 
 Dans l'environnement Airbyte actuel, la table source par défaut est `raw.airbyte_id_matching` et reprend les noms de colonnes bruts du sheet (`VISA`, `TITRE`, `ID_ALLOCINE`). Les champs absents comme l'année CNC ou l'URL Allociné peuvent être laissés à `null`.
 
-Le template principal applique actuellement `scrape_limit: 10`, ce qui borne les runs de debug et évite un scraping trop large par défaut. Ajuster cette valeur, la mettre à `null` ou la supprimer pour changer le volume traité.
+La configuration applique actuellement `scrape_limit: 10`, ce qui borne les runs de debug et évite un scraping trop large par défaut. Ajuster cette valeur, la mettre à `null` ou la supprimer pour changer le volume traité.
 
 Fichiers fournis dans le repo:
 
-1. `config.template.json`: squelette de configuration source a copier vers `config.json`
-2. `config.json`: configuration runtime locale non versionnee
-3. `catalog.template.json`: squelette de catalogue compatible Airbyte, conservé pour compatibilité CLI
-4. `build_local_image.sh`: build local de l'image Docker
-5. `run_local_spec.sh`: test `spec`
-6. `run_local_check.sh`: test `check`
-7. `run_local_read.sh`: test `read`
-8. `../../docker-compose.yml`: stack locale `prefect-server` + `prefect-worker` + `browserless`
-9. `../../prefect/flows.py`: flow Prefect versionné pour l'orchestration
+1. `config.json`: configuration runtime
+2. `catalog.template.json`: squelette de catalogue compatible Airbyte, conservé pour compatibilité CLI
+3. `build_local_image.sh`: build local de l'image Docker
+4. `run_local_spec.sh`: test `spec`
+5. `run_local_check.sh`: test `check`
+6. `run_local_read.sh`: test `read`
+7. `../../docker-compose.yml`: stack locale `prefect-server` + `prefect-worker` + `browserless`
+8. `../../prefect/flows.py`: flow Prefect versionné pour l'orchestration
 
 ## Initialisation de la table de sortie
 
@@ -176,13 +170,7 @@ export POSTGRES_SSLMODE=disable
 export DBT_USER_POSTGRES_PASSWORD=...
 ```
 
-Créer ensuite le fichier local de runtime:
-
-```bash
-cp ingestion/scraping/allocine/config.template.json ingestion/scraping/allocine/config.json
-```
-
-Les placeholders `${ENV_VAR:-default}` seront alors résolus depuis l'environnement au chargement de `config.json`.
+Les placeholders `${ENV_VAR:-default}` de `config.json` seront alors résolus depuis l'environnement au chargement du fichier.
 
 ### 4. Lancer le scraper à la main
 

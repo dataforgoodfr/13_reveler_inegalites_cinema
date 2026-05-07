@@ -20,11 +20,25 @@ class AllocineFilmEnricher:
         "allocine_visa_number", "poster_url", "release_date", "duration", "genres", "trailer_url", "Direction", "Casting",
         "Scénaristes", "Production", "Equipe technique", "Soundtrack", "Distribution", "Sociétés"
     ]
+    BACKUP_ENRICHED_CSV_PATH = "database/data/allocine/allocine_matches_enriched.csv"
 
     def __init__(self, input_csv_path: str):
         self.input_csv_path = input_csv_path
         self.output_csv_path = input_csv_path.replace(".csv", "_enriched.csv")
         self.scraper = AllocineScraper()
+        self.backup_rows_by_visa = self._load_backup_rows_by_visa()
+
+    def _load_backup_rows_by_visa(self) -> Dict[str, Dict[str, str]]:
+        if not os.path.exists(self.BACKUP_ENRICHED_CSV_PATH):
+            return {}
+
+        with open(self.BACKUP_ENRICHED_CSV_PATH, mode="r", encoding="utf-8") as backup_file:
+            reader = csv.DictReader(backup_file)
+            return {
+                row["visa_number"]: row
+                for row in reader
+                if row.get("visa_number")
+            }
 
     async def fetch_film_details(self, allocine_id: int) -> Optional[Dict[str, str]]:
         url = self.scraper.FILM_URL.format(allocine_film_id=allocine_id)
@@ -71,6 +85,12 @@ class AllocineFilmEnricher:
                 if visa_number in existing_enriched_visas:
                     continue
 
+                backup_row = self.backup_rows_by_visa.get(visa_number)
+                if backup_row:
+                    writer.writerow(backup_row)
+                    existing_enriched_visas.add(visa_number)
+                    continue
+
                 try:
                     allocine_id = int(allocine_id_raw)
                     if allocine_id <= 0:
@@ -101,6 +121,7 @@ class AllocineFilmEnricher:
                     print(f"❌ Error enriching film ID {allocine_id}: {e}")
 
                 writer.writerow(row)
+                existing_enriched_visas.add(visa_number)
 
         # Replace input only if needed
         print(f"✅ Enriched CSV saved to: {self.output_csv_path}")
