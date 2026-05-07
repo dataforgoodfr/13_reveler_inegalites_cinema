@@ -2,8 +2,8 @@
 set -euo pipefail
 
 IMAGE_NAME="${1:-reveler/source-allocine:dev}"
-CONFIG_PATH="${2:-ingestion/scraping/allocine/config.template.json}"
-CATALOG_PATH="${3:-ingestion/scraping/allocine/catalog.template.json}"
+CONFIG_PATH="${2:-ingestion/scraping/allocine/config.json}"
+CATALOG_PATH="${3:-ingestion/scraping/allocine/catalog.json}"
 
 docker run --rm \
   --network host \

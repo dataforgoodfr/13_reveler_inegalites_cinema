@@ -9,7 +9,7 @@ from prefect import flow, get_run_logger
 REPO_ROOT = Path("/app")
 DBT_PROJECT_DIR = REPO_ROOT / "ingestion" / "dbt"
 ALLOCINE_CONFIG_PATH = (
-    REPO_ROOT / "ingestion" / "scraping" / "allocine" / "config.template.json"
+    REPO_ROOT / "ingestion" / "scraping" / "allocine" / "config.json"
 )
 ALLOCINE_MAIN_PATH = REPO_ROOT / "ingestion" / "scraping" / "allocine" / "main.py"
 

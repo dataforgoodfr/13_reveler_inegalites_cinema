@@ -8,10 +8,7 @@
 
 | Date       | Author         | Observations                                |
 |------------|----------------|---------------------------------------------|
-| 2026-05-07 | Joel Teixeira  | Ajout du bloc de metadonnees et normalisation |
-| 2026-05-07 | Joel Teixeira   | Alignement sur le schema brut `raw` |
-| 2026-05-07 | Joel Teixeira   | Alignement de l'exemple de configuration sur `dbt_user` |
-| 2026-05-07 | Joel Teixeira | Ajout du guide de debug manuel en virtualenv |
+| 2026-05-07 | Joel Teixeira | Implementation initiale |
 
 # Scraping Allocine
 
@@ -60,29 +57,38 @@ Exemple minimal:
   "input_year_column": null,
   "input_allocine_id_column": "ID_ALLOCINE",
   "input_allocine_url_column": null,
-  "scrape_limit": 100,
+  "scrape_limit": 10,
   "playwright_ws_endpoint": "${PLAYWRIGHT_WS_ENDPOINT:-ws://browserless:3000}"
 }
 ```
 
 Si `database_url` est fourni, il remplace les champs Postgres individuels.
 
-Le `config.template.json` du repo peut aussi servir directement de config runtime: les valeurs au format `${ENV_VAR:-default}` sont résolues depuis l'environnement du conteneur `prefect-worker`.
+Le fichier versionné `config.template.json` sert uniquement de modèle. Chaque utilisateur doit le cloner vers `config.json`, fichier local non versionné utilisé au runtime.
+
+Exemple:
+
+```bash
+cp ingestion/scraping/allocine/config.template.json ingestion/scraping/allocine/config.json
+```
+
+Les valeurs au format `${ENV_VAR:-default}` du `config.json` sont résolues depuis l'environnement du runtime.
 
 Dans l'environnement Airbyte actuel, la table source par défaut est `raw.airbyte_id_matching` et reprend les noms de colonnes bruts du sheet (`VISA`, `TITRE`, `ID_ALLOCINE`). Les champs absents comme l'année CNC ou l'URL Allociné peuvent être laissés à `null`.
 
-Le template principal applique actuellement `scrape_limit: 100`, ce qui borne les runs de debug et évite un scraping trop large par défaut. Ajuster cette valeur, la mettre à `null` ou la supprimer pour changer le volume traité.
+Le template principal applique actuellement `scrape_limit: 10`, ce qui borne les runs de debug et évite un scraping trop large par défaut. Ajuster cette valeur, la mettre à `null` ou la supprimer pour changer le volume traité.
 
 Fichiers fournis dans le repo:
 
-1. `config.template.json`: squelette de configuration source
-2. `catalog.template.json`: squelette de catalogue compatible Airbyte, conservé pour compatibilité CLI
-3. `build_local_image.sh`: build local de l'image Docker
-4. `run_local_spec.sh`: test `spec`
-5. `run_local_check.sh`: test `check`
-6. `run_local_read.sh`: test `read`
-7. `../../docker-compose.yml`: stack locale `prefect-server` + `prefect-worker` + `browserless`
-8. `../../prefect/flows.py`: flow Prefect versionné pour l'orchestration
+1. `config.template.json`: squelette de configuration source a copier vers `config.json`
+2. `config.json`: configuration runtime locale non versionnee
+3. `catalog.template.json`: squelette de catalogue compatible Airbyte, conservé pour compatibilité CLI
+4. `build_local_image.sh`: build local de l'image Docker
+5. `run_local_spec.sh`: test `spec`
+6. `run_local_check.sh`: test `check`
+7. `run_local_read.sh`: test `read`
+8. `../../docker-compose.yml`: stack locale `prefect-server` + `prefect-worker` + `browserless`
+9. `../../prefect/flows.py`: flow Prefect versionné pour l'orchestration
 
 ## Initialisation de la table de sortie
 
@@ -118,17 +124,17 @@ Via Docker:
 ```bash
 bash ingestion/scraping/allocine/build_local_image.sh
 bash ingestion/scraping/allocine/run_local_spec.sh
-bash ingestion/scraping/allocine/run_local_check.sh reveler/source-allocine:dev ingestion/scraping/allocine/config.template.json
-bash ingestion/scraping/allocine/run_local_read.sh reveler/source-allocine:dev ingestion/scraping/allocine/config.template.json ingestion/scraping/allocine/catalog.template.json
+bash ingestion/scraping/allocine/run_local_check.sh reveler/source-allocine:dev ingestion/scraping/allocine/config.json
+bash ingestion/scraping/allocine/run_local_read.sh reveler/source-allocine:dev ingestion/scraping/allocine/config.json ingestion/scraping/allocine/catalog.template.json
 ```
 
 Via `docker compose exec` depuis `ingestion/`:
 
 ```bash
 docker compose exec prefect-worker python3 /app/ingestion/scraping/allocine/main.py spec
-docker compose exec prefect-worker python3 /app/ingestion/scraping/allocine/main.py check --config /app/ingestion/scraping/allocine/config.template.json
-docker compose exec prefect-worker python3 /app/ingestion/scraping/allocine/main.py read --config /app/ingestion/scraping/allocine/config.template.json --catalog /app/ingestion/scraping/allocine/catalog.template.json
-docker compose exec prefect-worker python3 /app/ingestion/scraping/allocine/main.py sync --config /app/ingestion/scraping/allocine/config.template.json
+docker compose exec prefect-worker python3 /app/ingestion/scraping/allocine/main.py check --config /app/ingestion/scraping/allocine/config.json
+docker compose exec prefect-worker python3 /app/ingestion/scraping/allocine/main.py read --config /app/ingestion/scraping/allocine/config.json --catalog /app/ingestion/scraping/allocine/catalog.template.json
+docker compose exec prefect-worker python3 /app/ingestion/scraping/allocine/main.py sync --config /app/ingestion/scraping/allocine/config.json
 ```
 
 ## Debug manuel en virtualenv
@@ -151,6 +157,7 @@ pip install -r ingestion/scraping/allocine/requirements.txt
 Depuis `ingestion/`:
 
 ```bash
+cd ingestion/
 docker compose up -d browserless
 ```
 
@@ -169,22 +176,28 @@ export POSTGRES_SSLMODE=disable
 export DBT_USER_POSTGRES_PASSWORD=...
 ```
 
-Le fichier `config.template.json` peut être conservé tel quel: ses placeholders `${ENV_VAR:-default}` seront résolus au runtime.
+Créer ensuite le fichier local de runtime:
+
+```bash
+cp ingestion/scraping/allocine/config.template.json ingestion/scraping/allocine/config.json
+```
+
+Les placeholders `${ENV_VAR:-default}` seront alors résolus depuis l'environnement au chargement de `config.json`.
 
 ### 4. Lancer le scraper à la main
 
 Depuis la racine du repo:
 
 ```bash
-python ingestion/scraping/allocine/main.py check --config ingestion/scraping/allocine/config.template.json
-python ingestion/scraping/allocine/main.py sync --config ingestion/scraping/allocine/config.template.json
+python ingestion/scraping/allocine/main.py check --config ingestion/scraping/allocine/config.json
+python ingestion/scraping/allocine/main.py sync --config ingestion/scraping/allocine/config.json
 ```
 
 Ordre conseillé:
 
 1. commencer par `check` pour valider la connectivité base + table d'entrée;
 2. lancer ensuite `sync` pour observer les logs détaillés du scraping;
-3. garder `scrape_limit: 100` ou le réduire temporairement si un debug plus court est nécessaire.
+3. garder `scrape_limit: 10` ou le réduire temporairement si un debug plus court est nécessaire.
 
 ### 5. Limite de cette approche
 

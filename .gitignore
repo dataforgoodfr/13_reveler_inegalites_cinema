@@ -130,6 +130,7 @@ ingestion/.env*
 ingestion/.venv-dbt
 !ingestion/.env*.example
 .venv
+.venv-*
 env/
 venv/
 ENV/
