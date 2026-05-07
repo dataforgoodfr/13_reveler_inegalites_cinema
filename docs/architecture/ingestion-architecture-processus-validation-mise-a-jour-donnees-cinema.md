@@ -28,7 +28,7 @@ Le nouveau processus repose sur 4 briques:
 3. Prefect: orchestration des syncs Airbyte via API, puis des exécutions `dbt`.
 4. dbt: application des règles métier pour produire des données "corrigées" prêtes pour Metabase et le site web.
 
-Important: les données brutes sont conservées. Les corrections sont appliquées en couche "curated" (pas d'écrasement direct de la source brute).
+Important: les données brutes sont conservées. Les corrections sont appliquées en couche `fnl` (pas d'écrasement direct de la source brute).
 
 ## 3. Parcours utilisateur attendu
 
@@ -91,7 +91,7 @@ flowchart LR
 3. Airbyte joue ici uniquement le rôle de passerelle d'ingestion vers PostgreSQL: il charge à la fois la zone brute (`RAW`) et les tables de modifications (`UPD`).
 4. dbt lit ensuite ces deux couches pour produire une couche `CUR` qui concentre les règles de consolidation et de correction.
 5. Les usages finaux partent tous de `CUR`: Metabase, l'API backend et la webapp consultent la même version consolidée des données.
-6. Le diagramme montre donc un principe important: on ne corrige pas la source brute directement; on conserve l'historique et on applique les règles dans la couche curated.
+6. Le diagramme montre donc un principe important: on ne corrige pas la source brute directement; on conserve l'historique et on applique les règles dans la couche `fnl`.
 
 
 ## 5. Bénéfices attendus

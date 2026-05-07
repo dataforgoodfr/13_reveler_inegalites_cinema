@@ -10,6 +10,7 @@
 |------------|---------------------------|-------------------------------------------------------|
 | 2026-04-30 | Hugo Laurens, Joel Teixeira | Creation de la specification technique cible        |
 | 2026-05-07 | Joel Teixeira             | Normalisation des metadonnees et conservation du statut draft |
+| 2026-05-07 | Joel Teixeira              | Alignement des couches `raw`, `staging`, `intermediate`, `fnl` |
 
 Note de cadrage 2026-04-30: ce document décrit la cible fonctionnelle. Pour l'état réel du repo et la trajectoire V1 retenue, se référer en priorité à `docs/architecture/ingestion-architecture-airbyte-dbt-prefect-scraping.md`. En particulier, le backend lit encore `ric_*`, les scrapers restent des jobs Python/docker orchestrés hors Airbyte, et Airbyte est réservé aux sources standards comme Google Sheets.
 
@@ -22,7 +23,7 @@ Mettre en place un pipeline pérenne pour:
 1. intégrer les nouveaux jeux de données CNC annuels via un Google Sheet unique alimenté en ajout de lignes;
 2. appliquer des corrections ciblées métier sur plusieurs entités (ex: `CreditHolder`);
 3. préserver l'historique brut;
-4. exposer une couche "curated" unique pour Metabase + backend + frontend.
+4. exposer une couche `fnl` unique pour Metabase + backend + frontend.
 
 Ce document décrit le contrat cible: sources attendues, colonnes, règles métier, modèles dbt attendus, tests et critères d'acceptation. Le setup opérationnel est dans le runbook; la trajectoire de migration est dans le plan d'architecture.
 
@@ -33,7 +34,7 @@ Inclus:
 1. Source Google Sheets `AGREEMENT CNC` (1 onglet unique, alimenté en append côté métier).
 2. Google Sheet `Modification data` (1 onglet par entité).
 3. Ingestion Airbyte vers PostgreSQL raw.
-4. Transformation dbt en couches `raw -> staging -> marts`.
+4. Transformation dbt en couches `raw -> staging -> intermediate -> fnl`.
 5. Exposition de tables/vues finales et intégration backend SQLAlchemy.
 6. Exécution séparée des scrapers existants hors Airbyte.
 
@@ -43,7 +44,7 @@ Inclus:
 ## 3.1 Flux global
 
 1. Bob alimente Google Sheets, avec ajout annuel de nouvelles lignes dans l'onglet unique `AGREEMENT CNC`.
-2. Airbyte synchronise vers schéma raw (`ab_raw` ou équivalent).
+2. Airbyte synchronise vers le schéma `raw`.
 3. Prefect orchestre les syncs Airbyte via API, les exécutions `dbt` et les jobs de scraping hors Airbyte.
 4. dbt construit:
    - `stg_*`: normalisation des types et colonnes,
@@ -60,16 +61,19 @@ Inclus:
    - cast des types;
    - renommage canonique;
    - normalisation des valeurs.
-3. `published/final`:
+3. `intermediate`:
+   - jointures et consolidations intermediaires;
+   - latest, dedup, validations.
+4. `fnl`:
    - application des corrections;
    - logique de priorité métier;
    - consommation BI/API.
 
 Note:
 
-1. dans la cible `schema1`, `ab_raw.id_matching` est la table d'entrée du scraping;
-2. `ab_raw.allocine_data` et `ab_raw.mubi_data` sont des tables brutes de sortie de scraping;
-3. le scraping est piloté par `ab_raw.id_matching`, pas par un mart dbt intermédiaire.
+1. dans la cible `schema1`, `raw.id_matching` est la table d'entrée du scraping;
+2. `raw.allocine_data` et `raw.mubi_data` sont des tables brutes de sortie de scraping;
+3. le scraping est piloté par `raw.id_matching`, pas par une table dbt `intermediate` ou `fnl`.
 
 ## 4. Contrats de données
 
@@ -195,16 +199,16 @@ TODO: valider ces règles avec les équipes métier et ajuster selon les besoins
 3. (`entity`, `id`) existant dans la table de référence;
 4. unicité de la version active dans `int_modifications_latest`.
 
-## 6.4 Tests sur marts / exposition
+## 6.4 Tests sur fnl / exposition
 
 1. unicité des clés métier (`film_id`, `credit_holder_id`, etc.);
 2. non-null des colonnes obligatoires publiées;
 3. test de non-régression du nombre de lignes vs source métier;
-4. test de cohérence "source vs curated" (delta explicable).
+4. test de cohérence "source vs fnl" (delta explicable).
 
 ## 7. Gestion des erreurs et observabilité (Optionnel V1, mais sympa pour alerter en cas de problèmes)
 
-1. Table `mart_data_corrections_rejected` avec motif de rejet:
+1. Table `fnl_data_corrections_rejected` avec motif de rejet:
    - colonne non autorisée,
    - id introuvable,
    - type invalide,
@@ -220,11 +224,11 @@ TODO: valider ces règles avec les équipes métier et ajuster selon les besoins
 
 ## 8. Impacts backend (FastAPI + SQLAlchemy)
 
-Créer/mettre à jour les modèles SQLAlchemy nécessaires pour consommer la couche curated:
+Créer/mettre à jour les modèles SQLAlchemy nécessaires pour consommer la couche `fnl`:
 
-1. modèles pour tables/vues `mart_*` exposées (au minimum films et credit holders);
-2. repositories lisant `mart_*` au lieu des tables source quand pertinent;
-3. adaptation des use cases (`GetFilmDetails`, `SearchFilms`, etc.) pour privilégier les champs curated;
+1. modèles pour tables/vues `fnl.*` exposées (au minimum films et credit holders);
+2. repositories lisant `fnl.*` au lieu des tables source quand pertinent;
+3. adaptation des use cases (`GetFilmDetails`, `SearchFilms`, etc.) pour privilégier les champs de `fnl`;
 4. maintenir la rétrocompatibilité API (même contrat de réponse).
 
 ## 9. Scrapers hors Airbyte (OPTIONNEL V1)
@@ -300,7 +304,7 @@ Approche retenue dans le repo:
 2. une correction métier valide dans `Modification data` est visible en sortie au prochain cycle;
 3. aucune donnée brute n'est perdue;
 4. les rejets sont visibles et actionnables; (OPTIONNEL V1)
-5. Metabase + frontend utilisent la même couche curated.
+5. Metabase + frontend utilisent la même couche `fnl`.
 
 ## Referenced by
 
