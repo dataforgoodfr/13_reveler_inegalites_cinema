@@ -1,3 +1,15 @@
+**Owner:** Julien Commes
+
+**Last reviewed:** 2026-05-07
+
+**Status:** active
+
+## Historique du document
+
+| Date       | Author         | Observations                                |
+|------------|----------------|---------------------------------------------|
+| 2026-05-07 | Joel Teixeira  | Ajout du bloc de metadonnees et normalisation |
+| 2026-05-07 | Julien Commes  | Reattribution de la propriete documentaire ML |
 
 Ce dossier contient le code de machine learning pour l'analyse automatique des différentes images (frames) de bande-annonces.
 

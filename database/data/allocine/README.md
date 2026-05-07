@@ -1,3 +1,15 @@
+**Owner:** Joel Teixeira
+
+**Last reviewed:** 2026-05-07
+
+**Status:** active
+
+## Historique du document
+
+| Date       | Author         | Observations                                |
+|------------|----------------|---------------------------------------------|
+| 2026-05-07 | Joel Teixeira  | Ajout du bloc de metadonnees et normalisation |
+
 # Scraping Allocine
 
 Ces scripts cherchent les films dans Allocine, recuperent leurs pages, puis transforment le HTML en donnees CSV exploitables par les seeders.
@@ -15,6 +27,12 @@ Ces scripts cherchent les films dans Allocine, recuperent leurs pages, puis tran
    - page casting: realisation, acteurs, scenario, production, equipe, musique, distribution, societes.
 8. L'enricher ecrit un CSV suffixe `_enriched.csv`.
 9. `seed_allocine_movies_details.py` injecte le CSV enrichi en base, met a jour `allocine_id`, la fiche film et les relations associees.
+
+## Statut
+
+Ce dossier decrit le flux historique manuel.
+
+Depuis 2026-05-07, un job standalone existe aussi dans [../../../ingestion/scraping/allocine/README.md](../../../ingestion/scraping/allocine/README.md). Il reutilise le parser HTML existant, mais sort un flux `allocine_data` au lieu des CSV versionnes.
 
 ## Fichiers
 
@@ -41,3 +59,9 @@ Prerequis: base PostgreSQL accessible, backend configure, Chromium distant lance
 - Le matcher depend de `ric_films`: le seed CNC doit avoir ete execute avant le scraping.
 - Les selecteurs CSS dependent du HTML Allocine.
 - L'enricher ignore l'enrichissement quand le numero de visa Allocine contredit le visa CNC.
+- Le flux cible retenu n'est plus un connecteur Airbyte: c'est un job standalone dans `ingestion/scraping/allocine/`.
+
+## Referenced by
+
+- [database/README.md](../../README.md)
+- [database/data/README.md](../README.md)

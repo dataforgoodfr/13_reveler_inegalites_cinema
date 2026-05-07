@@ -1,3 +1,15 @@
+**Owner:** Nicolas Revel
+
+**Last reviewed:** 2026-05-07
+
+**Status:** active
+
+## Historique du document
+
+| Date       | Author         | Observations                                 |
+|------------|----------------|----------------------------------------------|
+| 2026-05-07 | Nicolas Revel  | Ajout du bloc de metadonnees et normalisation |
+
 # Data For Good #13 - Révéler les Inégalités dans le Cinéma (RIC) - Documentation Backend
 
 ## Comment lancer le backend ?
@@ -93,3 +105,7 @@ Chaque use case encapsule une opération spécifique, ce qui permet de garder le
 
 Par exemple :
 - `GetFilmDetails` dans `use_cases/get_film_details.py` contient toute la logique nécessaire pour récupérer les informations détaillées d’un film.
+
+## Referenced by
+
+- [README.md](../README.md)

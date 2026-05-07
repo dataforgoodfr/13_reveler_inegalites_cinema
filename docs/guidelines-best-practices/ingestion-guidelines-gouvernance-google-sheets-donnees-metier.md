@@ -1,8 +1,15 @@
-Created by: Hugo Laurens, Joel Teixeira
+**Owner:** Joel Teixeira
 
-Last reviewed: 2026-03-11
+**Last reviewed:** 2026-05-07
 
-Status: draft
+**Status:** draft
+
+## Historique du document
+
+| Date       | Author                    | Observations                                          |
+|------------|---------------------------|-------------------------------------------------------|
+| 2026-03-11 | Hugo Laurens, Joel Teixeira | Creation du document de gouvernance                 |
+| 2026-05-07 | Joel Teixeira             | Normalisation des metadonnees et maintien du statut draft |
 
 # Gouvernance Google Sheets pour mises à jour de données
 

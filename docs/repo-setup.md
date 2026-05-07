@@ -1,3 +1,15 @@
+**Owner:** Joel Teixeira
+
+**Last reviewed:** 2026-05-07
+
+**Status:** active
+
+## Historique du document
+
+| Date       | Author         | Observations                                |
+|------------|----------------|---------------------------------------------|
+| 2026-05-07 | Joel Teixeira  | Ajout du bloc de metadonnees et normalisation |
+
 # Étapes d'installation des logiciels et / ou librairies
 
 ## Installation de Docker et Docker Compose
@@ -64,3 +76,7 @@ Par exemple pour Ubuntu 23.04+:
 
 L'installation avec l'installateur officiel nécessitant quelques étapes supplémentaires,
 se référer à la [documentation officielle](https://python-poetry.org/docs/#installing-with-the-official-installer).
+
+## Referenced by
+
+- [README.md](../README.md)

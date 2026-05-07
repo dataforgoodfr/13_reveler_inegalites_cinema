@@ -1,3 +1,15 @@
+**Owner:** Julien Commes
+
+**Last reviewed:** 2026-05-07
+
+**Status:** active
+
+## Historique du document
+
+| Date       | Author         | Observations                                |
+|------------|----------------|---------------------------------------------|
+| 2026-05-07 | Joel Teixeira  | Ajout du bloc de metadonnees et normalisation |
+
 # ML Image Analysis Pipeline Documentation
 
 ## Overview

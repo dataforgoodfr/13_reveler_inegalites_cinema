@@ -1,3 +1,15 @@
+**Owner:** Joel Teixeira
+
+**Last reviewed:** 2026-05-07
+
+**Status:** active
+
+## Historique du document
+
+| Date       | Author         | Observations                                |
+|------------|----------------|---------------------------------------------|
+| 2026-05-07 | Joel Teixeira  | Ajout du bloc de metadonnees et normalisation |
+
 # Extraction de donnees externes
 
 Ce dossier contient les scripts historiques de collecte web du projet.
@@ -40,6 +52,14 @@ Note: les classes MUBI sont dans le repo, mais les fichiers actuels ne declarent
 
 ## Evolution prevue
 
-La specification Airbyte/dbt prevoit d'encapsuler ces scripts de scraping existants dans des connecteurs Airbyte custom.
+La stratégie retenue dans le repo n'est plus d'encapsuler ces scrapers dans Airbyte.
 
-Voir [../../docs/specifications/specification-airbyte-dbt-mises-a-jour-donnees.md](../../docs/specifications/specification-airbyte-dbt-mises-a-jour-donnees.md).
+1. Airbyte reste réservé aux Google Sheets et autres connecteurs standards.
+2. Les scrapers sont progressivement repris comme jobs Python/docker autonomes dans `ingestion/scraping/`.
+3. Prefect orchestre ensuite `dbt` puis ces jobs de scraping.
+
+Voir [../../ingestion/README.md](../../ingestion/README.md).
+
+## Referenced by
+
+- [database/README.md](../README.md)

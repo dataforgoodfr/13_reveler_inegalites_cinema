@@ -1,8 +1,22 @@
-Owner: Joel Teixeira
+**Owner:** Joel Teixeira
 
-Last reviewed: 2026-05-05
+**Last reviewed:** 2026-05-07
 
-Status: Etat actuel du projet + draft d'architecture pour airbyte et dbt.
+**Status:** draft
+
+## Statut de référence
+
+Ce document est la cible d'architecture de référence pour le module `ingestion`.
+
+1. si un autre document d'architecture diverge de ce schéma cible, c'est ce document qui fait foi;
+2. les autres documents d'architecture doivent être lus comme des documents de transition, d'état actuel ou de plan d'exécution.
+
+## Historique du document
+
+| Date       | Author         | Observations                                                     |
+|------------|----------------|------------------------------------------------------------------|
+| 2026-05-06 | Joel Teixeira  | Documentation de l'etat actuel et du draft d'architecture        |
+| 2026-05-07 | Joel Teixeira  | Normalisation du champ Status et ajout de l'historique document  |
 
 ## Diagramme de flux global actuel
 
@@ -178,7 +192,7 @@ flowchart LR
         SRC_GS_FESTIVAL[src_gsheet_fix_festivals]
         SRC_GS_FESTIVAL_AWARDS[src_gsheet_fix_festival_awards]
 
-        AB_AGREEMENT[(ab_raw.films)]
+        AB_AGREEMENT[(ab_raw.agreement_cnc)]
         AB_ID_MATCHING[(ab_raw.id_matching)]
 
         AB_FILM_CREDITS[(ab_raw.fix_film_credits)]
@@ -196,7 +210,7 @@ flowchart LR
 
     subgraph SCRAPING_FLOW[Scraping flow]
         direction TB
-        SCRAPE_ALLOCINE[Allocine scraper<br/>scraping_allocine.py]
+        SCRAPE_ALLOCINE[Allocine scraping job<br/>ingestion/scraping/allocine/main.py]
         SCRAPE_MUBI[MUBI scraper<br/>scraping_mubi.py]
         AB_ALLOCINE[(ab_raw.allocine_data)]
         AB_MUBI[(ab_raw.mubi_data)]
@@ -300,20 +314,27 @@ flowchart LR
     class SRC_GS_CNC,SRC_GS_ID_MATCHING,SRC_GS_FILM_CREDITS,SRC_GS_FILM_GENRES,SRC_GS_FILMS_COUNTRY_BUDGET_ALLOCATION,SRC_GS_AWARD_NOMINATIONS,SRC_GS_CREDIT_HOLDERS,SRC_GS_ROLES,SRC_GS_GENRES,SRC_GS_COUNTRIES,SRC_GS_FESTIVAL,SRC_GS_FESTIVAL_AWARDS airbyteNode;
 
     classDef pythonScript fill:#fde047,stroke:#a16207,color:#111827;
-    class SCRAPE_ALLOCINE,SCRAPE_MUBI pythonScript;
+    class SCRAPE_ALLOCINE,SCRAPE_MUBI,PREFECT pythonScript;
 ```
 
 ## Lecture rapide de l'architecture cible
 
 1. Les Google Sheets restent les points d'entrée des corrections métier, puis Airbyte les charge dans `ab_raw`.
-2. dbt normalise ces tables brutes en `stg_*`, puis publie des tables finales `fnl_*` consommées par le frontend et Metabase.
-3. Les scrapers sont prévus comme des exécutions Airbyte, tandis que Prefect orchestre l'ordre global des runs, les dépendances, les relances et le déclenchement bout en bout.
-4. Les scrapers n'utilisent pas uniquement `id_matching`: ils lisent aussi la table dans laquelle ils écrivent déjà pour savoir ce qui a déjà été traité.
-5. Pour Allociné, le scraper charge `ab_raw.allocine_data` pour récupérer les IDs déjà scrapés.
-6. Il charge en parallèle `ab_raw.id_matching` pour obtenir la liste complète des IDs à traiter.
-7. Il compare les deux listes et isole les IDs présents dans `id_matching` mais absents de `allocine_data`.
-8. Le scraping cible ne porte donc que sur les IDs manquants, puis les nouvelles données scrapées sont ajoutées à la table existante.
-9. Le même principe s'applique au flux MUBI: la table de sortie existante sert de mémoire d'exécution, et `id_matching` sert de liste de référence.
+2. Pour `Modification data`, chaque onglet métier correspond à sa propre source/connexion Airbyte et à sa propre table brute cible.
+3. dbt normalise ces tables brutes en `stg_*`, puis publie des tables finales `fnl_*` consommées par le frontend et Metabase.
+4. Prefect orchestre les syncs Airbyte via API ainsi que les jobs Python/docker de scraping, tandis qu'Airbyte reste dédié aux sources standards comme Google Sheets.
+5. Les scrapers n'utilisent pas uniquement `id_matching`: ils lisent aussi la table dans laquelle ils écrivent déjà pour savoir ce qui a déjà été traité.
+6. Pour Allociné, le job prévu dans `ingestion/scraping/allocine/` charge `ab_raw.allocine_data` pour récupérer les IDs déjà terminés.
+7. Il charge en parallèle `ab_raw.id_matching` pour obtenir la liste complète des IDs à traiter.
+8. Il compare les deux listes et isole les IDs présents dans `id_matching` mais absents de `allocine_data`, ou dont le statut ne fait pas partie des statuts terminaux configurés.
+9. Le scraping cible ne porte donc que sur les IDs manquants, puis les nouvelles données scrapées sont ajoutées à la table existante avec `run_id`, `extracted_at`, `scrape_status` et `record_hash`.
+10. Le même principe s'applique au flux MUBI: la table de sortie existante sert de mémoire d'exécution, et `id_matching` sert de liste de référence.
+11. Côté dbt, le flux Allociné peut maintenant être relu via `stg_allocine_data` puis consolidé avec `int_allocine_data_latest_by_source_record`.
+
+## Conséquence importante pour les modèles dbt
+
+1. Dans cette cible, `id_matching` est la table d'entrée du scraping Allociné et MUBI.
+2. aucun mart dbt intermédiaire n'est la table de pilotage cible du scraping.
 
 ## Points de vigilance sur le scraping cible
 
@@ -321,5 +342,23 @@ flowchart LR
 2. Si la table de sortie contient des lignes partielles, en erreur ou obsolètes, le scraper peut considérer à tort un ID comme déjà traité.
 3. Ajouter uniquement les IDs manquants évite de retraiter tout l'historique, mais impose une stratégie claire de rescraping quand une donnée source change ou quand un scraping précédent était incomplet.
 4. La table de sortie devient à la fois un stockage de résultats et un registre d'avancement; il faut donc tracer les erreurs, dates de scraping et éventuels statuts de reprise.
-5. Le découpage Airbyte exécution / Prefect orchestration doit rester net: Airbyte lance les connecteurs de scraping, mais Prefect garde la responsabilité du chaînage global, des retries inter-étapes et de la supervision.
+5. Le découpage doit rester net: Airbyte charge les sources standards, tandis que Prefect lance les jobs de scraping, gère le chaînage global, les retries inter-étapes et la supervision.
 6. Si plusieurs runs s'exécutent en parallèle, le calcul des IDs manquants peut produire des doublons d'écriture sans verrouillage ou contrainte d'unicité adaptée.
+7. Le code historique `database/data/allocine/allocine_runner.py` reste encore manuel et orienté CSV; il n'est pas encore branché sur ce flux cible Airbyte.
+
+## Etat actuel du repo par rapport a la cible
+
+1. `Airbyte` pour Google Sheets est documenté, mais la configuration réelle des connexions reste encore externe au repo.
+2. `Prefect` est déjà dockerisé dans `ingestion/docker-compose.yml` et un flow versionné existe dans `ingestion/prefect/flows.py`.
+3. Le job standalone Allociné existe dans `ingestion/scraping/allocine/` et suit déjà la logique `id_matching -> allocine_data`.
+4. Les modèles `stg_agreement_cnc`, `stg_raw_ric_films`, `stg_allocine_data`, `int_agreement_cnc_latest_by_visa` et `int_allocine_data_latest_by_source_record` existent.
+5. Les tables finales `fnl_*` du schéma cible restent largement à construire.
+6. Le flux historique CSV/seeders existe encore en parallèle pour une partie du périmètre.
+
+## Roadmap de convergence
+
+1. Stabiliser `id_matching` comme unique entrée canonique du scraping.
+2. Aligner complètement le flow Prefect sur `Airbyte via API -> dbt -> scraping -> transformations finales`.
+3. Construire les tables `fnl_*` prévues dans ce schéma à partir de `ab_raw` et des sorties de scraping.
+4. Réduire progressivement les handoffs CSV historiques au profit des tables raw dédiées.
+5. Basculer ensuite backend et BI sur la couche finale publiée.

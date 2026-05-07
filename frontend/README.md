@@ -1,3 +1,15 @@
+**Owner:** Nicolas Revel
+
+**Last reviewed:** 2026-05-07
+
+**Status:** active
+
+## Historique du document
+
+| Date       | Author         | Observations                                 |
+|------------|----------------|----------------------------------------------|
+| 2026-05-07 | Nicolas Revel  | Ajout du bloc de metadonnees et normalisation |
+
 # Objectif 50 / 50 frontend
 
 ## Prérequis
@@ -72,3 +84,7 @@ Next.js est un framework React qui fournit :
 5. Utiliser les composants shadcn/ui pour un design cohérent
 
 Pour plus de détails, consultez la [documentation Next.js](https://nextjs.org/docs).
+
+## Referenced by
+
+- [README.md](../README.md)

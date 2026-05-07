@@ -1,8 +1,14 @@
-Owner: Joel Teixeira
+**Owner:** Joel Teixeira
 
-Last reviewed: 2026-04-30
+**Last reviewed:** 2026-05-07
 
-Status: active
+**Status:** active
+
+## Historique du document
+
+| Date       | Author         | Observations                                |
+|------------|----------------|---------------------------------------------|
+| 2026-05-07 | Joel Teixeira  | Ajout du bloc d'historique et normalisation |
 
 # Reproducible Infra Setup - Airbyte OSS + dbt Core with Remote Postgres
 
@@ -52,6 +58,34 @@ cd ingestion
 ```
 
 Unless explicitly stated otherwise, commands below assume current directory is `ingestion/`.
+
+## 3.1 Option Docker locale pour le module ingestion
+
+Le repo contient aussi [ingestion/docker-compose.yml](/root/explore/13_reveler_inegalites_cinema/ingestion/docker-compose.yml:1) pour dockeriser les briques versionnées du module:
+
+1. `dbt`
+2. `source_allocine`
+3. `browserless` pour le scraping local optionnel
+4. `prefect-*` pour l'orchestration locale self-hosted
+
+Exemples:
+
+```bash
+cd ingestion
+docker compose build dbt
+docker compose run --rm dbt debug --profile ric --project-dir /app/dbt
+docker compose --profile scraping build source_allocine
+docker compose --profile scraping run --rm source_allocine spec
+docker compose --profile orchestration up -d prefect-postgres prefect-redis prefect-server prefect-services prefect-worker
+```
+
+Cette stack ne remplace pas `Airbyte OSS` lui-même; elle dockerise le code d'ingestion versionné dans ce repo.
+
+Stratégie opérationnelle retenue:
+
+1. `Airbyte` sert uniquement aux Google Sheets source;
+2. `Prefect` orchestre ensuite les syncs Airbyte via API, puis `dbt` et les jobs de scraping hors Airbyte;
+3. le scraping Allociné lit `ab_raw.id_matching` et écrit `ab_raw.allocine_data`.
 
 ## 4. Prerequisites
 
@@ -165,8 +199,16 @@ Requires Google Sheets sources to be already created and shared with service acc
 ### Step 1 - Create sources
 
 1. Create Google Sheets source `src_gsheet_agreement_cnc`
-2. Create Google Sheets source `src_gsheet_modification_data`
-3. Use service account authentication
+2. Create one Google Sheets source per `Modification data` worksheet / entity table
+3. Use service account authentication for each source
+
+Recommended naming pattern for `Modification data`:
+
+1. `src_gsheet_fix_film_credits`
+2. `src_gsheet_fix_film_genres`
+3. `src_gsheet_fix_credit_holders`
+4. `src_gsheet_fix_roles`
+5. etc.
 
 ### Step 2 - Create Postgres destination
 
@@ -182,7 +224,14 @@ Create destination `dst_pg` with:
 ### Step 3 - Create connections
 
 1. `cnx_agreement_cnc_to_pg`
-2. `cnx_modification_data_to_pg`
+2. one connection per `Modification data` worksheet / target table
+
+Recommended naming pattern:
+
+1. `cnx_fix_film_credits_to_pg`
+2. `cnx_fix_film_genres_to_pg`
+3. `cnx_fix_credit_holders_to_pg`
+4. etc.
 
 Recommended defaults:
 
@@ -220,6 +269,8 @@ dbt --version
 ```bash
 test -f dbt/dbt_project.yml
 ```
+
+Le scraping ne lit pas de mart dbt de pilotage. La source de vérité du scraping est `ab_raw.id_matching`.
 
 If this check fails, pull the branch/repository content that includes the dbt project before continuing.
 
@@ -271,7 +322,7 @@ Every developer follows this order:
 1. Set `POSTGRES_*` values in `.env` for the environment you want to target (`test` or `prod`).
 2. Reload env vars (`set -a; source .env; set +a`).
 3. Ensure Airbyte local is running (`abctl local status`).
-4. Trigger or wait for Airbyte sync to the configured Postgres DB.
+4. Trigger Airbyte syncs via Prefect/API or wait for them to complete in the configured Postgres DB.
 5. Run `dbt build --profile ric  --project-dir dbt`.
 6. Validate marts consumed by backend/BI in the targeted environment.
 
@@ -317,3 +368,8 @@ A new developer setup is valid only if all checks pass:
 4. dbt Core install: https://docs.getdbt.com/docs/local/install-dbt
 5. dbt profiles: https://docs.getdbt.com/docs/local/profiles.yml
 6. dbt Postgres setup: https://docs.getdbt.com/docs/local/connect-data-platform/postgres-setup
+
+## Referenced by
+
+- [README.md](../../README.md)
+- [ingestion/README.md](../../ingestion/README.md)

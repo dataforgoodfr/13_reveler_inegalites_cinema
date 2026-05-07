@@ -1,10 +1,17 @@
-Created by: Hugo Laurens, Joel Teixeira
+**Owner:** Joel Teixeira
 
-Last reviewed: 2026-03-11
+**Last reviewed:** 2026-05-07
 
-Status: draft
+**Status:** draft
 
-Note de cadrage 2026-04-30: ce document décrit la cible fonctionnelle. Pour l'état réel du repo et la trajectoire V1 retenue, se référer en priorité à `docs/architecture/plan-automatisation-pipeline-ingestion.md` et `docs/architecture/schema1-ingestion-seeds-airbyte-dbt.md`. En particulier, le backend lit encore `ric_*`, les scrapers restent des jobs Python manuels/orchestrables, et les connecteurs Airbyte custom pour scraping restent optionnels.
+## Historique du document
+
+| Date       | Author                    | Observations                                          |
+|------------|---------------------------|-------------------------------------------------------|
+| 2026-04-30 | Hugo Laurens, Joel Teixeira | Creation de la specification technique cible        |
+| 2026-05-07 | Joel Teixeira             | Normalisation des metadonnees et conservation du statut draft |
+
+Note de cadrage 2026-04-30: ce document décrit la cible fonctionnelle. Pour l'état réel du repo et la trajectoire V1 retenue, se référer en priorité à `docs/architecture/ingestion-architecture-airbyte-dbt-prefect-scraping.md`. En particulier, le backend lit encore `ric_*`, les scrapers restent des jobs Python/docker orchestrés hors Airbyte, et Airbyte est réservé aux sources standards comme Google Sheets.
 
 # Spécification technique - Airbyte + dbt pour mises à jour CNC et corrections métier
 
@@ -24,11 +31,11 @@ Ce document décrit le contrat cible: sources attendues, colonnes, règles méti
 Inclus:
 
 1. Source Google Sheets `AGREEMENT CNC` (1 onglet unique, alimenté en append côté métier).
-2. Source Google Sheets `Modification data` (1 onglet par entité).
+2. Google Sheet `Modification data` (1 onglet par entité).
 3. Ingestion Airbyte vers PostgreSQL raw.
 4. Transformation dbt en couches `raw -> staging -> marts`.
 5. Exposition de tables/vues finales et intégration backend SQLAlchemy.
-6. Encapsulation des scripts de scraping existants dans des connecteurs Airbyte custom.
+6. Exécution séparée des scrapers existants hors Airbyte.
 
 
 ## 3. Architecture cible
@@ -37,11 +44,12 @@ Inclus:
 
 1. Bob alimente Google Sheets, avec ajout annuel de nouvelles lignes dans l'onglet unique `AGREEMENT CNC`.
 2. Airbyte synchronise vers schéma raw (`ab_raw` ou équivalent).
-3. dbt construit:
+3. Prefect orchestre les syncs Airbyte via API, les exécutions `dbt` et les jobs de scraping hors Airbyte.
+4. dbt construit:
    - `stg_*`: normalisation des types et colonnes,
    - `int_*`: consolidation intermédiaire (latest, dedup, validation),
-   - `mart_*`: tables/vues publiées.
-4. API FastAPI + Metabase lisent `mart_*` uniquement.
+   - `fnl_*` ou tables/vues publiées équivalentes.
+5. API FastAPI + Metabase lisent la couche publiée uniquement.
 
 ## 3.2 Couches de données
 
@@ -52,10 +60,16 @@ Inclus:
    - cast des types;
    - renommage canonique;
    - normalisation des valeurs.
-3. `marts/curated`:
+3. `published/final`:
    - application des corrections;
    - logique de priorité métier;
    - consommation BI/API.
+
+Note:
+
+1. dans la cible `schema1`, `ab_raw.id_matching` est la table d'entrée du scraping;
+2. `ab_raw.allocine_data` et `ab_raw.mubi_data` sont des tables brutes de sortie de scraping;
+3. le scraping est piloté par `ab_raw.id_matching`, pas par un mart dbt intermédiaire.
 
 ## 4. Contrats de données
 
@@ -85,6 +99,7 @@ Organisation:
 
 1. 1 onglet par entité (`CreditHolder`, `Film`, etc.).
 2. Schéma commun par onglet.
+3. Côté Airbyte, chaque onglet doit être synchronisé par sa propre source/connexion vers sa propre table brute cible.
 
 Colonnes V1:
 
@@ -112,7 +127,7 @@ Note sur `status`:
 2. `int_agreement_cnc_latest_by_visa`:
    - déduplication par `visa_number` (dernière version);
    - l'année métier provient de `cnc_agrement_year`, pas du nom d'onglet.
-3. `mart_films_curated`:
+3. `fnl_films` ou table finale équivalente:
    - left join `ric_films` + `int_agreement_cnc_latest_by_visa`;
    - `original_name_curated = coalesce(cnc.original_name, films.original_name)`;
    - conservation des deux colonnes:
@@ -130,9 +145,9 @@ Note sur `status`:
    - rejet des lignes invalides vers table d'erreurs.
 3. `int_modifications_latest`:
    - dernière correction par (`entity`, `id`, `column_name`).
-4. application dans marts par entité:
-   - `mart_credit_holders_curated`
-   - `mart_films_curated`
+4. application dans les tables finales par entité:
+   - `fnl_credit_holders`
+   - `fnl_films`
    - etc.
 
 Pattern SQL recommandé:
@@ -212,19 +227,20 @@ Créer/mettre à jour les modèles SQLAlchemy nécessaires pour consommer la cou
 3. adaptation des use cases (`GetFilmDetails`, `SearchFilms`, etc.) pour privilégier les champs curated;
 4. maintenir la rétrocompatibilité API (même contrat de réponse).
 
-## 9. Airbyte custom connectors pour scraping (OPTIONNEL V1)
+## 9. Scrapers hors Airbyte (OPTIONNEL V1)
 
-Objectif: intégrer les scripts existants (Allociné, MUBI, autres) dans Airbyte.
+Objectif: exécuter les scrapers existants (Allociné, MUBI, autres) hors Airbyte, tout en gardant un contrat brut exploitable.
 
-Approche:
+Approche retenue dans le repo:
 
-1. encapsuler chaque scraper dans un connecteur source custom (Python CDK Airbyte);
-2. émettre des enregistrements normalisés avec métadonnées d'extraction:
+1. exécuter chaque scraper comme job Python/docker autonome, orchestré par Prefect;
+2. écrire les enregistrements normalisés dans des tables brutes dédiées:
    - `extracted_at`,
    - `source_url`,
    - `run_id`,
    - `record_hash` (optionnel).
-3. synchroniser vers raw, puis transformer via dbt comme les autres flux.
+3. laisser Airbyte réservé aux Google Sheets et autres connecteurs standards;
+4. transformer ensuite ces tables via dbt comme les autres flux.
 
 ## 10. Sécurité, accès, et gouvernance
 
@@ -244,29 +260,35 @@ Approche:
 
 ## 11.2 Phase 2 - Ingestion
 
-1. créer connexions Airbyte Google Sheets -> Postgres raw;
-2. configurer la connexion Airbyte sur l'onglet CNC unique et vérifier la reprise correcte des nouvelles lignes ajoutées chaque année;
-3. tester la reprise après incident.
+1. créer les connexions Airbyte Google Sheets -> Postgres raw;
+2. configurer une connexion Airbyte sur l'onglet CNC unique et vérifier la reprise correcte des nouvelles lignes ajoutées chaque année;
+3. configurer une connexion Airbyte distincte pour chaque onglet de `Modification data`;
+4. tester la reprise après incident.
 
 ## 11.3 Phase 3 - dbt
 
-1. créer modèles `stg`, `int`, `mart`;
+1. créer modèles `stg`, `int`, `fnl` ou couche publiée équivalente;
 2. ajouter tous les tests listés section 6;
 3. publier documentation dbt (lineage + descriptions).
 
 ## 11.4 Phase 4 - Backend / Exposition
 
-1. ajouter modèles SQLAlchemy `mart_*`;
+1. ajouter modèles SQLAlchemy sur la couche finale publiée;
 2. adapter repositories/use cases;
 3. valider via tests API + tests de non-régression.
 
 ## 11.5 Phase 5 - BI / Front
 
-1. basculer Metabase sur `mart_*`;
+1. basculer Metabase sur la couche finale publiée;
 2. valider affichage frontend via API;
 3. recette métier avec jeux d'essai.
 
 ## 11.6 Phase 6 - Run
+
+1. déclencher les syncs Airbyte Google Sheets via API;
+2. déclencher `dbt`;
+3. déclencher les scrapers hors Airbyte via Prefect;
+4. exécuter les contrôles qualité finaux.
 
 1. mettre en place monitoring et alerting;
 2. documenter runbook opérationnel;
@@ -279,3 +301,9 @@ Approche:
 3. aucune donnée brute n'est perdue;
 4. les rejets sont visibles et actionnables; (OPTIONNEL V1)
 5. Metabase + frontend utilisent la même couche curated.
+
+## Referenced by
+
+- [README.md](../../README.md)
+- [database/data/README.md](../../database/data/README.md)
+- [ingestion/README.md](../../ingestion/README.md)

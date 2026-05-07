@@ -1,3 +1,15 @@
+**Owner:** Data Team DataForGood
+
+**Last reviewed:** 2026-05-07
+
+**Status:** active
+
+## Historique du document
+
+| Date       | Author                | Observations                                 |
+|------------|-----------------------|----------------------------------------------|
+| 2026-05-07 | Data Team DataForGood | Ajout du bloc de metadonnees et normalisation |
+
 # Data For Good #13 - Révéler les Inégalités dans le Cinéma (RIC)
 
 L'objectif de ce projet est de créer une application web qui informera le grand public et les institutions sur les inégalités de genre et raciales dans le cinéma français.
@@ -22,7 +34,7 @@ Techniquement, l'application sera composée de :
 
 ## Prérequis
 * `git`
-* `docker` et `docker-compose` (voir [documentation d'installation](docs/setup.md))
+* `docker` et `docker-compose` (voir [documentation d'installation](docs/repo-setup.md))
 
 ## Documentation
 
@@ -32,10 +44,9 @@ Points d'entrée principaux:
 2. [backend/README.md](backend/README.md): API FastAPI, routes, variables d'environnement, acces base.
 3. [database/README.md](database/README.md): modèles SQLAlchemy, migrations Alembic, seeds et données historiques.
 4. [ingestion/README.md](ingestion/README.md): statut rapide du workspace Airbyte/dbt et commandes dbt courantes.
-5. [docs/runbooks/infra-setup-dbt-core-airbyte-remote-postgres.md](docs/runbooks/infra-setup-dbt-core-airbyte-remote-postgres.md): setup operationnel Airbyte OSS, dbt Core et PostgreSQL.
-6. [docs/specifications/specification-airbyte-dbt-mises-a-jour-donnees.md](docs/specifications/specification-airbyte-dbt-mises-a-jour-donnees.md): contrats cible Google Sheets, Airbyte, dbt et critères d'acceptation.
-7. [docs/architecture/plan-automatisation-pipeline-ingestion.md](docs/architecture/plan-automatisation-pipeline-ingestion.md): etat actuel, ecarts et roadmap de migration vers une ingestion automatisee.
-
+5. [ml-image/README.md](ml-image/README.md): code de machine learning pour l'analyse automatique des différentes images (frames) de bande-annonces, modèles utilisés, installation et execution.
+6. [docs/repo-documentation-guidelines.md](docs/repo-documentation-guidelines.md): directives pour la documentation projet, structure recommandée, cycle de vie des documents.
+7. [AGENTS.md](AGENTS.md): guide de travail du repository, bonnes pratiques et documents à lire en priorité.
 
 # Contribution
 

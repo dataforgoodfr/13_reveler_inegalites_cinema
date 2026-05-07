@@ -1,3 +1,15 @@
+**Owner:** Joel Teixeira
+
+**Last reviewed:** 2026-05-07
+
+**Status:** active
+
+## Historique du document
+
+| Date       | Author         | Observations                                |
+|------------|----------------|---------------------------------------------|
+| 2026-05-07 | Joel Teixeira  | Ajout du bloc de metadonnees et normalisation |
+
 # Scraping MUBI
 
 Ces scripts collectent les films listes sur des pages de festivals MUBI, puis recuperent les prix et nominations visibles sur les pages awards de chaque film.
@@ -49,3 +61,8 @@ Prerequis: Chromium distant lance et variable `PLAYWRIGHT_WS_ENDPOINT` definie.
 - Les selecteurs CSS MUBI sont des classes generees; ils peuvent changer.
 - Le script redemarre regulierement la session navigateur pour limiter les blocages.
 - La collecte d'awards est volontairement bornee par `max_total_requests` par defaut.
+
+## Referenced by
+
+- [database/README.md](../../README.md)
+- [database/data/README.md](../README.md)

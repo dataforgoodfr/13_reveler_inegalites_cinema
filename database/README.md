@@ -1,10 +1,15 @@
-Owner: Joel Teixeira
+**Owner:** Joel Teixeira
 
-Last reviewed: 2026-04-30
+**Last reviewed:** 2026-05-07
 
-Status: active
+**Status:** active
 
-History: Ce code a été implémenté en 2025 pendant la saison 13 DataForGood, dans le cadre du projet RIC (Révéler les Inégalités au Cinéma) par François ([fitzfoufou](https://github.com/fitzfoufou)). Il a été revu et documenté en 2026 pour faciliter la maintenance et les évolutions futures.
+## Historique du document
+
+| Date       | Author         | Observations                                                                 |
+|------------|----------------|------------------------------------------------------------------------------|
+| 2025       | Francois       | Implementation initiale du code de base de donnees pendant la saison 13 D4G |
+| 2026-05-07 | Joel Teixeira  | Revue, documentation et normalisation des metadonnees                        |
 
 # Base de données
 
@@ -129,3 +134,7 @@ Attention: certains seeders mettent à jour ou suppriment/recréent des données
 3. Le backend lit encore les tables `ric_*` directement, pas des marts dbt curated.
 4. Les notebooks ne sont pas testes automatiquement.
 5. Les données versionnées incluent des exports intermédiaires qui peuvent devenir obsolètes.
+
+## Referenced by
+
+- [README.md](../README.md)
