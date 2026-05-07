@@ -6,10 +6,9 @@
 
 ## Historique du document
 
-| Date       | Author         | Observations                                                                 |
-|------------|----------------|------------------------------------------------------------------------------|
-| 2025       | Francois       | Implementation initiale du code de base de donnees pendant la saison 13 D4G |
-| 2026-05-07 | Joel Teixeira  | Revue, documentation et normalisation des metadonnees                        |
+| # | Date       | Author         | Observations           |
+|---|------------|----------------|------------------------|
+| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
 
 # Base de données
 

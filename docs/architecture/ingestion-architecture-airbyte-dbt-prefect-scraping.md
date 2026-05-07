@@ -13,11 +13,9 @@ Ce document est la cible d'architecture de référence pour le module `ingestion
 
 ## Historique du document
 
-| Date       | Author         | Observations                                                     |
-|------------|----------------|------------------------------------------------------------------|
-| 2026-05-06 | Joel Teixeira  | Documentation de l'etat actuel et du draft d'architecture        |
-| 2026-05-07 | Joel Teixeira  | Normalisation du champ Status et ajout de l'historique document  |
-| 2026-05-07 | Joel Teixeira   | Alignement des schemas `raw`, `staging`, `intermediate`, `fnl` |
+| # | Date       | Author         | Observations           |
+|---|------------|----------------|------------------------|
+| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
 
 ## Diagramme de flux global actuel
 

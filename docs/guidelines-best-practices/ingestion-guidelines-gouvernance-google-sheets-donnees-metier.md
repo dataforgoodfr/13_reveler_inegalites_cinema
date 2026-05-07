@@ -6,10 +6,9 @@
 
 ## Historique du document
 
-| Date       | Author                    | Observations                                          |
-|------------|---------------------------|-------------------------------------------------------|
-| 2026-03-11 | Hugo Laurens, Joel Teixeira | Creation du document de gouvernance                 |
-| 2026-05-07 | Joel Teixeira             | Normalisation des metadonnees et maintien du statut draft |
+| # | Date       | Author         | Observations           |
+|---|------------|----------------|------------------------|
+| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
 
 # Gouvernance Google Sheets pour mises à jour de données
 

@@ -6,9 +6,9 @@
 
 ## Historique du document
 
-| Date       | Author         | Observations                                 |
-|------------|----------------|----------------------------------------------|
-| 2026-05-07 | Nicolas Revel  | Ajout du bloc de metadonnees et normalisation |
+| # | Date       | Author         | Observations           |
+|---|------------|----------------|------------------------|
+| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
 
 # Objectif 50 / 50 frontend
 

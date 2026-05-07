@@ -6,9 +6,9 @@
 
 ## Historique du document
 
-| Date       | Author         | Observations                                  |
-|------------|----------------|-----------------------------------------------|
-| 2026-05-07 | Joel Teixeira | Création du README dbt et inventaire des modèles préparés |
+| # | Date       | Author         | Observations           |
+|---|------------|----------------|------------------------|
+| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
 
 # dbt
 

@@ -20,7 +20,7 @@ delete_deployment_if_exists "Recuperer les donnees Allocine/recuperer-les-donnee
 delete_deployment_if_exists "Finaliser les donnees/finaliser-les-donnees"
 
 prefect deploy "${FLOWS_FILE}:main_ingestion_flow" \
-  --name "lancer-l-ingestion-complete" \
+  --name "lancer-ingestion-donnees" \
   --description "Execution manuelle du pipeline d'ingestion complet avec etapes optionnelles Airbyte et dbt final." \
   --pool "${POOL_NAME}" >/tmp/prefect-deploy-main.log 2>&1 || {
   cat /tmp/prefect-deploy-main.log

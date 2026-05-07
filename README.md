@@ -6,9 +6,9 @@
 
 ## Historique du document
 
-| Date       | Author                | Observations                                 |
-|------------|-----------------------|----------------------------------------------|
-| 2026-05-07 | Data Team DataForGood | Ajout du bloc de metadonnees et normalisation |
+| # | Date       | Author         | Observations           |
+|---|------------|----------------|------------------------|
+| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
 
 # Data For Good #13 - Révéler les Inégalités dans le Cinéma (RIC)
 

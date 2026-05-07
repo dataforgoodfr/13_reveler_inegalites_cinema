@@ -1,18 +1,14 @@
-**Propriétaire:** Joel Teixeira
+**Owner:** Joel Teixeira
 
-**Dernière relecture:** 2026-05-07
+**Last reviewed:** 2026-05-07
 
-**Statut:** active
+**Status:** active
 
 ## Historique du document
 
-| Date       | Auteur         | Observations                                |
-|------------|----------------|---------------------------------------------|
-| 2026-05-07 | Joel Teixeira  | Ancienne tentative de renommage du schema final, remplacee depuis par `fnl` |
-| 2026-05-07 | Joel Teixeira  | Ajout du bloc d'historique et normalisation |
-| 2026-05-07 | Joel Teixeira   | Alignement des schemas `raw`, `staging`, `intermediate`, `fnl` |
-| 2026-05-07 | Joel Teixeira   | Renommage du secret runtime en `DBT_USER_POSTGRES_PASSWORD` |
-| 2026-05-07 | Joel Teixeira   | Publication automatique des deployments Prefect au demarrage du worker |
+| # | Date       | Author         | Observations           |
+|---|------------|----------------|------------------------|
+| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
 
 # Setup infra reproductible - Airbyte OSS + dbt Core + Prefect avec Postgres distant
 
@@ -111,9 +107,9 @@ Cette stack ne remplace pas `Airbyte OSS` lui-même; elle dockerise le code d'in
 Stratégie opérationnelle retenue:
 
 1. `Airbyte` sert uniquement aux Google Sheets source;
-2. `Prefect` orchestre ensuite les syncs Airbyte via API, puis `dbt` et les jobs de scraping hors Airbyte;
+2. `Prefect` orchestre aujourd'hui `dbt` et les jobs de scraping hors Airbyte; les syncs Airbyte via API sont déjà modélisés mais restent un placeholder explicite;
 3. `Prefect` stocke son état dans une database distante dédiée `prefect` sur le serveur PostgreSQL existant;
-4. le scraping Allociné lit `raw.id_matching` et écrit `raw.allocine_data`.
+4. le scraping Allociné lit actuellement `raw.airbyte_id_matching` et écrit `raw.allocine_data`.
 
 ## 4. Prérequis
 
@@ -121,10 +117,11 @@ Requis sur la machine développeur:
 
 1. Docker + Docker Compose plugin
 2. `curl`
-3. accès distant à la database Postgres `test` et/ou `prod`;
-4. accès distant à la database Prefect dédiée sur le même serveur Postgres.
+3. `python3` pour exécuter le bootstrap Airbyte versionné du repo;
+4. accès distant à la database Postgres `test` et/ou `prod`;
+5. accès distant à la database Prefect dédiée sur le même serveur Postgres.
 
-Python local n'est pas requis pour le chemin nominal du runbook.
+Python local n'est pas requis pour `dbt`, `Prefect` et le scraping dans le chemin nominal Docker, mais reste requis pour lancer `airbyte/bootstrap.py`.
 Un Postgres local peut être utilisé pour des tests isolés, mais il n'est pas requis.
 
 
@@ -174,6 +171,7 @@ CREATE USER airbyte_user WITH PASSWORD '<replace>';
 CREATE USER dbt_user WITH PASSWORD '<replace>';
 
 GRANT CONNECT ON DATABASE reveler_inegalites_cinema TO airbyte_user;
+GRANT CREATE, TEMPORARY ON DATABASE reveler_inegalites_cinema TO airbyte_user;
 GRANT CONNECT ON DATABASE reveler_inegalites_cinema TO dbt_user;
 
 CREATE SCHEMA IF NOT EXISTS raw;
@@ -276,11 +274,39 @@ Les Google Sheets doivent exister et être partagés avec l'email du compte de s
 4. créer et télécharger une clé JSON pour ce compte de service;
 5. partager les sheets avec l'email du compte de service en lecture.
 
-### Étape 1 - Créer les sources
+### Étape 1 - Préparer les fichiers locaux
 
-1. créer la source Google Sheets `src_gsheet_agreement_cnc`;
-2. créer une source Google Sheets par onglet `Modification data` / table entité;
-3. utiliser l'authentification par compte de service pour chaque source.
+Le chemin par défaut du repo est maintenant le bootstrap versionné documenté dans [ingestion/airbyte/README.md](../../ingestion/airbyte/README.md).
+
+Préparer:
+
+1. un fichier JSON de clé de compte de service dans `ingestion/airbyte/json_credentials/`;
+2. les manifests source dans `ingestion/airbyte/sources/`;
+3. `configuration.spreadsheet_id` pour chaque source réellement activée;
+4. `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_SSLMODE` et `AIRBYTE_DESTINATION_POSTGRES_PASSWORD` dans `ingestion/.env`.
+
+Règles de fonctionnement du bootstrap:
+
+1. le dossier `json_credentials/` est versionné mais pas son contenu;
+2. le bootstrap choisit automatiquement l'unique fichier `.json` présent dans `json_credentials/`;
+3. le bootstrap récupère automatiquement les credentials API Airbyte via `abctl local credentials` si besoin;
+4. le bootstrap infère automatiquement le workspace Airbyte s'il n'y en a qu'un;
+5. un manifest avec `spreadsheet_id` vide échoue volontairement tant que l'URL réelle du Google Sheet n'est pas renseignée.
+
+### Étape 2 - Appliquer le bootstrap
+
+Depuis `ingestion/`:
+
+```bash
+python3 airbyte/bootstrap.py apply --dry-run
+python3 airbyte/bootstrap.py apply
+```
+
+Le bootstrap:
+
+1. crée ou met à jour la ou les sources Google Sheets;
+2. crée ou met à jour la destination Postgres;
+3. crée ou met à jour la connexion source -> destination correspondante.
 
 Convention de nommage recommandée pour `Modification data`:
 
@@ -290,41 +316,36 @@ Convention de nommage recommandée pour `Modification data`:
 4. `src_gsheet_fix_roles`
 5. etc.
 
-### Étape 2 - Créer la destination Postgres
-
-Créer la destination `dst_pg` avec:
+La destination Postgres générée automatiquement utilise:
 
 1. Host: `${POSTGRES_HOST}`
 2. Port: `${POSTGRES_PORT}`
 3. Database: `${POSTGRES_DB}`
-4. User/password: `airbyte_user` / mot de passe Airbyte dédié
-5. schéma par défaut: `raw`
-6. mode SSL: `${POSTGRES_SSLMODE}` si requis par le serveur Postgres
+4. User: `airbyte_user`
+5. Password: `${AIRBYTE_DESTINATION_POSTGRES_PASSWORD}`
+6. schéma par défaut: `raw`
+7. mode SSL: `${POSTGRES_SSLMODE}` si requis par le serveur Postgres
 
-Important:
 
-1. dans l'état actuel du repo, `prefect-worker` utilise `dbt_user` en dur pour `dbt`;
-2. ne pas réutiliser un éventuel username du runtime repo comme identifiant de destination Airbyte dans cette architecture.
+### Étape 3 - Validation du premier sync
 
-### Étape 3 - Créer les connexions
+Après le premier `apply`, vérifier:
 
-1. `cnx_agreement_cnc_to_pg`
-2. une connexion par onglet `Modification data` / table cible
+1. que la source est visible dans Airbyte avec le bon `name`;
+2. que la destination Postgres est visible avec `airbyte_user`;
+3. que la connexion source -> destination existe;
+4. que les tables brutes attendues existent dans la database Postgres configurée.
 
-Convention de nommage recommandée:
+### Étape 4 - Utilisation de l'UI Airbyte en secours/debug
 
-1. `cnx_fix_film_credits_to_pg`
-2. `cnx_fix_film_genres_to_pg`
-3. `cnx_fix_credit_holders_to_pg`
-4. etc.
+L'UI Airbyte n'est plus le chemin nominal de setup. Elle reste utile pour:
 
-Paramètres recommandés:
+1. inspecter une source, une destination ou une connexion créées par le bootstrap;
+2. lancer un test manuel ponctuel;
+3. diagnostiquer un problème de schéma découvert, de stream ou de credential;
+4. comparer l'état appliqué par API avec l'état visible côté UI.
 
-1. fréquence: horaire ou nocturne, selon le SLA métier;
-2. normalisation des noms en colonnes SQL valides;
-3. notifications activées en cas d'échec de sync.
-
-### Étape 4 - Validation du premier sync
+Si un diagnostic manuel devient nécessaire, l'UI reste accessible sur `http://$AIRBYTE_HOST:$AIRBYTE_PORT`.
 
 Après le premier sync, vérifier les tables brutes dans la database Postgres configurée:
 
@@ -345,7 +366,7 @@ Mode par défaut: `dbt Core` s'exécute dans `prefect-worker`, démarré par `do
 test -f dbt/dbt_project.yml
 ```
 
-Le scraping ne lit pas de table `fnl` de pilotage. La source de vérité du scraping est `raw.id_matching`.
+Le scraping ne lit pas de table `fnl` de pilotage. La source de vérité actuelle du scraping est `raw.airbyte_id_matching`.
 
 Si ce check échoue, récupérer la branche ou le contenu repo contenant le projet dbt avant de continuer.
 
@@ -416,7 +437,7 @@ docker compose exec prefect-worker python3 /app/ingestion/prefect/flows.py main-
 
 Convention actuelle:
 
-1. `main-ingestion` = point d'entrée CLI unique du flow principal `airbyte sync -> dbt phase 1 -> scraping -> dbt phase 2`.
+1. `main-ingestion` = point d'entrée CLI unique du flow principal `airbyte sync placeholder -> dbt phase 1 -> scraping -> dbt phase 2`.
 2. dans l'UI Prefect, ce flow est publié avec le libellé `Lancer l'ingestion complete`.
 3. les étapes `Synchroniser les sources`, `Preparer les donnees`, `Recuperer les donnees Allocine` et `Finaliser les donnees` restent visibles comme sous-flows enfants dans le run.
 
@@ -425,8 +446,9 @@ Note:
 1. la séparation `dbt avant scraping` / `dbt après scraping` reste volontaire, mais elle est désormais modélisée comme sous-flows enfants du flow principal;
 2. `dbt phase 1` s'exécute par défaut dans `prefect-worker`;
 3. `scraping Allocine` est finalisé;
-4. `airbyte sync` et `dbt phase 2` restent présents comme tâches optionnelles, mais sont des placeholders explicites;
-5. le flow `main-ingestion` saute ces étapes futures tant qu'elles ne sont pas activées.
+4. `airbyte sync` reste présent comme étape optionnelle, mais c'est un placeholder explicite tant qu'aucune implémentation API réelle n'est branchée;
+5. `dbt phase 2` existe dans le flow et peut s'exécuter si activé;
+6. si `run_airbyte_sync_step=true`, le flow échoue actuellement avec `NotImplementedError`, ce qui est attendu tant que l'étape n'est pas implémentée.
 
 ## 12. Workflow développeur quotidien
 
@@ -436,11 +458,14 @@ Chaque développeur suit cet ordre:
 2. recharger les variables (`set -a; source .env; set +a`);
 3. vérifier qu'Airbyte local tourne (`abctl local status`);
 4. démarrer la stack ingestion si nécessaire: `docker compose up -d`;
-5. configurer ou vérifier dans Airbyte que la destination Postgres utilise bien `airbyte_user`;
-6. déclencher les syncs Airbyte via Prefect/API ou attendre leur fin dans la database Postgres configurée;
-7. lancer `docker compose exec prefect-worker dbt build --profile ric --project-dir /app/ingestion/dbt`, ou lancer le flow Prefect principal depuis l'UI;
-8. lancer les runs manuellement depuis l'UI Prefect;
-9. valider la couche publiée/finale consommée par backend/BI dans l'environnement cible.
+5. déposer un unique fichier JSON de compte de service dans `ingestion/airbyte/json_credentials/`;
+6. renseigner les `spreadsheet_id` nécessaires dans `ingestion/airbyte/sources/*.json`;
+7. appliquer le bootstrap Airbyte: `python3 airbyte/bootstrap.py apply --dry-run && python3 airbyte/bootstrap.py apply`;
+8. déclencher les syncs Airbyte depuis Airbyte UI/API ou lancer des tests manuels; ne pas considérer Prefect comme chemin opérationnel pour cette étape tant que le placeholder n'est pas implémenté;
+9. vérifier au besoin dans l'UI Airbyte que la destination Postgres utilise bien `airbyte_user`;
+10. lancer `docker compose exec prefect-worker dbt build --profile ric --project-dir /app/ingestion/dbt`, ou lancer le flow Prefect principal depuis l'UI;
+11. lancer les runs manuellement depuis l'UI Prefect;
+12. valider la couche publiée/finale consommée par backend/BI dans l'environnement cible.
 
 ## 13. Changement d'environnement
 
@@ -450,17 +475,18 @@ Pour changer d'environnement, modifier uniquement les valeurs de connexion:
 2. modifier `.env` et ajuster `PREFECT_PORT` si le port local choisi change;
 3. modifier `.env` et ajuster `BROWSERLESS_PORT` si le port local choisi change;
 4. modifier `.env` et pointer `PREFECT_API_DATABASE_CONNECTION_URL` vers la database Prefect dédiée correspondante;
-5. mettre à jour séparément dans Airbyte la destination Postgres pour qu'elle pointe vers le bon hôte cible avec `airbyte_user`;
+5. renseigner `AIRBYTE_DESTINATION_POSTGRES_PASSWORD` pour l'environnement cible;
 6. recharger les variables d'environnement (`set -a; source .env; set +a`);
-7. garder les schémas et contrats identiques entre environnements (`raw`, `staging`, `intermediate`, `fnl`);
-8. limiter les écritures production aux mainteneurs ou automatisations approuvées.
+7. relancer `python3 airbyte/bootstrap.py apply` pour mettre à jour la destination et les connexions avec la bonne cible;
+8. garder les schémas et contrats identiques entre environnements (`raw`, `staging`, `intermediate`, `fnl`);
+9. limiter les écritures production aux mainteneurs ou automatisations approuvées.
 
 ## 14. Checklist de reproductibilité
 
 Un setup développeur est valide seulement si tous les checks passent:
 
 1. `abctl version` correspond à la version approuvée par l'équipe;
-2. `docker compose exec prefect-worker dbt --version` affiche `1.11.7` core + adapter postgres;
+2. `docker compose exec prefect-worker dbt --version` affiche les versions attendues du conteneur, actuellement `dbt-core 1.11.7` et `dbt-postgres 1.10.0`; cet écart est volontaire et ne doit pas être interprété comme un défaut;
 3. `docker compose config --quiet` réussit;
 4. l'UI Prefect est accessible sur `http://localhost:$PREFECT_PORT`;
 5. Airbyte synchronise les sources Google Sheets vers `raw`;

@@ -1,0 +1,2 @@
+json_credentials/*
+!json_credentials/.gitignore

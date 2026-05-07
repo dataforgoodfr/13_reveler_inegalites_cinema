@@ -6,10 +6,9 @@
 
 ## Historique du document
 
-| Date       | Author         | Observations                                |
-|------------|----------------|---------------------------------------------|
-| 2026-05-07 | OpenAI Codex   | Mise a jour de la doc de configuration: `config.json` versionne, suppression des references a `config.template.json` |
-| 2026-05-07 | Joel Teixeira | Implementation initiale |
+| # | Date       | Author         | Observations           |
+|---|------------|----------------|------------------------|
+| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
 
 # Scraping Allocine
 
@@ -19,7 +18,7 @@ Objectif: remplacer le handoff CSV historique dans `database/data/allocine/` par
 
 ## Ce que fait la source
 
-1. Lit par défaut les films candidats depuis `raw.id_matching`.
+1. Lit actuellement les films candidats depuis `raw.airbyte_id_matching`.
 2. Crée automatiquement la table mémoire de sortie si elle n'existe pas encore.
 3. Lit les lignes déjà réussies dans `raw.allocine_data` pour ignorer les enregistrements déjà traités.
 4. Réutilise le parseur HTML Allociné historique et la session navigateur Playwright:

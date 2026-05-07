@@ -6,13 +6,9 @@
 
 ## Historique du document
 
-| Date       | Author                    | Observations                                          |
-|------------|---------------------------|-------------------------------------------------------|
-| 2026-04-30 | Hugo Laurens, Joel Teixeira | Creation de la specification technique cible        |
-| 2026-05-07 | Joel Teixeira             | Normalisation des metadonnees et conservation du statut draft |
-| 2026-05-07 | Joel Teixeira              | Alignement des couches `raw`, `staging`, `intermediate`, `fnl` |
-
-Note de cadrage 2026-04-30: ce document décrit la cible fonctionnelle. Pour l'état réel du repo et la trajectoire V1 retenue, se référer en priorité à `docs/architecture/ingestion-architecture-airbyte-dbt-prefect-scraping.md`. En particulier, le backend lit encore `ric_*`, les scrapers restent des jobs Python/docker orchestrés hors Airbyte, et Airbyte est réservé aux sources standards comme Google Sheets.
+| # | Date       | Author         | Observations           |
+|---|------------|----------------|------------------------|
+| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
 
 # Spécification technique - Airbyte + dbt pour mises à jour CNC et corrections métier
 

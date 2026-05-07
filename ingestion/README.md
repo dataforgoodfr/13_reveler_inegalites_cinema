@@ -6,14 +6,9 @@
 
 ## Historique du document
 
-| Date       | Author         | Observations                                |
-|------------|----------------|---------------------------------------------|
-| 2026-05-07 | Joel Teixeira | Renommage des flows et deployments Prefect avec des libelles plus lisibles |
-| 2026-05-07 | Joel Teixeira  | Ajout du bloc de metadonnees et normalisation |
-| 2026-05-07 | Joel Teixeira   | Alignement des schemas `raw`, `staging`, `intermediate`, `fnl` |
-| 2026-05-07 | Joel Teixeira   | Renommage du secret runtime en `DBT_USER_POSTGRES_PASSWORD` |
-| 2026-05-07 | Joel Teixeira   | Publication automatique des deployments Prefect au démarrage du worker |
-| 2026-05-07 | Joel Teixeira   | Sélection dbt par tags `phase1` et `phase2` pour respecter la séparation avant/après scraping |
+| # | Date       | Author         | Observations           |
+|---|------------|----------------|------------------------|
+| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
 
 # Ingestion
 
@@ -29,7 +24,7 @@ Strategie retenue:
 2. Pour `Modification data`, chaque onglet métier correspond à sa propre source Airbyte, sa propre connexion/sync et sa propre table brute cible.
 3. `dbt` transforme les tables brutes et les sorties de scraping, puis publie les tables finales prévues par `schema1`.
 4. `scraping/allocine/` exécute le scraping Allociné et écrit les données enrichies dans `raw.allocine_data`.
-5. `Prefect` orchestre les syncs Airbyte via API, puis les étapes `dbt` et `scraping allocine`.
+5. `Prefect` orchestre les étapes `dbt` et `scraping allocine`; le déclenchement des syncs Airbyte via API reste modélisé mais non implémenté.
 
 Ce que cela implique:
 
@@ -37,10 +32,11 @@ Ce que cela implique:
 2. `Airbyte` reste cantonné aux sources standards, en particulier Google Sheets;
 3. le Google Sheet `Modification data` n'est pas un flux unique: il faut un sync Airbyte distinct par onglet / table métier;
 4. `dbt` ne scrape rien: il transforme seulement les tables d'entrée;
-5. `Prefect` devient le point d'entrée opérationnel du flux complet, y compris pour déclencher les syncs Airbyte via API.
+5. `Prefect` devient le point d'entrée opérationnel pour `dbt` et le scraping; l'étape Airbyte via API reste un placeholder non opérationnel.
 6. le runtime Prefect est désormais structuré autour d'un flow principal unique et de sous-flows par étape pour garder une visibilité séparée dans l'UI;
 7. côté exécution réelle, `dbt phase 1` et `scraping Allociné` sont finalisés;
-8. `airbyte sync` et `dbt phase 2` sont déjà modélisés dans Prefect mais restent des étapes futures.
+8. `airbyte sync` est déjà modélisé dans Prefect mais reste une étape future;
+9. `dbt phase 2` est modélisé et exécutable lorsqu'il est explicitement activé.
 
 Modèles implémentés:
 
@@ -57,7 +53,7 @@ Découpage d'exécution:
 
 Point important:
 
-1. l'entrée canonique du scraping est `raw.id_matching`;
+1. l'entrée canonique actuelle du scraping est `raw.airbyte_id_matching`;
 2. la sortie canonique du scraping Allociné est `raw.allocine_data`;
 3. les tables finales `fnl_*` de `schema1` restent encore largement à construire.
 4. stratégie comptes recommandée: `prefect_user` pour Prefect, `airbyte_user` pour Airbyte, `dbt_user` pour le runtime `dbt + scraping` du repo.
@@ -65,16 +61,58 @@ Point important:
 
 ## Roles
 
-1. `airbyte/`: assets et conventions pour les syncs Google Sheets vers `raw`.
+1. `airbyte/`: assets, manifests versionnés et bootstrap API pour les syncs Google Sheets vers `raw`.
 2. `dbt/`: transformations SQL, staging, intermediate et futures tables finales `fnl_*` dans `fnl`.
 3. `scraping/allocine/`: job standalone de scraping/enrichissement Allociné.
 4. `prefect/`: orchestration du pipeline d'ingestion.
+
+## Bootstrap Airbyte
+
+Le dossier [airbyte/README.md](/root/explore/13_reveler_inegalites_cinema/ingestion/airbyte/README.md:1) documente maintenant un mode de bootstrap versionné pour les sources Airbyte.
+
+Principe retenu:
+
+1. les manifests source sont versionnés dans `airbyte/sources/`;
+2. les secrets restent hors git dans `airbyte/json_credentials/`;
+3. l'utilisateur dépose un unique fichier JSON de compte de service dans `airbyte/json_credentials/`;
+4. l'utilisateur renseigne lui-même l'URL du Google Sheet dans `configuration.spreadsheet_id` pour chaque source;
+5. `airbyte/bootstrap.py` récupère automatiquement les credentials API Airbyte via `abctl local credentials` si les variables d'environnement ne sont pas déjà définies;
+6. `airbyte/bootstrap.py` infère automatiquement le workspace Airbyte s'il n'y en a qu'un;
+7. `airbyte/bootstrap.py` crée ou met à jour la source Google Sheets;
+8. `airbyte/bootstrap.py` crée ou met à jour la destination Postgres cible;
+9. `airbyte/bootstrap.py` crée ou met à jour la connexion source -> destination correspondante.
+10. les manifests `src_gsheet_*` alignés sur l'architecture cible sont déjà présents, mais leurs `spreadsheet_id` restent volontairement vides tant que les URLs réelles ne sont pas renseignées.
+
+Variables d'environnement Airbyte désormais attendues dans `.env`:
+
+1. `AIRBYTE_HOST` et `AIRBYTE_PORT`, ou `AIRBYTE_API_URL`
+2. `POSTGRES_HOST`
+3. `POSTGRES_PORT`
+4. `POSTGRES_DB`
+5. `AIRBYTE_DESTINATION_POSTGRES_PASSWORD`
+
+Variables Airbyte facultatives:
+
+1. `AIRBYTE_WORKSPACE_ID`
+2. `AIRBYTE_CLIENT_ID`
+3. `AIRBYTE_CLIENT_SECRET`
+4. `AIRBYTE_DESTINATION_NAME`
+5. `AIRBYTE_CONNECTION_PREFIX`
+
+Commandes utiles depuis `ingestion/`:
+
+```bash
+python3 airbyte/bootstrap.py list-workspaces
+python3 airbyte/bootstrap.py list-sources
+python3 airbyte/bootstrap.py apply --dry-run
+python3 airbyte/bootstrap.py apply
+```
 
 ## Scraping Allocine
 
 Le job `scraping/allocine/`:
 
-1. lit `raw.id_matching`;
+1. lit `raw.airbyte_id_matching`;
 2. relit `raw.allocine_data` pour éviter de retraiter ce qui est déjà terminé;
 3. scrape seulement les IDs manquants;
 4. écrit les résultats enrichis dans `raw.allocine_data`;
@@ -190,13 +228,13 @@ Mode opératoire recommandé:
 
 Le point d'entrée versionné est [flows.py](/root/explore/13_reveler_inegalites_cinema/ingestion/prefect/flows.py:1). Il expose maintenant un seul flow utilisateur dans Prefect:
 
-1. `Lancer l'ingestion complete`: chaîne `airbyte sync -> dbt phase 1 -> scraping -> dbt phase 2`.
+1. `Lancer l'ingestion complete`: chaîne `airbyte sync placeholder -> dbt phase 1 -> scraping -> dbt phase 2`.
 Description: orchestration complète du pipeline avec étapes optionnelles activables au lancement.
 
 Les étapes internes restent visibles comme sous-flows distincts dans l'exécution du flow principal, avec des libellés lisibles:
 
 1. `Synchroniser les sources`
-Description: déclenche les synchronisations Airbyte seulement si elles sont demandées.
+Description: représente l'étape de synchronisation Airbyte; elle reste non implémentée tant qu'aucun déclenchement API réel n'est branché.
 2. `Preparer les donnees`
 Description: exécute `dbt build --select tag:phase1` avant le scraping.
 3. `Recuperer les donnees Allocine`
@@ -231,7 +269,7 @@ Le parsing CLI ne conserve plus qu'un point d'entrée `main-ingestion`; les anci
 
 1. Airbyte sync les Google Sheets vers `raw`.
 2. Pour `Modification data`, Airbyte exécute un sync séparé par onglet métier.
-3. `raw.id_matching` sert de table d'entrée canonique du scraping.
+3. `raw.airbyte_id_matching` sert de table d'entrée canonique du scraping.
 4. Prefect expose un seul deployment utilisateur pour lancer l'ingestion complète.
 5. Dans ce flow, Prefect lance `dbt phase 1` avant scraping.
 6. Prefect lance ensuite le scraping Allociné.
@@ -240,6 +278,7 @@ Le parsing CLI ne conserve plus qu'un point d'entrée `main-ingestion`; les anci
 
 ## Documentation détaillée
 
+1. [README Airbyte](airbyte/README.md): bootstrap versionné des sources Airbyte, secrets locaux hors git et commandes d'application.
 1. [README dbt](dbt/README.md): modèles préparés, tags d'exécution et sources brutes consommées par le projet dbt.
 1. [Runbook infra](../docs/runbooks/ingestion-runbook-infra-setup-dbt-core-airbyte-remote-postgres.md): installation et exploitation locale Airbyte/dbt/PostgreSQL.
 2. [Specification Airbyte/dbt](../docs/specifications/ingestion-specification-airbyte-dbt-mises-a-jour-donnees.md): contrats cible et critères d'acceptation.

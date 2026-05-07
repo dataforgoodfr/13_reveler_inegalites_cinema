@@ -1,0 +1,10 @@
+{
+  "kind": "source",
+  "name": "src_gsheet_fix_countries",
+  "configuration": {
+    "spreadsheet_id": "",
+    "credentials": {
+      "auth_type": "Service"
+    }
+  }
+}

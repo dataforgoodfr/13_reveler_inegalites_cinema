@@ -6,10 +6,9 @@
 
 ## Historique du document
 
-| Date       | Author         | Observations                                |
-|------------|----------------|---------------------------------------------|
-| 2026-05-07 | OpenAI Codex   | Ajout du fallback sur le CSV enrichi de backup par numero de visa |
-| 2026-05-07 | Joel Teixeira  | Ajout du bloc de metadonnees et normalisation |
+| # | Date       | Author         | Observations           |
+|---|------------|----------------|------------------------|
+| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
 
 # Scraping Allocine
 

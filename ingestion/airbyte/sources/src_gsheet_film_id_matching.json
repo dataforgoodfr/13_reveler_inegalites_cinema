@@ -1,0 +1,10 @@
+{
+  "kind": "source",
+  "name": "src_gsheet_film_id_matching",
+  "configuration": {
+    "spreadsheet_id": "",
+    "credentials": {
+      "auth_type": "Service"
+    }
+  }
+}

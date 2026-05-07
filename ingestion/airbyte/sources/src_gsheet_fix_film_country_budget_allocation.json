@@ -1,0 +1,10 @@
+{
+  "kind": "source",
+  "name": "src_gsheet_fix_film_country_budget_allocation",
+  "configuration": {
+    "spreadsheet_id": "",
+    "credentials": {
+      "auth_type": "Service"
+    }
+  }
+}

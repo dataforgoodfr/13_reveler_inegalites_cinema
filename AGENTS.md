@@ -6,9 +6,9 @@
 
 ## Historique du document
 
-| Date       | Author                | Observations                                  |
-|------------|-----------------------|-----------------------------------------------|
-| 2026-05-07 | Data Team DataForGood | Création du guide AGENTS adapté au repository |
+| # | Date       | Author         | Observations           |
+|---|------------|----------------|------------------------|
+| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
 
 # AGENTS
 
@@ -39,7 +39,7 @@ Règles obligatoires :
 - mettre à jour la documentation concernée dans la même PR chaque fois que possible ;
 - écrire la documentation en français lorsque c'est possible, en particulier pour les contenus internes ;
 - conserver en tête de chaque fichier `.md` un bloc de métadonnées avec `**Owner:**`, `**Last reviewed:**`, `**Status:**` ;
-- maintenir un `## Historique du document` avec au minimum `Date`, `Author`, `Observations` ;
+- maintenir un `## Historique du document` avec les colonnes `#`, `Date`, `Author`, `Observations` ;
 - éviter les documents génériques qui mélangent plusieurs sujets.
 
 Quand créer ou mettre à jour un document :

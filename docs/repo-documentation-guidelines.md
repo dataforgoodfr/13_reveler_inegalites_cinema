@@ -6,9 +6,9 @@
 
 ## Historique du document
 
-| Date       | Author         | Observations                                                             |
-|------------|----------------|--------------------------------------------------------------------------|
-| 2026-05-07 | Joel Teixeira  | Traduction française, ajout du template et normalisation des métadonnées |
+| # | Date       | Author         | Observations           |
+|---|------------|----------------|------------------------|
+| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
 
 # Guide Général De Documentation
 
@@ -82,7 +82,7 @@ Métadonnées requises en haut de chaque document :
 - `Owner`
 - `Last reviewed`
 - `Status` (`draft`, `active`, `deprecated`, `obsolete`)
-- Un historique du document, de préférence sous forme de tableau avec les colonnes `Date`, `Author`, `Observations`
+- Un historique du document sous forme de tableau avec les colonnes `#`, `Date`, `Author`, `Observations`
 
 ### 4.2 Rédaction
 
@@ -182,11 +182,11 @@ Exemple de bloc de métadonnées à placer en haut d'un document :
 
 ## Historique du document
 
-| Date       | Author       | Observations                                  |
-|------------|--------------|-----------------------------------------------|
-| 2026-05-07 | Jane Doe     | Création du document                          |
-| 2026-05-10 | John Doe     | Mise à jour du workflow d'ingestion           |
-| 2026-05-15 | equipe-data  | Clarifications sur le déploiement et le debug |
+| # | Date       | Author       | Observations                                  |
+|---|------------|--------------|-----------------------------------------------|
+| 1 | 2026-05-07 | Jane Doe     | Création du document                          |
+| 2 | 2026-05-10 | John Doe     | Mise à jour du workflow d'ingestion           |
+| 3 | 2026-05-15 | equipe-data  | Clarifications sur le déploiement et le debug |
 ```
 
 ## 9. Recommandations D'Automatisation
