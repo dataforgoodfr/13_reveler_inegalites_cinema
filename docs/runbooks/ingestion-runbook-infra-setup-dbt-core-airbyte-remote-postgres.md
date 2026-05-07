@@ -107,7 +107,7 @@ Cette stack ne remplace pas `Airbyte OSS` lui-même; elle dockerise le code d'in
 Stratégie opérationnelle retenue:
 
 1. `Airbyte` sert uniquement aux Google Sheets source;
-2. `Prefect` orchestre aujourd'hui `dbt` et les jobs de scraping hors Airbyte; les syncs Airbyte via API sont déjà modélisés mais restent un placeholder explicite;
+2. `Prefect` orchestre les syncs Airbyte via API, puis `dbt` et les jobs de scraping hors Airbyte;
 3. `Prefect` stocke son état dans une database distante dédiée `prefect` sur le serveur PostgreSQL existant;
 4. le scraping Allociné lit actuellement `raw.airbyte_id_matching` et écrit `raw.allocine_data`.
 
@@ -151,6 +151,8 @@ Définir `PREFECT_PORT` pour choisir le port hôte local exposé par Prefect.
 Définir `BROWSERLESS_PORT` pour choisir le port hôte local exposé par Browserless.
 Définir `PREFECT_API_DATABASE_CONNECTION_URL` vers la database Prefect dédiée sur le même serveur Postgres cible.
 Définir `AIRBYTE_HOST` et `AIRBYTE_PORT` pour l'instance Airbyte locale. L'URL UI se déduit en `http://$AIRBYTE_HOST:$AIRBYTE_PORT`.
+Définir obligatoirement `AIRBYTE_CLIENT_ID` et `AIRBYTE_CLIENT_SECRET` dans `.env` pour le bootstrap Airbyte et pour les syncs Airbyte via Prefect.
+Définir `AIRBYTE_SYNC_TIMEOUT_SECONDS` et `AIRBYTE_SYNC_POLL_SECONDS` pour contrôler l'attente des jobs Airbyte côté Prefect si les valeurs par défaut ne conviennent pas.
 
 Charger les variables dans le shell si nécessaire:
 
@@ -289,7 +291,7 @@ Règles de fonctionnement du bootstrap:
 
 1. le dossier `json_credentials/` est versionné mais pas son contenu;
 2. le bootstrap choisit automatiquement l'unique fichier `.json` présent dans `json_credentials/`;
-3. le bootstrap récupère automatiquement les credentials API Airbyte via `abctl local credentials` si besoin;
+3. le bootstrap lit obligatoirement `AIRBYTE_CLIENT_ID` et `AIRBYTE_CLIENT_SECRET` depuis `.env`;
 4. le bootstrap infère automatiquement le workspace Airbyte s'il n'y en a qu'un;
 5. un manifest avec `spreadsheet_id` vide échoue volontairement tant que l'URL réelle du Google Sheet n'est pas renseignée.
 
@@ -437,7 +439,7 @@ docker compose exec prefect-worker python3 /app/ingestion/prefect/flows.py main-
 
 Convention actuelle:
 
-1. `main-ingestion` = point d'entrée CLI unique du flow principal `airbyte sync placeholder -> dbt phase 1 -> scraping -> dbt phase 2`.
+1. `main-ingestion` = point d'entrée CLI unique du flow principal `airbyte sync -> dbt phase 1 -> scraping -> dbt phase 2`.
 2. dans l'UI Prefect, ce flow est publié avec le libellé `Lancer l'ingestion complete`.
 3. les étapes `Synchroniser les sources`, `Preparer les donnees`, `Recuperer les donnees Allocine` et `Finaliser les donnees` restent visibles comme sous-flows enfants dans le run.
 
@@ -446,9 +448,10 @@ Note:
 1. la séparation `dbt avant scraping` / `dbt après scraping` reste volontaire, mais elle est désormais modélisée comme sous-flows enfants du flow principal;
 2. `dbt phase 1` s'exécute par défaut dans `prefect-worker`;
 3. `scraping Allocine` est finalisé;
-4. `airbyte sync` reste présent comme étape optionnelle, mais c'est un placeholder explicite tant qu'aucune implémentation API réelle n'est branchée;
-5. `dbt phase 2` existe dans le flow et peut s'exécuter si activé;
-6. si `run_airbyte_sync_step=true`, le flow échoue actuellement avec `NotImplementedError`, ce qui est attendu tant que l'étape n'est pas implémentée.
+4. `airbyte sync` existe comme étape optionnelle réellement implémentée;
+5. elle exige `--run-airbyte-sync`, au moins un nom de connexion Airbyte explicite, et des valeurs `AIRBYTE_CLIENT_ID` / `AIRBYTE_CLIENT_SECRET` valides dans `.env`;
+6. elle attend le statut terminal de chaque job Airbyte avant de passer à `dbt phase 1`;
+7. `dbt phase 2` existe dans le flow et peut s'exécuter si activé.
 
 ## 12. Workflow développeur quotidien
 
@@ -461,7 +464,7 @@ Chaque développeur suit cet ordre:
 5. déposer un unique fichier JSON de compte de service dans `ingestion/airbyte/json_credentials/`;
 6. renseigner les `spreadsheet_id` nécessaires dans `ingestion/airbyte/sources/*.json`;
 7. appliquer le bootstrap Airbyte: `python3 airbyte/bootstrap.py apply --dry-run && python3 airbyte/bootstrap.py apply`;
-8. déclencher les syncs Airbyte depuis Airbyte UI/API ou lancer des tests manuels; ne pas considérer Prefect comme chemin opérationnel pour cette étape tant que le placeholder n'est pas implémenté;
+8. déclencher les syncs Airbyte depuis Prefect si les noms de connexions cibles sont connus, ou depuis l'UI Airbyte pour du debug ponctuel;
 9. vérifier au besoin dans l'UI Airbyte que la destination Postgres utilise bien `airbyte_user`;
 10. lancer `docker compose exec prefect-worker dbt build --profile ric --project-dir /app/ingestion/dbt`, ou lancer le flow Prefect principal depuis l'UI;
 11. lancer les runs manuellement depuis l'UI Prefect;
@@ -493,6 +496,14 @@ Un setup développeur est valide seulement si tous les checks passent:
 6. `docker compose exec prefect-worker dbt debug --profile ric --project-dir /app/ingestion/dbt` réussit;
 7. `docker compose exec prefect-worker dbt build --profile ric --project-dir /app/ingestion/dbt` réussit;
 8. au moins un modèle est requêtable dans `staging`, `intermediate` ou `fnl`.
+
+Exemple CLI avec sync Airbyte explicite:
+
+```bash
+docker compose exec prefect-worker python3 /app/ingestion/prefect/flows.py main-ingestion \
+  --run-airbyte-sync \
+  --airbyte-connection-name "src_gsheet_agreement_cnc -> dst_pg_raw"
+```
 
 ## 15. Problèmes fréquents
 

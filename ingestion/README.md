@@ -24,7 +24,7 @@ Strategie retenue:
 2. Pour `Modification data`, chaque onglet métier correspond à sa propre source Airbyte, sa propre connexion/sync et sa propre table brute cible.
 3. `dbt` transforme les tables brutes et les sorties de scraping, puis publie les tables finales prévues par `schema1`.
 4. `scraping/allocine/` exécute le scraping Allociné et écrit les données enrichies dans `raw.allocine_data`.
-5. `Prefect` orchestre les étapes `dbt` et `scraping allocine`; le déclenchement des syncs Airbyte via API reste modélisé mais non implémenté.
+5. `Prefect` orchestre les syncs Airbyte via API, puis les étapes `dbt` et `scraping allocine`.
 
 Ce que cela implique:
 
@@ -32,10 +32,10 @@ Ce que cela implique:
 2. `Airbyte` reste cantonné aux sources standards, en particulier Google Sheets;
 3. le Google Sheet `Modification data` n'est pas un flux unique: il faut un sync Airbyte distinct par onglet / table métier;
 4. `dbt` ne scrape rien: il transforme seulement les tables d'entrée;
-5. `Prefect` devient le point d'entrée opérationnel pour `dbt` et le scraping; l'étape Airbyte via API reste un placeholder non opérationnel.
+5. `Prefect` devient le point d'entrée opérationnel du flux complet, y compris pour déclencher les syncs Airbyte via API.
 6. le runtime Prefect est désormais structuré autour d'un flow principal unique et de sous-flows par étape pour garder une visibilité séparée dans l'UI;
 7. côté exécution réelle, `dbt phase 1` et `scraping Allociné` sont finalisés;
-8. `airbyte sync` est déjà modélisé dans Prefect mais reste une étape future;
+8. `airbyte sync` est maintenant exécutable dans Prefect à partir de noms de connexions explicites;
 9. `dbt phase 2` est modélisé et exécutable lorsqu'il est explicitement activé.
 
 Modèles implémentés:
@@ -76,7 +76,7 @@ Principe retenu:
 2. les secrets restent hors git dans `airbyte/json_credentials/`;
 3. l'utilisateur dépose un unique fichier JSON de compte de service dans `airbyte/json_credentials/`;
 4. l'utilisateur renseigne lui-même l'URL du Google Sheet dans `configuration.spreadsheet_id` pour chaque source;
-5. `airbyte/bootstrap.py` récupère automatiquement les credentials API Airbyte via `abctl local credentials` si les variables d'environnement ne sont pas déjà définies;
+5. `airbyte/bootstrap.py` lit obligatoirement `AIRBYTE_CLIENT_ID` et `AIRBYTE_CLIENT_SECRET` depuis l'environnement;
 6. `airbyte/bootstrap.py` infère automatiquement le workspace Airbyte s'il n'y en a qu'un;
 7. `airbyte/bootstrap.py` crée ou met à jour la source Google Sheets;
 8. `airbyte/bootstrap.py` crée ou met à jour la destination Postgres cible;
@@ -90,14 +90,16 @@ Variables d'environnement Airbyte désormais attendues dans `.env`:
 3. `POSTGRES_PORT`
 4. `POSTGRES_DB`
 5. `AIRBYTE_DESTINATION_POSTGRES_PASSWORD`
+6. `AIRBYTE_CLIENT_ID`
+7. `AIRBYTE_CLIENT_SECRET`
+8. `AIRBYTE_SYNC_TIMEOUT_SECONDS`
+9. `AIRBYTE_SYNC_POLL_SECONDS`
 
 Variables Airbyte facultatives:
 
 1. `AIRBYTE_WORKSPACE_ID`
-2. `AIRBYTE_CLIENT_ID`
-3. `AIRBYTE_CLIENT_SECRET`
-4. `AIRBYTE_DESTINATION_NAME`
-5. `AIRBYTE_CONNECTION_PREFIX`
+2. `AIRBYTE_DESTINATION_NAME`
+3. `AIRBYTE_CONNECTION_PREFIX`
 
 Commandes utiles depuis `ingestion/`:
 
@@ -204,6 +206,7 @@ Pré-requis:
 4. renseigner `PREFECT_API_DATABASE_CONNECTION_URL` dans `.env`;
 5. vérifier que `dbt_user` existe et possède les grants attendus côté base applicative.
 6. renseigner `DBT_USER_POSTGRES_PASSWORD` dans `.env` pour `dbt` et le scraping Allociné.
+7. renseigner `AIRBYTE_CLIENT_ID` et `AIRBYTE_CLIENT_SECRET` dans `.env` pour le bootstrap Airbyte et pour les syncs Airbyte via Prefect.
 
 Exemples depuis `ingestion/`:
 
@@ -228,13 +231,13 @@ Mode opératoire recommandé:
 
 Le point d'entrée versionné est [flows.py](/root/explore/13_reveler_inegalites_cinema/ingestion/prefect/flows.py:1). Il expose maintenant un seul flow utilisateur dans Prefect:
 
-1. `Lancer l'ingestion complete`: chaîne `airbyte sync placeholder -> dbt phase 1 -> scraping -> dbt phase 2`.
+1. `Lancer l'ingestion complete`: chaîne `airbyte sync -> dbt phase 1 -> scraping -> dbt phase 2`.
 Description: orchestration complète du pipeline avec étapes optionnelles activables au lancement.
 
 Les étapes internes restent visibles comme sous-flows distincts dans l'exécution du flow principal, avec des libellés lisibles:
 
 1. `Synchroniser les sources`
-Description: représente l'étape de synchronisation Airbyte; elle reste non implémentée tant qu'aucun déclenchement API réel n'est branché.
+Description: déclenche les synchronisations Airbyte demandées par nom de connexion, attend leur statut terminal et réutilise un job déjà en cours si nécessaire.
 2. `Preparer les donnees`
 Description: exécute `dbt build --select tag:phase1` avant le scraping.
 3. `Recuperer les donnees Allocine`
@@ -253,14 +256,16 @@ Important:
 2. `dbt phase 1` exécute `dbt build --select tag:phase1`;
 3. `allocine scraping` est opérationnel;
 4. `dbt phase 2` exécute `dbt build --select tag:phase2`, mais reste une étape aval désactivée par défaut;
-5. `airbyte sync` reste explicitement non implémenté et est sauté par défaut;
-6. le flow principal exécute la bonne séquence et saute les étapes futures tant qu'elles ne sont pas activées.
+5. `airbyte sync` exige `--run-airbyte-sync`, au moins un nom de connexion Airbyte explicite, et des valeurs `AIRBYTE_CLIENT_ID` / `AIRBYTE_CLIENT_SECRET` valides dans `.env`;
+6. l'étape Airbyte attend la fin de chaque job avant de passer à `dbt phase 1`;
+7. le flow principal exécute la bonne séquence et saute les étapes futures tant qu'elles ne sont pas activées.
 
 Exemples CLI optionnels, surtout utiles pour debug local:
 
 ```bash
 docker compose exec prefect-worker dbt build --profile ric --project-dir /app/ingestion/dbt
 docker compose exec prefect-worker python3 /app/ingestion/prefect/flows.py main-ingestion
+docker compose exec prefect-worker python3 /app/ingestion/prefect/flows.py main-ingestion --run-airbyte-sync --airbyte-connection-name "src_gsheet_agreement_cnc -> dst_pg_raw"
 ```
 
 Le parsing CLI ne conserve plus qu'un point d'entrée `main-ingestion`; les anciennes commandes `dbt-phase-1`, `allocine-scraping` ou `airbyte-sync` ne sont plus exposées comme points d'entrée CLI séparés.
@@ -271,10 +276,10 @@ Le parsing CLI ne conserve plus qu'un point d'entrée `main-ingestion`; les anci
 2. Pour `Modification data`, Airbyte exécute un sync séparé par onglet métier.
 3. `raw.airbyte_id_matching` sert de table d'entrée canonique du scraping.
 4. Prefect expose un seul deployment utilisateur pour lancer l'ingestion complète.
-5. Dans ce flow, Prefect lance `dbt phase 1` avant scraping.
-6. Prefect lance ensuite le scraping Allociné.
-7. Prefect prévoit enfin `dbt phase 2`, mais cette étape reste désactivée par défaut.
-8. aujourd'hui, seules les étapes `dbt phase 1` et `scraping` sont exécutées réellement.
+5. Si l'option Airbyte est activée, Prefect déclenche les syncs demandés par noms de connexions et attend leur fin.
+6. Dans ce flow, Prefect lance ensuite `dbt phase 1` avant scraping.
+7. Prefect lance ensuite le scraping Allociné.
+8. Prefect prévoit enfin `dbt phase 2`, mais cette étape reste désactivée par défaut.
 
 ## Documentation détaillée
 

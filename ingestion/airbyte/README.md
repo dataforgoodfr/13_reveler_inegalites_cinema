@@ -12,7 +12,7 @@
 
 # Airbyte Bootstrap
 
-Ce dossier contient les manifests versionnés et le script de bootstrap pour créer ou mettre à jour les ressources Airbyte via API.
+Ce dossier contient les manifests versionnés et les utilitaires Python pour créer, mettre à jour et piloter les ressources Airbyte via API.
 
 ## Principe
 
@@ -20,16 +20,18 @@ Ce dossier contient les manifests versionnés et le script de bootstrap pour cr�
 2. les secrets restent hors git dans `json_credentials/`;
 3. l'utilisateur dépose un unique fichier JSON de compte de service dans `json_credentials/`;
 4. l'utilisateur renseigne l'URL du Google Sheet cible dans `configuration.spreadsheet_id`;
-5. `bootstrap.py` récupère automatiquement les credentials API Airbyte via `abctl local credentials` si nécessaire;
+5. `bootstrap.py` lit obligatoirement `AIRBYTE_CLIENT_ID` et `AIRBYTE_CLIENT_SECRET` depuis l'environnement;
 6. `bootstrap.py` infère automatiquement le workspace Airbyte s'il n'y en a qu'un;
 7. `bootstrap.py` injecte automatiquement le fichier JSON local dans `credentials.service_account_info`;
-8. `bootstrap.py` crée ou met à jour la source Google Sheets, la destination Postgres et la connexion source -> destination.
+8. `bootstrap.py` crée ou met à jour la source Google Sheets, la destination Postgres et la connexion source -> destination;
+9. `client.py` mutualise l'authentification API, la résolution du workspace, la découverte des connexions et le déclenchement des jobs de sync, réutilisés par `bootstrap.py` et `prefect/flows.py`.
 
 ## Structure
 
 1. `bootstrap.py`: script d'application des manifests
-2. `sources/*.json`: manifests versionnés des sources Airbyte
-3. `json_credentials/`: secrets locaux gitignored
+2. `client.py`: client Airbyte partagé pour bootstrap et orchestration Prefect
+3. `sources/*.json`: manifests versionnés des sources Airbyte
+4. `json_credentials/`: secrets locaux gitignored
 
 Convention recommandée:
 
@@ -62,17 +64,21 @@ Le script lit `ingestion/.env` par défaut et attend au minimum:
 3. `POSTGRES_PORT`
 4. `POSTGRES_DB`
 5. `AIRBYTE_DESTINATION_POSTGRES_PASSWORD`
+6. `AIRBYTE_CLIENT_ID`
+7. `AIRBYTE_CLIENT_SECRET`
 
 Variables facultatives:
 
-1. `AIRBYTE_CLIENT_ID` et `AIRBYTE_CLIENT_SECRET`
-Description: sinon le bootstrap tente `abctl local credentials`
-2. `AIRBYTE_WORKSPACE_ID`
+1. `AIRBYTE_WORKSPACE_ID`
 Description: sinon le bootstrap l'infère si un seul workspace existe
-3. `AIRBYTE_DESTINATION_NAME`
+2. `AIRBYTE_DESTINATION_NAME`
 Description: défaut `dst_pg_raw`
-6. `AIRBYTE_CONNECTION_NAME`
-7. `AIRBYTE_CONNECTION_PREFIX`
+3. `AIRBYTE_CONNECTION_NAME`
+4. `AIRBYTE_CONNECTION_PREFIX`
+5. `AIRBYTE_SYNC_TIMEOUT_SECONDS`
+Description: timeout de poll des jobs Airbyte utilisé par Prefect, défaut `3600`
+6. `AIRBYTE_SYNC_POLL_SECONDS`
+Description: intervalle de poll des jobs Airbyte utilisé par Prefect, défaut `10`
 
 ## Exemple de secret local
 

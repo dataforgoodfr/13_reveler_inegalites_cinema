@@ -1,9 +1,25 @@
 import argparse
+import os
 import shlex
 import subprocess
+import time
 from pathlib import Path
 
 from prefect import flow, get_run_logger
+
+from ingestion.airbyte.client import ensure_workspace_id
+from ingestion.airbyte.client import extract_job_id
+from ingestion.airbyte.client import extract_job_status
+from ingestion.airbyte.client import find_by_name
+from ingestion.airbyte.client import find_running_job_for_connection
+from ingestion.airbyte.client import get_access_token
+from ingestion.airbyte.client import get_api_base_url
+from ingestion.airbyte.client import get_job
+from ingestion.airbyte.client import is_failed_job_status
+from ingestion.airbyte.client import is_running_job_status
+from ingestion.airbyte.client import is_success_job_status
+from ingestion.airbyte.client import list_connections
+from ingestion.airbyte.client import trigger_sync
 
 
 REPO_ROOT = Path("/app")
@@ -12,6 +28,12 @@ ALLOCINE_CONFIG_PATH = (
     REPO_ROOT / "ingestion" / "scraping" / "allocine" / "config.json"
 )
 ALLOCINE_MAIN_PATH = REPO_ROOT / "ingestion" / "scraping" / "allocine" / "main.py"
+DEFAULT_AIRBYTE_SYNC_TIMEOUT_SECONDS = int(
+    os.getenv("AIRBYTE_SYNC_TIMEOUT_SECONDS", "3600")
+)
+DEFAULT_AIRBYTE_SYNC_POLL_SECONDS = int(
+    os.getenv("AIRBYTE_SYNC_POLL_SECONDS", "10")
+)
 
 
 def _run(command: list[str], step_name: str, cwd: Path | None = None) -> None:
@@ -39,6 +61,56 @@ def _run(command: list[str], step_name: str, cwd: Path | None = None) -> None:
     logger.info("Finished step '%s' successfully.", step_name)
 
 
+def _wait_for_airbyte_job(
+    *,
+    api_base_url: str,
+    token: str,
+    job_id: str,
+    connection_name: str,
+    timeout_seconds: int,
+    poll_seconds: int,
+) -> None:
+    logger = get_run_logger()
+    started_at = time.monotonic()
+
+    while True:
+        job = get_job(api_base_url, token, job_id)
+        status = extract_job_status(job)
+        elapsed_seconds = int(time.monotonic() - started_at)
+        logger.info(
+            "Airbyte job status: connection=%s job_id=%s status=%s elapsed_seconds=%s",
+            connection_name,
+            job_id,
+            status or "unknown",
+            elapsed_seconds,
+        )
+
+        if is_success_job_status(status):
+            logger.info(
+                "Airbyte sync completed successfully: connection=%s job_id=%s",
+                connection_name,
+                job_id,
+            )
+            return
+
+        if is_failed_job_status(status):
+            raise RuntimeError(
+                f"Airbyte sync failed for connection '{connection_name}' with job {job_id} and status '{status}'."
+            )
+
+        if not is_running_job_status(status):
+            raise RuntimeError(
+                f"Airbyte sync returned unexpected status '{status}' for connection '{connection_name}' and job {job_id}."
+            )
+
+        if (time.monotonic() - started_at) >= timeout_seconds:
+            raise TimeoutError(
+                f"Airbyte sync timed out after {timeout_seconds}s for connection '{connection_name}' and job {job_id}."
+            )
+
+        time.sleep(poll_seconds)
+
+
 @flow(
     name="Synchroniser les sources",
     description="Declenche les synchronisations Airbyte lorsqu'elles sont activees pour ce run.",
@@ -49,22 +121,70 @@ def run_airbyte_sync(
     connection_names: list[str] | None = None,
 ) -> None:
     logger = get_run_logger()
+    requested_names = connection_names or []
     logger.info(
         "Task parameters: enabled=%s, connection_names=%s",
         enabled,
-        connection_names or [],
+        requested_names,
     )
     if not enabled:
-        logger.info(
-            "Airbyte sync phase skipped. Future flow scaffolded but not implemented yet."
-        )
+        logger.info("Airbyte sync phase skipped.")
         return
 
-    names = ", ".join(connection_names or [])
-    raise NotImplementedError(
-        "Airbyte sync via API is not implemented yet. "
-        f"Requested connections: {names or 'none'}."
-    )
+    if not requested_names:
+        raise ValueError(
+            "Airbyte sync phase was enabled but no connection names were provided."
+        )
+
+    api_base_url = get_api_base_url()
+    token = get_access_token(api_base_url)
+    workspace_id = ensure_workspace_id(api_base_url, token)
+    connections = list_connections(api_base_url, token, workspace_id)
+
+    for connection_name in requested_names:
+        connection = find_by_name(connections, connection_name)
+        if connection is None:
+            available_names = sorted(
+                str(item.get("name"))
+                for item in connections
+                if item.get("name")
+            )
+            raise RuntimeError(
+                f"Unable to find Airbyte connection named '{connection_name}'. Available connections: {available_names}"
+            )
+
+        connection_id = str(connection["connectionId"])
+        running_job = find_running_job_for_connection(
+            api_base_url,
+            token,
+            connection_id=connection_id,
+        )
+        if running_job is not None:
+            job_id = extract_job_id(running_job)
+            logger.info(
+                "Reusing running Airbyte sync job: connection=%s connection_id=%s job_id=%s",
+                connection_name,
+                connection_id,
+                job_id,
+            )
+        else:
+            created_job = trigger_sync(api_base_url, token, connection_id)
+            job_id = extract_job_id(created_job)
+            logger.info(
+                "Triggered Airbyte sync job: connection=%s connection_id=%s job_id=%s",
+                connection_name,
+                connection_id,
+                job_id,
+            )
+
+        _wait_for_airbyte_job(
+            api_base_url=api_base_url,
+            token=token,
+            job_id=job_id,
+            connection_name=connection_name,
+            timeout_seconds=DEFAULT_AIRBYTE_SYNC_TIMEOUT_SECONDS,
+            poll_seconds=DEFAULT_AIRBYTE_SYNC_POLL_SECONDS,
+        )
 
 
 @flow(

@@ -3,21 +3,34 @@ import argparse
 import json
 import os
 import re
-import subprocess
 import sys
 from pathlib import Path
 from typing import Any
-from urllib import error, parse, request
-
+from urllib import parse
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from ingestion.airbyte.client import ensure_workspace_id
+from ingestion.airbyte.client import find_by_name
+from ingestion.airbyte.client import find_connection
+from ingestion.airbyte.client import get_access_token
+from ingestion.airbyte.client import get_api_base_url
+from ingestion.airbyte.client import get_definition_id_by_name
+from ingestion.airbyte.client import list_connections
+from ingestion.airbyte.client import list_destinations
+from ingestion.airbyte.client import list_sources
+from ingestion.airbyte.client import list_workspaces
+from ingestion.airbyte.client import request_json
+
+
 INGESTION_DIR = ROOT_DIR / "ingestion"
 AIRBYTE_DIR = INGESTION_DIR / "airbyte"
 DEFAULT_ENV_PATH = INGESTION_DIR / ".env"
 SOURCE_DIR = AIRBYTE_DIR / "sources"
 JSON_CREDENTIALS_DIR = AIRBYTE_DIR / "json_credentials"
 ENV_PATTERN = re.compile(r"^\$\{(?P<name>[A-Z0-9_]+)(?::-?(?P<default>.*))?\}$")
-ABCTL_CREDENTIALS_PATTERN = re.compile(r"^\s*(?P<key>[A-Za-z-]+):\s*(?P<value>.+?)\s*$")
 
 
 def load_dotenv(path: Path) -> None:
@@ -70,139 +83,6 @@ def load_json_as_string(path: Path) -> str:
     return json.dumps(parsed, ensure_ascii=False)
 
 
-def request_json(
-    method: str,
-    url: str,
-    *,
-    token: str | None = None,
-    body: dict[str, Any] | None = None,
-) -> dict[str, Any] | list[Any]:
-    payload = None
-    headers = {"Content-Type": "application/json"}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    if body is not None:
-        payload = json.dumps(body).encode("utf-8")
-
-    req = request.Request(url, data=payload, headers=headers, method=method)
-    try:
-        with request.urlopen(req) as response:
-            raw = response.read().decode("utf-8")
-    except error.HTTPError as exc:
-        detail = exc.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"{method} {url} failed: {exc.code} {detail}") from exc
-
-    if not raw:
-        return {}
-    return json.loads(raw)
-
-
-def get_api_base_url() -> str:
-    api_url = os.getenv("AIRBYTE_API_URL")
-    if api_url:
-        return api_url.rstrip("/")
-
-    host = os.getenv("AIRBYTE_HOST", "localhost")
-    port = os.getenv("AIRBYTE_PORT", "8000")
-    return f"http://{host}:{port}/api/public/v1"
-
-
-def ensure_airbyte_api_credentials() -> None:
-    if os.getenv("AIRBYTE_CLIENT_ID") and os.getenv("AIRBYTE_CLIENT_SECRET"):
-        return
-
-    process = subprocess.run(
-        ["abctl", "local", "credentials"],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-
-    parsed: dict[str, str] = {}
-    for line in process.stdout.splitlines():
-        match = ABCTL_CREDENTIALS_PATTERN.match(line)
-        if not match:
-            continue
-        parsed[match.group("key").lower()] = match.group("value")
-
-    client_id = parsed.get("client-id")
-    client_secret = parsed.get("client-secret")
-    if not client_id or not client_secret:
-        raise RuntimeError(
-            "Unable to infer AIRBYTE_CLIENT_ID / AIRBYTE_CLIENT_SECRET from `abctl local credentials`."
-        )
-
-    os.environ.setdefault("AIRBYTE_CLIENT_ID", client_id)
-    os.environ.setdefault("AIRBYTE_CLIENT_SECRET", client_secret)
-
-
-def get_access_token(api_base_url: str) -> str:
-    ensure_airbyte_api_credentials()
-    body = {
-        "client_id": os.environ["AIRBYTE_CLIENT_ID"],
-        "client_secret": os.environ["AIRBYTE_CLIENT_SECRET"],
-        "grant_type": "client_credentials",
-    }
-    response = request_json("POST", f"{api_base_url}/applications/token", body=body)
-    if not isinstance(response, dict) or not response.get("access_token"):
-        raise RuntimeError("Airbyte token response does not contain access_token")
-    return str(response["access_token"])
-
-
-def list_workspaces(api_base_url: str, token: str) -> list[dict[str, Any]]:
-    response = request_json("GET", f"{api_base_url}/workspaces?limit=100", token=token)
-    if not isinstance(response, dict):
-        return []
-    return list(response.get("data", []))
-
-
-def ensure_workspace_id(api_base_url: str, token: str) -> str:
-    existing = os.getenv("AIRBYTE_WORKSPACE_ID")
-    if existing:
-        return existing
-
-    workspaces = list_workspaces(api_base_url, token)
-    if len(workspaces) != 1:
-        raise RuntimeError(
-            "AIRBYTE_WORKSPACE_ID is unset and bootstrap could not infer a single workspace."
-        )
-
-    workspace_id = str(workspaces[0]["workspaceId"])
-    os.environ["AIRBYTE_WORKSPACE_ID"] = workspace_id
-    return workspace_id
-
-
-def list_definitions(
-    api_base_url: str,
-    token: str,
-    workspace_id: str,
-    kind: str,
-) -> list[dict[str, Any]]:
-    path = "sources" if kind == "source" else "destinations"
-    response = request_json(
-        "GET",
-        f"{api_base_url}/workspaces/{workspace_id}/definitions/{path}",
-        token=token,
-    )
-    if not isinstance(response, dict):
-        return []
-    return list(response.get("data", []))
-
-
-def get_definition_id_by_name(
-    api_base_url: str,
-    token: str,
-    workspace_id: str,
-    *,
-    kind: str,
-    name: str,
-) -> str:
-    for definition in list_definitions(api_base_url, token, workspace_id, kind):
-        if definition.get("name") == name:
-            return str(definition["id"])
-    raise RuntimeError(f"Unable to find {kind} definition named '{name}' in workspace {workspace_id}")
-
-
 def infer_single_service_account_file() -> Path:
     files = sorted(
         path
@@ -247,51 +127,6 @@ def expand_source_configuration(value: Any, base_dir: Path) -> Any:
         return [expand_source_configuration(item, base_dir) for item in value]
 
     return value
-
-
-def list_sources(api_base_url: str, token: str, workspace_id: str) -> list[dict[str, Any]]:
-    query = parse.urlencode({"workspaceIds": workspace_id, "limit": 100})
-    response = request_json("GET", f"{api_base_url}/sources?{query}", token=token)
-    if not isinstance(response, dict):
-        return []
-    return list(response.get("data", []))
-
-
-def list_destinations(api_base_url: str, token: str, workspace_id: str) -> list[dict[str, Any]]:
-    query = parse.urlencode({"workspaceIds": workspace_id, "limit": 100})
-    response = request_json("GET", f"{api_base_url}/destinations?{query}", token=token)
-    if not isinstance(response, dict):
-        return []
-    return list(response.get("data", []))
-
-
-def list_connections(api_base_url: str, token: str, workspace_id: str) -> list[dict[str, Any]]:
-    query = parse.urlencode({"workspaceIds": workspace_id, "limit": 100})
-    response = request_json("GET", f"{api_base_url}/connections?{query}", token=token)
-    if not isinstance(response, dict):
-        return []
-    return list(response.get("data", []))
-
-
-def find_by_name(items: list[dict[str, Any]], name: str) -> dict[str, Any] | None:
-    for item in items:
-        if item.get("name") == name:
-            return item
-    return None
-
-
-def find_connection(
-    connections: list[dict[str, Any]],
-    source_id: str,
-    destination_id: str,
-) -> dict[str, Any] | None:
-    for connection in connections:
-        if (
-            connection.get("sourceId") == source_id
-            and connection.get("destinationId") == destination_id
-        ):
-            return connection
-    return None
 
 
 def default_source_name(manifest_path: Path) -> str:
