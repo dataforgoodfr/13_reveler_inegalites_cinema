@@ -17,7 +17,10 @@ models:
   ric:
     staging:
       +materialized: view
+      +schema: staging
     intermediate:
       +materialized: view
-    marts:
+      +schema: intermediate
+    fnl:
       +materialized: table
+      +schema: fnl

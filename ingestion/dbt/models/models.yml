@@ -2,21 +2,29 @@ version: 2
 
 models:
   - name: stg_agreement_cnc
+    config:
+      tags: ["phase1"]
     description: Typed and normalized staging model for the Airbyte-loaded Agreement CNC sheet.
     columns:
       - name: visa_number
         tests:
           - not_null
 
-  - name: stg_raw_ric_films
-    description: Typed staging projection of the current historical application film table.
+  - name: stg_allocine_data
+    config:
+      tags: ["phase2"]
+    description: Typed staging projection of raw Allocine scraping output loaded through the custom Airbyte source.
     columns:
-      - name: film_id
+      - name: source_record_id
         tests:
           - not_null
-          - unique
+      - name: extracted_at
+        tests:
+          - not_null
 
   - name: int_agreement_cnc_latest_by_visa
+    config:
+      tags: ["phase1"]
     description: Latest Agreement CNC record per visa number, based on Airbyte extraction metadata.
     columns:
       - name: visa_number
@@ -24,12 +32,12 @@ models:
           - not_null
           - unique
 
-  - name: mart_cnc_films_for_scraping
-    description: Consolidated CNC film list merging historical raw films with the latest Agreement CNC load and exposing scraping flags.
+  - name: int_allocine_data_latest_by_source_record
+    config:
+      tags: ["phase2"]
+    description: Latest Allocine scraping result per source record, based on extraction timestamp.
     columns:
-      - name: visa_number
+      - name: source_record_id
         tests:
           - not_null
           - unique
-      - name: should_scrape_allocine
-        description: Indicates whether the film should go through the Allocine matching and enrichment workflow.

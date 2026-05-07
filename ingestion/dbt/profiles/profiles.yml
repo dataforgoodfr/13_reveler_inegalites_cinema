@@ -1,0 +1,13 @@
+ric:
+  target: default
+  outputs:
+    default:
+      type: postgres
+      host: "{{ env_var('POSTGRES_HOST') }}"
+      port: "{{ env_var('POSTGRES_PORT') | int }}"
+      user: dbt_user
+      password: "{{ env_var('DBT_USER_POSTGRES_PASSWORD') }}"
+      dbname: "{{ env_var('POSTGRES_DB') }}"
+      schema: fnl
+      threads: "{{ env_var('DBT_THREADS', '4') | int }}"
+      sslmode: "{{ env_var('POSTGRES_SSLMODE', 'disable') }}"
