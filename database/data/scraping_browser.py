@@ -39,8 +39,9 @@ class AsyncBrowserSession:
 
         parsed = urlparse(self.ws_endpoint)
 
-        # Accept a direct websocket CDP endpoint as-is when a non-root path is provided.
-        if parsed.scheme in {"ws", "wss"} and parsed.path not in {"", "/"}:
+        # Accept direct websocket endpoints as-is. This supports Browserless-style
+        # root websocket URLs as well as explicit `/devtools/browser/...` endpoints.
+        if parsed.scheme in {"ws", "wss"}:
             return self.ws_endpoint
 
         if parsed.scheme not in {"http", "https", "ws", "wss"}:

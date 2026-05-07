@@ -1,0 +1,21 @@
+{
+  "postgres_host": "${POSTGRES_HOST:-localhost}",
+  "postgres_port": "${POSTGRES_PORT:-5432}",
+  "postgres_db": "${POSTGRES_DB:-reveler_inegalites_cinema}",
+  "postgres_user": "dbt_user",
+  "postgres_password": "${DBT_USER_POSTGRES_PASSWORD:-<secret>}",
+  "postgres_sslmode": "${POSTGRES_SSLMODE:-disable}",
+  "input_schema": "raw",
+  "input_table": "airbyte_id_matching",
+  "output_schema": "raw",
+  "output_table": "allocine_data",
+  "input_id_column": "VISA",
+  "input_visa_column": "VISA",
+  "input_title_column": "TITRE",
+  "input_year_column": null,
+  "input_allocine_id_column": "ID_ALLOCINE",
+  "input_allocine_url_column": null,
+  "completed_statuses": ["success", "not_found", "visa_mismatch"],
+  "scrape_limit": 100,
+  "playwright_ws_endpoint": "${PLAYWRIGHT_WS_ENDPOINT:-ws://browserless:3000}"
+}

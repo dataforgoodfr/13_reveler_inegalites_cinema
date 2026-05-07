@@ -1,0 +1,46 @@
+services:
+  prefect-server:
+    image: prefecthq/prefect:3-latest
+    env_file:
+      - .env
+    environment:
+      PREFECT_SERVER_API_HOST: 0.0.0.0
+      PREFECT_SERVER_UI_API_URL: http://localhost:${PREFECT_PORT:-4222}/api
+    command: prefect server start --no-services --host 0.0.0.0
+    ports:
+      - "${PREFECT_PORT:-4222}:4200"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:4200/api/health', timeout=1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  prefect-worker:
+    build:
+      context: ..
+      dockerfile: ingestion/prefect/Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      prefect-server:
+        condition: service_healthy
+      browserless:
+        condition: service_started
+    environment:
+      PREFECT_API_URL: http://prefect-server:4200/api
+      DBT_PROFILES_DIR: /app/ingestion/dbt/profiles
+      PLAYWRIGHT_WS_ENDPOINT: ${PLAYWRIGHT_WS_ENDPOINT:-ws://browserless:3000}
+    entrypoint: ["/bin/bash", "/app/ingestion/prefect/start_worker.sh"]
+    volumes:
+      - ..:/app
+
+  browserless:
+    image: browserless/chrome:latest
+    ports:
+      - "${BROWSERLESS_PORT:-3000}:3000"
+    environment:
+      PREBOOT_CHROME: "true"
+      KEEP_ALIVE: "true"
+      CONNECTION_TIMEOUT: "600000"
+      MAX_CONCURRENT_SESSIONS: "4"
