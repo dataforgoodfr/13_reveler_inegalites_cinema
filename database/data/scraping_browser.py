@@ -17,6 +17,19 @@ DEFAULT_VIEWPORT = {"width": 1280, "height": 800}
 DEFAULT_LOCALE = "fr-FR"
 HUMAN_LIKE_DELAY = random.uniform(1500, 3000)
 HUMAN_LIKE_SCROLL_Y = random.uniform(500, 3000)
+BLOCKED_STATUS_CODES = {403, 429}
+BLOCKED_PAGE_MARKERS = [
+    "captcha",
+    "access denied",
+    "forbidden",
+    "too many requests",
+    "verify you are human",
+    "bot detection",
+]
+
+
+class WebsiteBlockedError(RuntimeError):
+    """Raised when a target website appears to be blocking automated access."""
 
 
 class AsyncBrowserSession:
@@ -99,8 +112,22 @@ class AsyncBrowserSession:
         Navigate to a URL, simulate human-like scrolling and waiting,
         and return the resulting HTML content.
         """
-        await self.page.goto(url)
+        response = await self.page.goto(url)
+        if response is not None and response.status in BLOCKED_STATUS_CODES:
+            raise WebsiteBlockedError(
+                f"Website blocked the request for {url} with HTTP status {response.status}."
+            )
+
         await self.page.wait_for_timeout(HUMAN_LIKE_DELAY)
         await self.page.mouse.wheel(0, HUMAN_LIKE_SCROLL_Y)
         await self.page.wait_for_timeout(HUMAN_LIKE_DELAY)
-        return await self.page.content()
+        html = await self.page.content()
+        lowered_html = html.lower()
+
+        for marker in BLOCKED_PAGE_MARKERS:
+            if marker in lowered_html:
+                raise WebsiteBlockedError(
+                    f"Website blocking page detected for {url}: found marker '{marker}'."
+                )
+
+        return html

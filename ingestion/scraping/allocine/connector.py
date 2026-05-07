@@ -12,6 +12,7 @@ from urllib.parse import quote_plus
 from sqlalchemy import bindparam, create_engine, text
 
 from backend.utils.date_utils import parse_duration, parse_release_date
+from database.data.scraping_browser import WebsiteBlockedError
 
 
 STREAM_NAME = "allocine_data"
@@ -343,21 +344,45 @@ class AllocineAirbyteSource:
         run_id = str(uuid.uuid4())
         records: list[dict[str, Any]] = []
         total_rows = len(source_rows)
+        summary_statuses = ["success", "not_found", "blocked", "error", "visa_mismatch"]
+        status_counts = {status: 0 for status in summary_statuses}
 
         print(f"Allocine scraping started: {total_rows} pending rows to process.")
 
         async with browser_factory(ws_endpoint=config.playwright_ws_endpoint) as session:
             for index, source_row in enumerate(source_rows, start=1):
-                records.append(
-                    await self._scrape_one_record(
+                record = await self._scrape_one_record(
                         run_id=run_id,
                         session=session,
                         scraper=scraper,
                         source_row=source_row,
                     )
-                )
+                records.append(record)
+                status = record.get("scrape_status") or "error"
+                status_counts[status] = status_counts.get(status, 0) + 1
+
+                if status != "success":
+                    source_label = record.get("source_record_id") or record.get("visa_number")
+                    title = record.get("original_name") or "unknown-title"
+                    reason = record.get("error_message") or "no reason provided"
+                    print(
+                        "Allocine scraping issue: "
+                        f"status={status} "
+                        f"source_record_id={source_label} "
+                        f"title={title!r} "
+                        f"reason={reason}"
+                    )
+
                 if index % 10 == 0 or index == total_rows:
                     print(f"Allocine scraping progress: {index}/{total_rows} rows processed.")
+
+        print(
+            "Allocine scraping summary: "
+            + ", ".join(
+                f"{status}={status_counts.get(status, 0)}"
+                for status in summary_statuses
+            )
+        )
 
         return records
 
@@ -759,6 +784,9 @@ class AllocineAirbyteSource:
             else:
                 base_record["scrape_status"] = "success"
 
+        except WebsiteBlockedError as exc:
+            base_record["scrape_status"] = "blocked"
+            base_record["error_message"] = str(exc)
         except Exception as exc:
             base_record["scrape_status"] = "error"
             base_record["error_message"] = str(exc)

@@ -11,6 +11,7 @@
 | 2026-05-07 | Joel Teixeira  | Ajout du bloc de metadonnees et normalisation |
 | 2026-05-07 | Joel Teixeira   | Alignement sur le schema brut `raw` |
 | 2026-05-07 | Joel Teixeira   | Alignement de l'exemple de configuration sur `dbt_user` |
+| 2026-05-07 | GitHub Copilot | Ajout du guide de debug manuel en virtualenv |
 
 # Scraping Allocine
 
@@ -130,6 +131,71 @@ docker compose exec prefect-worker python3 /app/ingestion/scraping/allocine/main
 docker compose exec prefect-worker python3 /app/ingestion/scraping/allocine/main.py sync --config /app/ingestion/scraping/allocine/config.template.json
 ```
 
+## Debug manuel en virtualenv
+
+Le scraper peut être lancé dans un virtualenv Python local, tout en gardant le navigateur dans `browserless` via `PLAYWRIGHT_WS_ENDPOINT`.
+
+### 1. Créer le virtualenv
+
+Depuis la racine du repo:
+
+```bash
+python3 -m venv .venv-allocine
+source .venv-allocine/bin/activate
+pip install --upgrade pip
+pip install -r ingestion/scraping/allocine/requirements.txt
+```
+
+### 2. Démarrer uniquement Browserless
+
+Depuis `ingestion/`:
+
+```bash
+docker compose up -d browserless
+```
+
+Par défaut, le service est alors joignable en local sur `ws://localhost:3000`.
+
+### 3. Exporter les variables d'environnement
+
+Depuis la racine du repo:
+
+```bash
+export PLAYWRIGHT_WS_ENDPOINT=ws://localhost:3000
+export POSTGRES_HOST=...
+export POSTGRES_PORT=...
+export POSTGRES_DB=...
+export POSTGRES_SSLMODE=disable
+export DBT_USER_POSTGRES_PASSWORD=...
+```
+
+Le fichier `config.template.json` peut être conservé tel quel: ses placeholders `${ENV_VAR:-default}` seront résolus au runtime.
+
+### 4. Lancer le scraper à la main
+
+Depuis la racine du repo:
+
+```bash
+python ingestion/scraping/allocine/main.py check --config ingestion/scraping/allocine/config.template.json
+python ingestion/scraping/allocine/main.py sync --config ingestion/scraping/allocine/config.template.json
+```
+
+Ordre conseillé:
+
+1. commencer par `check` pour valider la connectivité base + table d'entrée;
+2. lancer ensuite `sync` pour observer les logs détaillés du scraping;
+3. garder `scrape_limit: 100` ou le réduire temporairement si un debug plus court est nécessaire.
+
+### 5. Limite de cette approche
+
+Le navigateur ne tourne pas dans le virtualenv lui-même.
+
+Le fonctionnement réel est le suivant:
+
+1. le code Python du scraper s'exécute dans le virtualenv local;
+2. Playwright se connecte à `browserless` via `PLAYWRIGHT_WS_ENDPOINT`;
+3. le moteur navigateur reste donc externe au virtualenv, ce qui correspond au design actuel du projet.
+
 ## Positionnement dans l'architecture
 
 Dans la stratégie retenue:
@@ -156,6 +222,7 @@ Séparation assumée:
 6. le port hôte de `browserless/chrome` est piloté par `BROWSERLESS_PORT` dans `.env`;
 7. le service `browserless/chrome` du compose local est une commodité de dev; il peut être remplacé par un endpoint Browserless/Chrome distant.
 8. Le flow Prefect versionné est le point d'entrée recommandé pour ce scraping en environnement local ou serveur.
+9. En cas de blocage anti-bot ou de rate limiting côté site, le scraper enregistre désormais `scrape_status = blocked` avec un message d'erreur explicite.
 
 ## Referenced by
 
