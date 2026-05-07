@@ -16,6 +16,6 @@
   "input_allocine_id_column": "ID_ALLOCINE",
   "input_allocine_url_column": null,
   "completed_statuses": ["success", "not_found", "visa_mismatch"],
-  "scrape_limit": 100,
+  "scrape_limit": 10,
   "playwright_ws_endpoint": "${PLAYWRIGHT_WS_ENDPOINT:-ws://browserless:3000}"
 }

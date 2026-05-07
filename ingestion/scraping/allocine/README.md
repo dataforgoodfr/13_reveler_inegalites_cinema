@@ -11,7 +11,7 @@
 | 2026-05-07 | Joel Teixeira  | Ajout du bloc de metadonnees et normalisation |
 | 2026-05-07 | Joel Teixeira   | Alignement sur le schema brut `raw` |
 | 2026-05-07 | Joel Teixeira   | Alignement de l'exemple de configuration sur `dbt_user` |
-| 2026-05-07 | GitHub Copilot | Ajout du guide de debug manuel en virtualenv |
+| 2026-05-07 | Joel Teixeira | Ajout du guide de debug manuel en virtualenv |
 
 # Scraping Allocine
 

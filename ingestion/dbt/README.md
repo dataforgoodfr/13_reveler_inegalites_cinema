@@ -8,7 +8,7 @@
 
 | Date       | Author         | Observations                                  |
 |------------|----------------|-----------------------------------------------|
-| 2026-05-07 | GitHub Copilot | Création du README dbt et inventaire des modèles préparés |
+| 2026-05-07 | Joel Teixeira | Création du README dbt et inventaire des modèles préparés |
 
 # dbt
 

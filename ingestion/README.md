@@ -8,7 +8,7 @@
 
 | Date       | Author         | Observations                                |
 |------------|----------------|---------------------------------------------|
-| 2026-05-07 | GitHub Copilot | Renommage des flows et deployments Prefect avec des libelles plus lisibles |
+| 2026-05-07 | Joel Teixeira | Renommage des flows et deployments Prefect avec des libelles plus lisibles |
 | 2026-05-07 | Joel Teixeira  | Ajout du bloc de metadonnees et normalisation |
 | 2026-05-07 | Joel Teixeira   | Alignement des schemas `raw`, `staging`, `intermediate`, `fnl` |
 | 2026-05-07 | Joel Teixeira   | Renommage du secret runtime en `DBT_USER_POSTGRES_PASSWORD` |
