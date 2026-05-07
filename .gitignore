@@ -172,6 +172,9 @@ cython_debug/
 # misc
 .DS_Store
 
+# Local dbt machine identifier
+ingestion/dbt/profiles/.user.yml
+
 # Certbot: keep Dockerfile/entrypoint, ignore generated data
 certbot/*
 !certbot/Dockerfile
