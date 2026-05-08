@@ -8,23 +8,21 @@ from pathlib import Path
 from typing import Any
 from urllib import parse
 
+from ingestion.airbyte.client import (
+    ensure_workspace_id,
+    find_by_name,
+    find_connection,
+    get_access_token,
+    get_api_base_url,
+    get_definition_id_by_name,
+    list_connections,
+    list_destinations,
+    list_sources,
+    list_workspaces,
+    request_json,
+)
+
 ROOT_DIR = Path(__file__).resolve().parents[2]
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(ROOT_DIR))
-
-from ingestion.airbyte.client import ensure_workspace_id
-from ingestion.airbyte.client import find_by_name
-from ingestion.airbyte.client import find_connection
-from ingestion.airbyte.client import get_access_token
-from ingestion.airbyte.client import get_api_base_url
-from ingestion.airbyte.client import get_definition_id_by_name
-from ingestion.airbyte.client import list_connections
-from ingestion.airbyte.client import list_destinations
-from ingestion.airbyte.client import list_sources
-from ingestion.airbyte.client import list_workspaces
-from ingestion.airbyte.client import request_json
-
-
 INGESTION_DIR = ROOT_DIR / "ingestion"
 AIRBYTE_DIR = INGESTION_DIR / "airbyte"
 DEFAULT_ENV_PATH = INGESTION_DIR / ".env"
@@ -130,7 +128,10 @@ def expand_source_configuration(value: Any, base_dir: Path) -> Any:
 
 
 def default_source_name(manifest_path: Path) -> str:
-    return manifest_path.stem.replace("_", " ").replace("-", " ").strip() or "Google Sheets"
+    return (
+        manifest_path.stem.replace("_", " ").replace("-", " ").strip()
+        or "Google Sheets"
+    )
 
 
 def build_source_payload(
@@ -152,15 +153,12 @@ def build_source_payload(
             f"Manifest {manifest_path} must define configuration.spreadsheet_id."
         )
 
-    definition_id = (
-        manifest.get("definition_id")
-        or get_definition_id_by_name(
-            api_base_url,
-            token,
-            workspace_id,
-            kind="source",
-            name="Google Sheets",
-        )
+    definition_id = manifest.get("definition_id") or get_definition_id_by_name(
+        api_base_url,
+        token,
+        workspace_id,
+        kind="source",
+        name="Google Sheets",
     )
 
     defaults = {
@@ -206,8 +204,12 @@ def ensure_source(
 ) -> dict[str, Any]:
     workspace_id = ensure_workspace_id(api_base_url, token)
     manifest = resolve_env_placeholders(json_load(manifest_path))
-    payload = build_source_payload(api_base_url, token, manifest, manifest_path, workspace_id)
-    existing = find_by_name(list_sources(api_base_url, token, workspace_id), payload["name"])
+    payload = build_source_payload(
+        api_base_url, token, manifest, manifest_path, workspace_id
+    )
+    existing = find_by_name(
+        list_sources(api_base_url, token, workspace_id), payload["name"]
+    )
 
     action = "update" if existing else "create"
     print(f"[source:{action}] {manifest_path}")
@@ -292,7 +294,9 @@ def ensure_destination(
 ) -> dict[str, Any]:
     workspace_id = ensure_workspace_id(api_base_url, token)
     payload = build_destination_payload(api_base_url, token, workspace_id)
-    existing = find_by_name(list_destinations(api_base_url, token, workspace_id), payload["name"])
+    existing = find_by_name(
+        list_destinations(api_base_url, token, workspace_id), payload["name"]
+    )
 
     action = "update" if existing else "create"
     print(f"[destination:{action}] {payload['name']}")
@@ -384,7 +388,9 @@ def build_connection_payload(
         "destinationId": destination["destinationId"],
         "configurations": {
             "streams": stream_configs,
-            "namespaceDefinition": os.getenv("AIRBYTE_CONNECTION_NAMESPACE_DEFINITION", "destination"),
+            "namespaceDefinition": os.getenv(
+                "AIRBYTE_CONNECTION_NAMESPACE_DEFINITION", "destination"
+            ),
             "prefix": os.getenv("AIRBYTE_CONNECTION_PREFIX", ""),
             "nonBreakingSchemaUpdatesBehavior": os.getenv(
                 "AIRBYTE_CONNECTION_SCHEMA_UPDATES_BEHAVIOR", "ignore"
@@ -408,7 +414,9 @@ def ensure_connection(
             "[connection:skip] dry-run cannot preview connection for resources that do not exist yet."
         )
         return {}
-    streams = get_streams(api_base_url, token, source["sourceId"], destination["destinationId"])
+    streams = get_streams(
+        api_base_url, token, source["sourceId"], destination["destinationId"]
+    )
     payload = build_connection_payload(source, destination, streams)
     existing = find_connection(
         list_connections(api_base_url, token, workspace_id),
@@ -454,7 +462,9 @@ def iter_source_manifests(paths: list[str]) -> list[Path]:
     for raw_path in paths:
         path = Path(raw_path).resolve()
         if path.is_dir():
-            result.extend(sorted(child for child in path.glob("*.json") if child.is_file()))
+            result.extend(
+                sorted(child for child in path.glob("*.json") if child.is_file())
+            )
         else:
             result.append(path)
     return result
@@ -495,7 +505,11 @@ def main() -> int:
     token = get_access_token(api_base_url)
 
     if args.command == "list-workspaces":
-        print(json.dumps(list_workspaces(api_base_url, token), ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                list_workspaces(api_base_url, token), ensure_ascii=False, indent=2
+            )
+        )
         return 0
 
     if args.command == "list-sources":
@@ -537,4 +551,4 @@ if __name__ == "__main__":
         raise SystemExit(main())
     except RuntimeError as exc:
         print(f"Error: {exc}", file=sys.stderr)
-        raise SystemExit(1)
+        raise SystemExit(1) from exc

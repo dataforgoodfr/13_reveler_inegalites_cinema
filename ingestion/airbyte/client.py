@@ -4,7 +4,6 @@ import os
 from typing import Any
 from urllib import error, parse, request
 
-
 RUNNING_JOB_STATUSES = {"pending", "running", "incomplete"}
 SUCCESS_JOB_STATUSES = {"succeeded", "success", "completed"}
 FAILED_JOB_STATUSES = {"failed", "cancelled", "canceled"}
@@ -120,10 +119,14 @@ def get_definition_id_by_name(
     for definition in list_definitions(api_base_url, token, workspace_id, kind):
         if definition.get("name") == name:
             return str(definition["id"])
-    raise RuntimeError(f"Unable to find {kind} definition named '{name}' in workspace {workspace_id}")
+    raise RuntimeError(
+        f"Unable to find {kind} definition named '{name}' in workspace {workspace_id}"
+    )
 
 
-def list_sources(api_base_url: str, token: str, workspace_id: str) -> list[dict[str, Any]]:
+def list_sources(
+    api_base_url: str, token: str, workspace_id: str
+) -> list[dict[str, Any]]:
     query = parse.urlencode({"workspaceIds": workspace_id, "limit": 100}, doseq=True)
     response = request_json("GET", f"{api_base_url}/sources?{query}", token=token)
     if not isinstance(response, dict):
@@ -131,7 +134,9 @@ def list_sources(api_base_url: str, token: str, workspace_id: str) -> list[dict[
     return list(response.get("data", []))
 
 
-def list_destinations(api_base_url: str, token: str, workspace_id: str) -> list[dict[str, Any]]:
+def list_destinations(
+    api_base_url: str, token: str, workspace_id: str
+) -> list[dict[str, Any]]:
     query = parse.urlencode({"workspaceIds": workspace_id, "limit": 100}, doseq=True)
     response = request_json("GET", f"{api_base_url}/destinations?{query}", token=token)
     if not isinstance(response, dict):
@@ -139,7 +144,9 @@ def list_destinations(api_base_url: str, token: str, workspace_id: str) -> list[
     return list(response.get("data", []))
 
 
-def list_connections(api_base_url: str, token: str, workspace_id: str) -> list[dict[str, Any]]:
+def list_connections(
+    api_base_url: str, token: str, workspace_id: str
+) -> list[dict[str, Any]]:
     query = parse.urlencode({"workspaceIds": workspace_id, "limit": 100}, doseq=True)
     response = request_json("GET", f"{api_base_url}/connections?{query}", token=token)
     if not isinstance(response, dict):

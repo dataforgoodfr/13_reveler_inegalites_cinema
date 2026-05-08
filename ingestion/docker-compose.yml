@@ -10,7 +10,13 @@ services:
     ports:
       - "${PREFECT_PORT:-4222}:4200"
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:4200/api/health', timeout=1)"]
+      test:
+        [
+          CMD,
+          python,
+          -c,
+          "import urllib.request as u; u.urlopen('http://localhost:4200/api/health', timeout=1)",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -31,7 +37,7 @@ services:
       PREFECT_API_URL: http://prefect-server:4200/api
       DBT_PROFILES_DIR: /app/ingestion/dbt/profiles
       PLAYWRIGHT_WS_ENDPOINT: ${PLAYWRIGHT_WS_ENDPOINT:-ws://browserless:3000}
-    entrypoint: ["/bin/bash", "/app/ingestion/prefect/start_worker.sh"]
+    entrypoint: [/bin/bash, /app/ingestion/prefect/start_worker.sh]
     volumes:
       - ..:/app
 

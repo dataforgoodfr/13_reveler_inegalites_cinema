@@ -1,16 +1,18 @@
-**Owner:** Joel Teixeira
-
-**Last reviewed:** 2026-05-07
-
-**Status:** active
-
-## Historique du document
-
-| # | Date       | Author         | Observations           |
-|---|------------|----------------|------------------------|
-| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
-
 # Base de données
+
+## Metadata du document
+
+**Responsable:** Joel Teixeira
+
+**Dernière révision:** 2026-05-08
+
+**Statut:** actif
+
+### Historique du document
+
+| #   | Date       | Auteur        | Observations           |
+| --- | ---------- | ------------- | ---------------------- |
+| 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
 
 Ce dossier regroupe la configuration PostgreSQL locale, les modèles SQLAlchemy, les migrations Alembic, les scripts de seed et les données historiques utilisées par le projet RIC.
 

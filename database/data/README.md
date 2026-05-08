@@ -1,16 +1,18 @@
-**Owner:** Joel Teixeira
-
-**Last reviewed:** 2026-05-07
-
-**Status:** active
-
-## Historique du document
-
-| # | Date       | Author         | Observations           |
-|---|------------|----------------|------------------------|
-| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
-
 # Extraction de donnees externes
+
+## Metadata du document
+
+**Responsable:** Joel Teixeira
+
+**Dernière révision:** 2026-05-08
+
+**Statut:** actif
+
+### Historique du document
+
+| #   | Date       | Auteur        | Observations           |
+| --- | ---------- | ------------- | ---------------------- |
+| 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
 
 Ce dossier contient les scripts historiques de collecte web du projet.
 
@@ -19,7 +21,6 @@ Ils utilisent en general:
 - [scraping_browser.py](scraping_browser.py): session Playwright asynchrone, connectee au Chromium distant via `PLAYWRIGHT_WS_ENDPOINT`;
 - BeautifulSoup: parsing du HTML rendu par Playwright;
 - CSV locaux: stockage intermediaire avant seed ou controle.
-
 
 ## Scrapers principaux
 

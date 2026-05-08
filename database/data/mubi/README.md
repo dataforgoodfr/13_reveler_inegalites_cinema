@@ -1,16 +1,18 @@
-**Owner:** Joel Teixeira
-
-**Last reviewed:** 2026-05-07
-
-**Status:** active
-
-## Historique du document
-
-| # | Date       | Author         | Observations           |
-|---|------------|----------------|------------------------|
-| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
-
 # Scraping MUBI
+
+## Metadata du document
+
+**Responsable:** Joel Teixeira
+
+**Dernière révision:** 2026-05-08
+
+**Statut:** actif
+
+### Historique du document
+
+| #   | Date       | Auteur        | Observations           |
+| --- | ---------- | ------------- | ---------------------- |
+| 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
 
 Ces scripts collectent les films listes sur des pages de festivals MUBI, puis recuperent les prix et nominations visibles sur les pages awards de chaque film.
 

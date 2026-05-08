@@ -1,16 +1,18 @@
-**Owner:** Joel Teixeira
-
-**Last reviewed:** 2026-05-07
-
-**Status:** active
-
-## Historique du document
-
-| # | Date       | Author         | Observations           |
-|---|------------|----------------|------------------------|
-| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
-
 # Airbyte Bootstrap
+
+## Metadata du document
+
+**Responsable:** Joel Teixeira
+
+**Dernière révision:** 2026-05-08
+
+**Statut:** actif
+
+### Historique du document
+
+| #   | Date       | Auteur        | Observations           |
+| --- | ---------- | ------------- | ---------------------- |
+| 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
 
 Ce dossier contient les manifests versionnés et les utilitaires Python pour créer, mettre à jour et piloter les ressources Airbyte via API.
 
@@ -70,15 +72,15 @@ Le script lit `ingestion/.env` par défaut et attend au minimum:
 Variables facultatives:
 
 1. `AIRBYTE_WORKSPACE_ID`
-Description: sinon le bootstrap l'infère si un seul workspace existe
+   Description: sinon le bootstrap l'infère si un seul workspace existe
 2. `AIRBYTE_DESTINATION_NAME`
-Description: défaut `dst_pg_raw`
+   Description: défaut `dst_pg_raw`
 3. `AIRBYTE_CONNECTION_NAME`
 4. `AIRBYTE_CONNECTION_PREFIX`
 5. `AIRBYTE_SYNC_TIMEOUT_SECONDS`
-Description: timeout de poll des jobs Airbyte utilisé par Prefect, défaut `3600`
+   Description: timeout de poll des jobs Airbyte utilisé par Prefect, défaut `3600`
 6. `AIRBYTE_SYNC_POLL_SECONDS`
-Description: intervalle de poll des jobs Airbyte utilisé par Prefect, défaut `10`
+   Description: intervalle de poll des jobs Airbyte utilisé par Prefect, défaut `10`
 
 ## Exemple de secret local
 
@@ -101,17 +103,22 @@ avec le JSON brut du compte de service Google.
 Depuis `ingestion/`:
 
 ```bash
-python3 airbyte/bootstrap.py list-workspaces
-python3 airbyte/bootstrap.py list-sources
-python3 airbyte/bootstrap.py apply --dry-run
-python3 airbyte/bootstrap.py apply
+python3 -m ingestion.airbyte.bootstrap list-workspaces
+python3 -m ingestion.airbyte.bootstrap list-sources
+python3 -m ingestion.airbyte.bootstrap apply --dry-run
+python3 -m ingestion.airbyte.bootstrap apply
 ```
 
 Ou depuis la racine:
 
 ```bash
-python3 ingestion/airbyte/bootstrap.py apply
+python3 -m ingestion.airbyte.bootstrap apply
 ```
+
+Note:
+
+1. l'execution supportee est `python3 -m ingestion.airbyte.bootstrap`;
+2. cette forme garde des imports package propres et evite tout hack local sur `sys.path`.
 
 ## Manifest source
 

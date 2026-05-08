@@ -1,16 +1,18 @@
-**Owner:** Joel Teixeira
-
-**Last reviewed:** 2026-05-07
-
-**Status:** draft
-
-## Historique du document
-
-| # | Date       | Author         | Observations           |
-|---|------------|----------------|------------------------|
-| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
-
 # Spécification technique - Airbyte + dbt pour mises à jour CNC et corrections métier
+
+## Metadata du document
+
+**Responsable:** Joel Teixeira
+
+**Dernière révision:** 2026-05-08
+
+**Statut:** brouillon
+
+### Historique du document
+
+| # | Date | Auteur | Observations |
+| --- | --- | --- | --- |
+| 1 | 2026-05-07 | Joel Teixeira | Initial implementation |
 
 ## 1. Contexte et objectifs
 

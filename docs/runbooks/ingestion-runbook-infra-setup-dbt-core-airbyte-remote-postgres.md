@@ -1,16 +1,18 @@
-**Owner:** Joel Teixeira
-
-**Last reviewed:** 2026-05-07
-
-**Status:** active
-
-## Historique du document
-
-| # | Date       | Author         | Observations           |
-|---|------------|----------------|------------------------|
-| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
-
 # Setup infra reproductible - Airbyte OSS + dbt Core + Prefect avec Postgres distant
+
+## Metadata du document
+
+**Responsable:** Joel Teixeira
+
+**Dernière révision:** 2026-05-08
+
+**Statut:** actif
+
+### Historique du document
+
+| #   | Date       | Auteur        | Observations           |
+| --- | ---------- | ------------- | ---------------------- |
+| 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
 
 ## 1. Objectif
 
@@ -124,7 +126,6 @@ Requis sur la machine développeur:
 Python local n'est pas requis pour `dbt`, `Prefect` et le scraping dans le chemin nominal Docker, mais reste requis pour lancer `airbyte/bootstrap.py`.
 Un Postgres local peut être utilisé pour des tests isolés, mais il n'est pas requis.
 
-
 ## 5. Vérification préalable
 
 Vérifier les prérequis avant installation:
@@ -133,17 +134,15 @@ Vérifier les prérequis avant installation:
 docker compose version
 ```
 
-
 ## 6. Contrat de variables d'environnement
 
 Créer un fichier local non commité nommé `.env`. Utiliser `.env.example` comme modèle:
 
-```
+```bash
 cp .env.example .env
 ```
 
 Puis renseigner les valeurs manquantes.
-
 
 Définir `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_SSLMODE` et `DBT_USER_POSTGRES_PASSWORD` vers l'environnement cible (`test` ou `prod`) avant de lancer les commandes.
 Dans l'état actuel du repo, ces variables servent au runtime `dbt + scraping` de `prefect-worker`.
@@ -327,7 +326,6 @@ La destination Postgres générée automatiquement utilise:
 5. Password: `${AIRBYTE_DESTINATION_POSTGRES_PASSWORD}`
 6. schéma par défaut: `raw`
 7. mode SSL: `${POSTGRES_SSLMODE}` si requis par le serveur Postgres
-
 
 ### Étape 3 - Validation du premier sync
 
@@ -525,13 +523,13 @@ docker compose exec prefect-worker python3 /app/ingestion/prefect/flows.py main-
 
 ## 16. Références
 
-1. démarrage rapide Airbyte OSS: https://docs.airbyte.com/platform/using-airbyte/getting-started/oss-quickstart
-2. Airbyte `abctl`: https://docs.airbyte.com/platform/deploying-airbyte/abctl
-3. destination Postgres Airbyte: https://docs.airbyte.com/integrations/destinations/postgres
-4. installation dbt Core: https://docs.getdbt.com/docs/local/install-dbt
-5. profils dbt: https://docs.getdbt.com/docs/local/profiles.yml
-6. setup Postgres dbt: https://docs.getdbt.com/docs/local/connect-data-platform/postgres-setup
-7. serveur Prefect auto-hébergé: https://docs.prefect.io/
+1. démarrage rapide Airbyte OSS: [https://docs.airbyte.com/platform/using-airbyte/getting-started/oss-quickstart](https://docs.airbyte.com/platform/using-airbyte/getting-started/oss-quickstart)
+2. Airbyte `abctl`: [https://docs.airbyte.com/platform/deploying-airbyte/abctl](https://docs.airbyte.com/platform/deploying-airbyte/abctl)
+3. destination Postgres Airbyte: [https://docs.airbyte.com/integrations/destinations/postgres](https://docs.airbyte.com/integrations/destinations/postgres)
+4. installation dbt Core: [https://docs.getdbt.com/docs/local/install-dbt](https://docs.getdbt.com/docs/local/install-dbt)
+5. profils dbt: [https://docs.getdbt.com/docs/local/profiles.yml](https://docs.getdbt.com/docs/local/profiles.yml)
+6. setup Postgres dbt: [https://docs.getdbt.com/docs/local/connect-data-platform/postgres-setup](https://docs.getdbt.com/docs/local/connect-data-platform/postgres-setup)
+7. serveur Prefect auto-hébergé: [https://docs.prefect.io/](https://docs.prefect.io/)
 
 ## Referenced by
 

@@ -1,8 +1,18 @@
-**Owner:** Joel Teixeira
+# Architecture ingestion - Airbyte, dbt, Prefect et scraping
 
-**Last reviewed:** 2026-05-07
+## Metadata du document
 
-**Status:** draft
+**Responsable:** Joel Teixeira
+
+**Dernière révision:** 2026-05-08
+
+**Statut:** brouillon
+
+### Historique du document
+
+| #   | Date       | Auteur        | Observations           |
+| --- | ---------- | ------------- | ---------------------- |
+| 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
 
 ## Statut de référence
 
@@ -10,12 +20,6 @@ Ce document est la cible d'architecture de référence pour le module `ingestion
 
 1. si un autre document d'architecture diverge de ce schéma cible, c'est ce document qui fait foi;
 2. les autres documents d'architecture doivent être lus comme des documents de transition, d'état actuel ou de plan d'exécution.
-
-## Historique du document
-
-| # | Date       | Author         | Observations           |
-|---|------------|----------------|------------------------|
-| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
 
 ## Diagramme de flux global actuel
 
@@ -68,7 +72,7 @@ flowchart LR
         RIC_POSTER_CHARS[(ric_poster_characters)]
         RIC_TRAILER_CHARS[(ric_trailer_characters)]
     end
-    
+
     subgraph ML[ML module]
         direction TB
         ML_MAIN[ml-image/main.py]
@@ -144,17 +148,16 @@ flowchart LR
 
     classDef csvFile fill:#bbf7d0,stroke:#15803d,color:#111827;
     class MUBI_AWARDS_CSV,ML_POSTER_CSV,ML_TRAILER_CSV,ALLOCINE_MATCH_CSV,ALLOCINE_ENRICHED_CSV,MUBI_FESTIVAL_CSV,XLSX_C5050 csvFile;
-    
+
     classDef regenerableFile stroke-dasharray: 5 4;
     class MUBI_AWARDS_CSV,ML_POSTER_CSV,ML_TRAILER_CSV,ALLOCINE_MATCH_CSV,ALLOCINE_ENRICHED_CSV,MUBI_FESTIVAL_CSV regenerableFile;
-    
+
     classDef internetPage fill:#bfdbfe,stroke:#1d4ed8,color:#111827;
     class ALLOCINE,MUBI internetPage;
-    
+
 ```
 
 ## Architecture cible
-
 
 ```mermaid
 flowchart LR

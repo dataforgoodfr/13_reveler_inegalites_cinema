@@ -1,9 +1,10 @@
-from playwright.async_api import async_playwright
-from os import getenv
-import random
 import json
+import random
+from os import getenv
 from urllib.parse import urlparse, urlunparse
 from urllib.request import urlopen
+
+from playwright.async_api import async_playwright
 
 # Define this variable in docker-compose environment (see database/README)
 CHROMIUM_WS_ENDPOINT = getenv("PLAYWRIGHT_WS_ENDPOINT")
@@ -63,7 +64,9 @@ class AsyncBrowserSession:
             )
 
         http_scheme = "https" if parsed.scheme in {"https", "wss"} else "http"
-        version_url = urlunparse((http_scheme, parsed.netloc, "/json/version", "", "", ""))
+        version_url = urlunparse(
+            (http_scheme, parsed.netloc, "/json/version", "", "", "")
+        )
 
         try:
             with urlopen(version_url, timeout=5) as response:

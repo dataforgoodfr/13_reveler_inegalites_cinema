@@ -14,7 +14,6 @@ from sqlalchemy import bindparam, create_engine, text
 from backend.utils.date_utils import parse_duration, parse_release_date
 from database.data.scraping_browser import WebsiteBlockedError
 
-
 STREAM_NAME = "allocine_data"
 DEFAULT_INPUT_SCHEMA = "raw"
 DEFAULT_INPUT_TABLE = "id_matching"
@@ -49,7 +48,14 @@ CONNECTION_SPECIFICATION = {
             "type": "string",
             "title": "Postgres SSL mode",
             "default": "disable",
-            "enum": ["disable", "allow", "prefer", "require", "verify-ca", "verify-full"],
+            "enum": [
+                "disable",
+                "allow",
+                "prefer",
+                "require",
+                "verify-ca",
+                "verify-full",
+            ],
         },
         "input_schema": {
             "type": "string",
@@ -181,7 +187,9 @@ class ConnectorConfig:
     @classmethod
     def from_dict(cls, raw_config: dict[str, Any]) -> "ConnectorConfig":
         database_url = raw_config.get("database_url") or _build_database_url(raw_config)
-        completed_statuses = raw_config.get("completed_statuses") or DEFAULT_COMPLETED_STATUSES
+        completed_statuses = (
+            raw_config.get("completed_statuses") or DEFAULT_COMPLETED_STATUSES
+        )
 
         values = {
             "database_url": database_url,
@@ -192,17 +200,29 @@ class ConnectorConfig:
             "input_id_column": raw_config.get("input_id_column", "film_id"),
             "input_visa_column": raw_config.get("input_visa_column", "visa_number"),
             "input_title_column": raw_config.get("input_title_column", "original_name"),
-            "input_year_column": raw_config.get("input_year_column", "cnc_agrement_year"),
-            "input_allocine_id_column": raw_config.get("input_allocine_id_column", "allocine_id"),
-            "input_allocine_url_column": raw_config.get("input_allocine_url_column", "allocine_url"),
-            "completed_statuses": [str(status).lower() for status in completed_statuses],
+            "input_year_column": raw_config.get(
+                "input_year_column", "cnc_agrement_year"
+            ),
+            "input_allocine_id_column": raw_config.get(
+                "input_allocine_id_column", "allocine_id"
+            ),
+            "input_allocine_url_column": raw_config.get(
+                "input_allocine_url_column", "allocine_url"
+            ),
+            "completed_statuses": [
+                str(status).lower() for status in completed_statuses
+            ],
             "scrape_limit": _normalize_positive_int(raw_config.get("scrape_limit")),
             "playwright_ws_endpoint": raw_config.get("playwright_ws_endpoint")
             or os.getenv("PLAYWRIGHT_WS_ENDPOINT"),
         }
 
         for key, value in values.items():
-            if key.endswith("_column") or key.endswith("_schema") or key.endswith("_table"):
+            if (
+                key.endswith("_column")
+                or key.endswith("_schema")
+                or key.endswith("_table")
+            ):
                 if value:
                     _validate_identifier(value)
 
@@ -349,20 +369,24 @@ class AllocineAirbyteSource:
 
         print(f"Allocine scraping started: {total_rows} pending rows to process.")
 
-        async with browser_factory(ws_endpoint=config.playwright_ws_endpoint) as session:
+        async with browser_factory(
+            ws_endpoint=config.playwright_ws_endpoint
+        ) as session:
             for index, source_row in enumerate(source_rows, start=1):
                 record = await self._scrape_one_record(
-                        run_id=run_id,
-                        session=session,
-                        scraper=scraper,
-                        source_row=source_row,
-                    )
+                    run_id=run_id,
+                    session=session,
+                    scraper=scraper,
+                    source_row=source_row,
+                )
                 records.append(record)
                 status = record.get("scrape_status") or "error"
                 status_counts[status] = status_counts.get(status, 0) + 1
 
                 if status != "success":
-                    source_label = record.get("source_record_id") or record.get("visa_number")
+                    source_label = record.get("source_record_id") or record.get(
+                        "visa_number"
+                    )
                     title = record.get("original_name") or "unknown-title"
                     reason = record.get("error_message") or "no reason provided"
                     print(
@@ -374,7 +398,9 @@ class AllocineAirbyteSource:
                     )
 
                 if index % 10 == 0 or index == total_rows:
-                    print(f"Allocine scraping progress: {index}/{total_rows} rows processed.")
+                    print(
+                        f"Allocine scraping progress: {index}/{total_rows} rows processed."
+                    )
 
         print(
             "Allocine scraping summary: "
@@ -392,10 +418,11 @@ class AllocineAirbyteSource:
 
         return AllocineScraper(), AsyncBrowserSession
 
-    def _insert_records(self, config: ConnectorConfig, records: list[dict[str, Any]]) -> None:
+    def _insert_records(
+        self, config: ConnectorConfig, records: list[dict[str, Any]]
+    ) -> None:
         engine = create_engine(config.database_url)
-        insert_sql = text(
-            f"""
+        insert_sql = text(f"""
             insert into {_relation(config.output_schema, config.output_table)} (
                 run_id,
                 extracted_at,
@@ -459,8 +486,7 @@ class AllocineAirbyteSource:
                 :error_message,
                 :record_hash
             )
-            """
-        )
+            """)
 
         try:
             with engine.begin() as connection:
@@ -486,7 +512,9 @@ class AllocineAirbyteSource:
             "companies",
         ):
             value = serialized.get(key)
-            serialized[key] = json.dumps(value, ensure_ascii=False) if value is not None else None
+            serialized[key] = (
+                json.dumps(value, ensure_ascii=False) if value is not None else None
+            )
         return serialized
 
     def _fetch_pending_rows(self, config: ConnectorConfig) -> list[dict[str, Any]]:
@@ -535,7 +563,9 @@ class AllocineAirbyteSource:
         return pending_rows
 
     def _fetch_processed_ids(self, connection, config: ConnectorConfig) -> set[str]:
-        if not self._table_exists(connection, config.output_schema, config.output_table):
+        if not self._table_exists(
+            connection, config.output_schema, config.output_table
+        ):
             return set()
 
         query = text(
@@ -562,10 +592,10 @@ class AllocineAirbyteSource:
             return
 
         if not self._schema_exists(connection, config.output_schema):
-            connection.execute(text(f"create schema {_quote_identifier(config.output_schema)}"))
-        connection.execute(
-            text(
-                f"""
+            connection.execute(
+                text(f"create schema {_quote_identifier(config.output_schema)}")
+            )
+        connection.execute(text(f"""
                 create table if not exists {_relation(config.output_schema, config.output_table)} (
                     run_id text,
                     extracted_at timestamptz,
@@ -598,56 +628,41 @@ class AllocineAirbyteSource:
                     error_message text,
                     record_hash text
                 )
-                """
-            )
-        )
-        connection.execute(
-            text(
-                f"""
+                """))
+        connection.execute(text(f"""
                 create index if not exists idx_{config.output_table}_source_record_id
                 on {_relation(config.output_schema, config.output_table)} (source_record_id)
-                """
-            )
-        )
-        connection.execute(
-            text(
-                f"""
+                """))
+        connection.execute(text(f"""
                 create index if not exists idx_{config.output_table}_scrape_status
                 on {_relation(config.output_schema, config.output_table)} (scrape_status)
-                """
-            )
-        )
-        connection.execute(
-            text(
-                f"""
+                """))
+        connection.execute(text(f"""
                 create index if not exists idx_{config.output_table}_extracted_at
                 on {_relation(config.output_schema, config.output_table)} (extracted_at)
-                """
-            )
-        )
+                """))
 
     def _schema_exists(self, connection, schema_name: str) -> bool:
-        query = text(
-            """
+        query = text("""
             select 1
             from information_schema.schemata
             where schema_name = :schema_name
-            """
-        )
+            """)
         return connection.execute(query, {"schema_name": schema_name}).scalar() == 1
 
     def _table_exists(self, connection, schema_name: str, table_name: str) -> bool:
-        query = text(
-            """
+        query = text("""
             select 1
             from information_schema.tables
             where table_schema = :schema_name
               and table_name = :table_name
-            """
+            """)
+        return (
+            connection.execute(
+                query, {"schema_name": schema_name, "table_name": table_name}
+            ).scalar()
+            == 1
         )
-        return connection.execute(
-            query, {"schema_name": schema_name, "table_name": table_name}
-        ).scalar() == 1
 
     def _stream_selected(self, catalog: dict[str, Any]) -> bool:
         streams = catalog.get("streams") or catalog.get("configuredStreams") or []
@@ -681,7 +696,9 @@ class AllocineAirbyteSource:
             "extracted_at": extracted_at,
             "source_record_id": source_record_id,
             "visa_number": str(visa_number) if visa_number not in (None, "") else None,
-            "original_name": str(original_name) if original_name not in (None, "") else None,
+            "original_name": (
+                str(original_name) if original_name not in (None, "") else None
+            ),
             "cnc_agrement_year": cnc_agrement_year,
             "match_strategy": match_strategy,
             "search_url": None,
@@ -712,7 +729,9 @@ class AllocineAirbyteSource:
             if not allocine_id:
                 if not original_name:
                     base_record["scrape_status"] = "error"
-                    base_record["error_message"] = "Missing original_name. Cannot search Allocine."
+                    base_record["error_message"] = (
+                        "Missing original_name. Cannot search Allocine."
+                    )
                     base_record["record_hash"] = _hash_record(base_record)
                     return base_record
 
@@ -775,7 +794,11 @@ class AllocineAirbyteSource:
             )
 
             row_visa = str(visa_number) if visa_number not in (None, "") else None
-            allocine_visa = str(allocine_visa_number) if allocine_visa_number not in (None, "") else None
+            allocine_visa = (
+                str(allocine_visa_number)
+                if allocine_visa_number not in (None, "")
+                else None
+            )
             if row_visa and allocine_visa and row_visa != allocine_visa:
                 base_record["scrape_status"] = "visa_mismatch"
                 base_record["error_message"] = (

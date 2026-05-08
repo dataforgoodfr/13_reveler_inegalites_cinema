@@ -1,20 +1,23 @@
-**Owner:** Data Team DataForGood
-
-**Last reviewed:** 2026-05-07
-
-**Status:** active
-
-## Historique du document
-
-| # | Date       | Author         | Observations           |
-|---|------------|----------------|------------------------|
-| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
-
 # AGENTS
+
+## Metadata du document
+
+**Responsable:** Data Team DataForGood
+
+**Dernière révision:** 2026-05-08
+
+**Statut:** actif
+
+### Historique du document
+
+| #   | Date       | Auteur        | Observations           |
+| --- | ---------- | ------------- | ---------------------- |
+| 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
 
 ## Objectif
 
 Ce document donne les règles de travail pour intervenir dans ce repository RIC. Il sert de point d'entrée rapide pour comprendre :
+
 - le rôle des principaux dossiers ;
 - les attentes de documentation ;
 - les bonnes pratiques à respecter avant de modifier le code ou les données ;
@@ -23,6 +26,7 @@ Ce document donne les règles de travail pour intervenir dans ce repository RIC.
 ## Périmètre Du Repository
 
 Le repository couvre plusieurs briques liées entre elles :
+
 - `frontend/` : application Next.js exposée aux utilisateurs finaux ;
 - `backend/` : API FastAPI et logique serveur ;
 - `database/` : modèles SQLAlchemy, migrations Alembic, seeds et données historiques ;
@@ -35,6 +39,7 @@ Le repository couvre plusieurs briques liées entre elles :
 Toute modification notable du repository doit vérifier son impact documentaire.
 
 Règles obligatoires :
+
 - lire [docs/repo-documentation-guidelines.md](docs/repo-documentation-guidelines.md) avant de créer ou restructurer de la documentation ;
 - mettre à jour la documentation concernée dans la même PR chaque fois que possible ;
 - écrire la documentation en français lorsque c'est possible, en particulier pour les contenus internes ;
@@ -43,6 +48,7 @@ Règles obligatoires :
 - éviter les documents génériques qui mélangent plusieurs sujets.
 
 Quand créer ou mettre à jour un document :
+
 - nouveau workflow d'ingestion, scraping ou ML ;
 - changement de comportement du backend ou du frontend ;
 - évolution de schéma, migration ou seed importante ;
@@ -71,9 +77,11 @@ Quand créer ou mettre à jour un document :
 ## Documentation Principale À Lire
 
 Point d'entrée général :
+
 - [README.md](README.md) : vision d'ensemble du projet, stack, prérequis et liens principaux.
 
 Par composant :
+
 - [frontend/README.md](frontend/README.md) : structure frontend, prérequis Node.js et commandes locales.
 - [backend/README.md](backend/README.md) : lancement du backend et manipulation des données côté API.
 - [database/README.md](database/README.md) : rôle de la base, migrations, seeds et données historiques.
@@ -81,6 +89,7 @@ Par composant :
 - [ml-image/README.md](ml-image/README.md) : installation et prérequis du pipeline ML image.
 
 Documentation transverse :
+
 - [docs/repo-documentation-guidelines.md](docs/repo-documentation-guidelines.md) : standard documentaire du repository.
 - [docs/repo-setup.md](docs/repo-setup.md) : installation des outils système utiles.
 - [docs/runbooks/ingestion-runbook-infra-setup-dbt-core-airbyte-remote-postgres.md](docs/runbooks/ingestion-runbook-infra-setup-dbt-core-airbyte-remote-postgres.md) : setup et exploitation infra pour ingestion.

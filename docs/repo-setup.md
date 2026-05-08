@@ -1,20 +1,23 @@
-**Owner:** Joel Teixeira
-
-**Last reviewed:** 2026-05-07
-
-**Status:** active
-
-## Historique du document
-
-| # | Date       | Author         | Observations           |
-|---|------------|----------------|------------------------|
-| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
-
 # Étapes d'installation des logiciels et / ou librairies
+
+## Metadata du document
+
+**Responsable:** Joel Teixeira
+
+**Dernière révision:** 2026-05-08
+
+**Statut:** actif
+
+### Historique du document
+
+| #   | Date       | Auteur        | Observations           |
+| --- | ---------- | ------------- | ---------------------- |
+| 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
 
 ## Installation de Docker et Docker Compose
 
 1. Installer Docker Engine en suivant la documentation officielle :
+
 ```bash
 # Ajout du repository Docker
 sudo apt-get update
@@ -35,11 +38,13 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 ```
 
 2. Vérifier l'installation :
+
 ```bash
 docker compose version
 ```
 
 3. (Optionnel) Configurer Docker pour s'exécuter sans sudo :
+
 ```bash
 sudo usermod -aG docker $USER
 newgrp docker
@@ -63,14 +68,15 @@ Cependant, libre à toi d'utiliser la méthode qui te convient le mieux ! Quelqu
 Suivre les instructions pour [installer pipx](https://pipx.pypa.io/stable/#install-pipx) selon ta plateforme (linux, windows, etc...)
 
 Par exemple pour Ubuntu 23.04+:
-
-    sudo apt update
-    sudo apt install pipx
-    pipx ensurepath
-
+```bash
+sudo apt update
+sudo apt install pipx
+pipx ensurepath
+```
 [Installer Poetry avec pipx](https://python-poetry.org/docs/#installing-with-pipx):
-
-    pipx install poetry
+```bash
+pipx install poetry
+```
 
 ### Installation de Poetry avec l'installateur officiel
 

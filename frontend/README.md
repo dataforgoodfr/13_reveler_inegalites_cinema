@@ -1,16 +1,18 @@
-**Owner:** Nicolas Revel
-
-**Last reviewed:** 2026-05-07
-
-**Status:** active
-
-## Historique du document
-
-| # | Date       | Author         | Observations           |
-|---|------------|----------------|------------------------|
-| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
-
 # Objectif 50 / 50 frontend
+
+## Metadata du document
+
+**Responsable:** Nicolas Revel
+
+**Dernière révision:** 2026-05-08
+
+**Statut:** actif
+
+### Historique du document
+
+| #   | Date       | Auteur        | Observations           |
+| --- | ---------- | ------------- | ---------------------- |
+| 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
 
 ## Prérequis
 
@@ -30,11 +32,13 @@ pnpm --version
 ## Configuration du Projet
 
 1. Installer les dépendances :
+
 ```bash
 pnpm install
 ```
 
 2. Démarrer le serveur de développement :
+
 ```bash
 pnpm dev
 ```
@@ -44,6 +48,7 @@ L'application sera disponible sur [http://localhost:3000](http://localhost:3000)
 ## Dépendances du Projet
 
 Les dépendances principales incluent :
+
 - Next.js 15
 - React 19
 - TypeScript
@@ -52,7 +57,7 @@ Les dépendances principales incluent :
 
 ## Structure du Projet
 
-```
+```text
 ├── app/            # Routes de l'application Next.js
 ├── components/     # Composants React réutilisables
 ├── public/         # Ressources statiques
@@ -62,6 +67,7 @@ Les dépendances principales incluent :
 ## Bases de Next.js
 
 Next.js est un framework React qui fournit :
+
 - Rendu côté serveur
 - Génération de sites statiques
 - Routes API
@@ -69,6 +75,7 @@ Next.js est un framework React qui fournit :
 - Optimisation intégrée
 
 ### Fonctionnalités Principales
+
 - Les pages sont créées dans le répertoire `app`
 - Les routes API sont définies dans `app/api`
 - Les ressources statiques vont dans le répertoire `public`

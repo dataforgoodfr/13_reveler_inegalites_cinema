@@ -1,16 +1,18 @@
-**Owner:** Joel Teixeira
-
-**Last reviewed:** 2026-05-07
-
-**Status:** active
-
-## Historique du document
-
-| # | Date       | Author         | Observations           |
-|---|------------|----------------|------------------------|
-| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
-
 # Ingestion
+
+## Metadata du document
+
+**Responsable:** Joel Teixeira
+
+**Dernière révision:** 2026-05-08
+
+**Statut:** actif
+
+### Historique du document
+
+| #   | Date       | Auteur        | Observations           |
+| --- | ---------- | ------------- | ---------------------- |
+| 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
 
 Ce dossier regroupe les assets d'ingestion et de transformation de données, séparés du code applicatif principal.
 
@@ -104,10 +106,10 @@ Variables Airbyte facultatives:
 Commandes utiles depuis `ingestion/`:
 
 ```bash
-python3 airbyte/bootstrap.py list-workspaces
-python3 airbyte/bootstrap.py list-sources
-python3 airbyte/bootstrap.py apply --dry-run
-python3 airbyte/bootstrap.py apply
+python3 -m ingestion.airbyte.bootstrap list-workspaces
+python3 -m ingestion.airbyte.bootstrap list-sources
+python3 -m ingestion.airbyte.bootstrap apply --dry-run
+python3 -m ingestion.airbyte.bootstrap apply
 ```
 
 ## Scraping Allocine
@@ -232,23 +234,23 @@ Mode opératoire recommandé:
 Le point d'entrée versionné est [flows.py](/root/explore/13_reveler_inegalites_cinema/ingestion/prefect/flows.py:1). Il expose maintenant un seul flow utilisateur dans Prefect:
 
 1. `Lancer l'ingestion complete`: chaîne `airbyte sync -> dbt phase 1 -> scraping -> dbt phase 2`.
-Description: orchestration complète du pipeline avec étapes optionnelles activables au lancement.
+   Description: orchestration complète du pipeline avec étapes optionnelles activables au lancement.
 
 Les étapes internes restent visibles comme sous-flows distincts dans l'exécution du flow principal, avec des libellés lisibles:
 
 1. `Synchroniser les sources`
-Description: déclenche les synchronisations Airbyte demandées par nom de connexion, attend leur statut terminal et réutilise un job déjà en cours si nécessaire.
+   Description: déclenche les synchronisations Airbyte demandées par nom de connexion, attend leur statut terminal et réutilise un job déjà en cours si nécessaire.
 2. `Preparer les donnees`
-Description: exécute `dbt build --select tag:phase1` avant le scraping.
+   Description: exécute `dbt build --select tag:phase1` avant le scraping.
 3. `Recuperer les donnees Allocine`
-Description: lance le scraping Allociné avec le fichier de configuration fourni.
+   Description: lance le scraping Allociné avec le fichier de configuration fourni.
 4. `Finaliser les donnees`
-Description: exécute `dbt build --select tag:phase2` uniquement si cette étape est activée.
+   Description: exécute `dbt build --select tag:phase2` uniquement si cette étape est activée.
 
 Deployments publiés automatiquement:
 
 1. `lancer-l-ingestion-complete`
-Description: point d'entrée manuel recommandé pour les utilisateurs de l'UI Prefect.
+   Description: point d'entrée manuel recommandé pour les utilisateurs de l'UI Prefect.
 
 Important:
 
@@ -286,8 +288,8 @@ Le parsing CLI ne conserve plus qu'un point d'entrée `main-ingestion`; les anci
 1. [README Airbyte](airbyte/README.md): bootstrap versionné des sources Airbyte, secrets locaux hors git et commandes d'application.
 1. [README dbt](dbt/README.md): modèles préparés, tags d'exécution et sources brutes consommées par le projet dbt.
 1. [Runbook infra](../docs/runbooks/ingestion-runbook-infra-setup-dbt-core-airbyte-remote-postgres.md): installation et exploitation locale Airbyte/dbt/PostgreSQL.
-2. [Specification Airbyte/dbt](../docs/specifications/ingestion-specification-airbyte-dbt-mises-a-jour-donnees.md): contrats cible et critères d'acceptation.
-3. [Architecture ingestion](../docs/architecture/ingestion-architecture-airbyte-dbt-prefect-scraping.md): cible de référence, état actuel relatif et roadmap de convergence.
+1. [Specification Airbyte/dbt](../docs/specifications/ingestion-specification-airbyte-dbt-mises-a-jour-donnees.md): contrats cible et critères d'acceptation.
+1. [Architecture ingestion](../docs/architecture/ingestion-architecture-airbyte-dbt-prefect-scraping.md): cible de référence, état actuel relatif et roadmap de convergence.
 
 ## Referenced by
 

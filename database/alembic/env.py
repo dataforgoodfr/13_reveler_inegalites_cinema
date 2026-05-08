@@ -1,15 +1,9 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-from sqlalchemy import create_engine
-from sqlalchemy import text
-
 from alembic import context
+from sqlalchemy import create_engine, engine_from_config, pool, text
 
-from database.database import Base
-from database.database import DATABASE_URL
-from database.database import DATABASE_SCHEMA
+from database.database import DATABASE_SCHEMA, DATABASE_URL, Base
 from database.models import *  # noqa: F403
 
 # this is the Alembic Config object, which provides
@@ -24,7 +18,7 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 engine = create_engine(DATABASE_URL)
 target_metadata = Base.metadata
-config.set_section_option('alembic', 'sqlalchemy.url', DATABASE_URL)
+config.set_section_option("alembic", "sqlalchemy.url", DATABASE_URL)
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

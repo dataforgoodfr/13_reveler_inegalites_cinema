@@ -1,22 +1,27 @@
-**Owner:** Joel Teixeira
-
-**Last reviewed:** 2026-05-07
-
-**Status:** active
-
-## Historique du document
-
-| # | Date       | Author         | Observations           |
-|---|------------|----------------|------------------------|
-| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
-
 # Guide Général De Documentation
+
+## Metadata du document
+
+**Responsable:** Joel Teixeira
+
+**Dernière révision:** 2026-05-08
+
+**Statut:** actif
+
+### Historique du document
+
+| #   | Date       | Auteur        | Observations           |
+| --- | ---------- | ------------- | ---------------------- |
+| 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
+
+## Introduction
 
 Ce guide définit un standard pratique pour créer, rédiger, mettre à jour et maintenir la documentation d'un projet dans n'importe quel dépôt logiciel.
 
 ## 1. Objectifs
 
 La documentation doit être :
+
 - Utile : aide quelqu'un à accomplir une tâche réelle.
 - Exacte : correspond au comportement actuel du système.
 - Facile à trouver : simple à localiser et à parcourir.
@@ -25,6 +30,7 @@ La documentation doit être :
 ## 2. Ensemble Minimal De Documentation
 
 Chaque projet devrait avoir :
+
 - Un `README.md` à la racine.
 - Un `README.md` par service/composant.
 - Un répertoire `docs/` organisé par catégorie de documentation.
@@ -32,6 +38,7 @@ Chaque projet devrait avoir :
 ### 2.1 README.md Racine (niveau projet)
 
 Inclure au minimum :
+
 1. L'objectif et le périmètre.
 2. Une vue d'ensemble de l'architecture.
 3. La structure du dépôt.
@@ -44,6 +51,7 @@ Inclure au minimum :
 ### 2.2 README.md De Service (niveau service)
 
 Chaque service devrait inclure :
+
 1. L'objectif du service et ses responsabilités.
 2. La structure des répertoires / modules.
 3. La configuration et les variables d'environnement.
@@ -56,6 +64,7 @@ Chaque service devrait inclure :
 ## 3. Taxonomie Recommandée Pour `docs/`
 
 Catégories principales :
+
 - `docs/specifications/`
 - `docs/guidelines-best-practices/`
 - `docs/improvement-recommendations/`
@@ -63,6 +72,7 @@ Catégories principales :
 - `docs/expertise/`
 
 Catégories additionnelles utiles :
+
 - `docs/runbooks/` (opérations, incidents, reprise)
 - `docs/reference/` (API, schémas, contrats)
 - `docs/adr/` (architecture decision records)
@@ -73,12 +83,14 @@ Catégories additionnelles utiles :
 ### 4.1 Création
 
 Créer un nouveau document quand :
+
 - Une nouvelle fonctionnalité ou un nouveau workflow est introduit.
 - Un comportement change d'une manière sur laquelle les utilisateurs/développeurs s'appuient.
 - Un problème récurrent de support / debug apparaît.
 - Une décision d'architecture ou produit importante est prise.
 
 Métadonnées requises en haut de chaque document :
+
 - `Owner`
 - `Last reviewed`
 - `Status` (`draft`, `active`, `deprecated`, `obsolete`)
@@ -87,6 +99,7 @@ Métadonnées requises en haut de chaque document :
 ### 4.2 Rédaction
 
 Règles d'écriture :
+
 - Commencer par l'objectif, puis les prérequis, puis les étapes.
 - Préférer des titres orientés tâches (`Comment...`, `Dépannage...`).
 - Garder une langue directe et sans ambiguïté.
@@ -95,6 +108,7 @@ Règles d'écriture :
 - Écrire la documentation en français chaque fois que possible, surtout pour les contenus internes et destinés à l'équipe.
 
 Règles de sécurité et de confidentialité :
+
 - Ne jamais inclure de secrets, identifiants, tokens ou clés privées.
 - Masquer les valeurs sensibles dans les exemples.
 - Ne pas inclure de données personnelles ou de données permettant d'identifier un client, sauf autorisation explicite.
@@ -102,10 +116,12 @@ Règles de sécurité et de confidentialité :
 ### 4.3 Modification / Mise À Jour
 
 Lors d'un changement de comportement dans le code :
+
 - Mettre à jour la documentation pertinente dans la même PR chaque fois que possible.
 - Si ce n'est pas possible, créer un suivi tracé avec responsable et date d'échéance.
 
 Pour les mises à jour :
+
 - Garder un historique utile (`Ce qui a changé` et `Pourquoi`).
 - Mettre à jour l'historique du document à chaque modification significative.
 - Marquer le contenu obsolète avec des consignes de migration.
@@ -114,11 +130,13 @@ Pour les mises à jour :
 ### 4.4 Maintenance
 
 Fréquence de maintenance :
+
 - Docs critiques (runbooks, déploiement, sécurité) : revue mensuelle.
 - Docs techniques actives : revue trimestrielle.
 - Docs de référence long terme : revue tous les 6 mois.
 
 Exigences de maintenance :
+
 - Chaque document doit avoir un responsable ou une équipe nommée.
 - Les liens cassés et commandes obsolètes doivent être corrigés rapidement.
 - Les docs dépassées doivent être corrigées, dépréciées ou archivées.
@@ -126,6 +144,7 @@ Exigences de maintenance :
 ## 5. Standards De Qualité
 
 Un document est complet quand il est :
+
 - Correct : validé par rapport au comportement actuel.
 - Actionnable : contient assez d'étapes pour être exécuté.
 - Ciblé : concentré sur un seul sujet.
@@ -133,6 +152,7 @@ Un document est complet quand il est :
 - Testable : les exemples / commandes peuvent être exécutés.
 
 Éviter :
+
 - Les duplications par copier-coller dans plusieurs documents.
 - Les gros documents mélangeant plusieurs sujets.
 - Les mots ambigus comme "bientôt", "généralement", "parfois".
@@ -141,21 +161,25 @@ Un document est complet quand il est :
 ## 6. Versionnement Et Nommage
 
 Conventions de nommage :
+
 - Utiliser des noms de fichiers clairs, stables, en kebab-case.
 - Les documents spécifiques doivent commencer par un préfixe de module ou domaine en kebab-case, afin de rendre leur portée immédiatement visible.
 - Garder un seul sujet par fichier.
 - Préférer des noms explicites aux noms génériques (`api-authentication.md` plutôt que `notes.md`).
 
 Exemple :
+
 - `ingestion-spec-airbyte-dbt-prefect-modifications-donnees.md`
 
 Conventions de versionnement :
+
 - Versionner les docs qui décrivent des contrats externes (API, schémas, protocoles).
 - Conserver des notes de migration quand des changements cassants ont lieu.
 
 ## 7. Workflow De Revue Suggéré
 
 Pour chaque PR de documentation :
+
 1. Revue technique par le responsable de la fonctionnalité.
 2. Revue de lisibilité par quelqu'un hors implémentation.
 3. Validation des liens / commandes.
@@ -164,6 +188,7 @@ Pour chaque PR de documentation :
 ## 8. Modèles (Recommandé)
 
 Utiliser `docs/templates/` pour :
+
 - Le modèle de README racine.
 - Le modèle de README de service.
 - Le modèle de spécification.
@@ -174,24 +199,15 @@ Utiliser `docs/templates/` pour :
 Exemple de bloc de métadonnées à placer en haut d'un document :
 
 ```md
-**Owner:** equipe-data
+# Titre du document
 
-**Last reviewed:** 2026-05-07
-
-**Status:** active
-
-## Historique du document
-
-| # | Date       | Author       | Observations                                  |
-|---|------------|--------------|-----------------------------------------------|
-| 1 | 2026-05-07 | Jane Doe     | Création du document                          |
-| 2 | 2026-05-10 | John Doe     | Mise à jour du workflow d'ingestion           |
-| 3 | 2026-05-15 | equipe-data  | Clarifications sur le déploiement et le debug |
+## Introduction
 ```
 
 ## 9. Recommandations D'Automatisation
 
 Utiliser des vérifications CI pour imposer la qualité documentaire :
+
 - Lint Markdown.
 - Vérification des liens.
 - Vérification orthographique.
@@ -201,6 +217,7 @@ Utiliser des vérifications CI pour imposer la qualité documentaire :
 ## 10. Recommandations De Gouvernance
 
 Pour garder une documentation complète dans la durée :
+
 - Définir un responsable documentation par service.
 - Rendre "impact documentation" obligatoire dans la checklist de PR.
 - Inclure la revue documentaire dans les vérifications de release readiness.

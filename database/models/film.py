@@ -1,7 +1,9 @@
-from sqlalchemy import Column, Integer, String, Date, Float, Boolean, Index
+from sqlalchemy import Boolean, Column, Date, Float, Index, Integer, String
 from sqlalchemy.orm import relationship
+
 from database.database import Base
 from database.models.film_genre import FilmGenre
+
 
 class Film(Base):
     __tablename__ = "ric_films"
@@ -22,7 +24,7 @@ class Film(Base):
     cnc_rank = Column(Integer, nullable=True)
     allocine_id = Column(Integer, nullable=True)
     mubi_id = Column(Integer, nullable=True)
-    # The columns (budget_category, genre_categories, broadcasters, is_french_financed) have been added 
+    # The columns (budget_category, genre_categories, broadcasters, is_french_financed) have been added
     # to provide a functional statistics dashboard using metabase
     # They are reformated attributes of budget, genres and broadcasters roles
     # TODO: to remove the 4 below columns if another solution for statistics is found
@@ -31,8 +33,12 @@ class Film(Base):
     broadcasters = Column(String, nullable=True)
     is_french_financed = Column(Boolean, nullable=True, default=False)
 
-    genres = relationship("Genre", secondary=lambda: FilmGenre.__table__, back_populates="films")
-    country_budget_allocations = relationship("FilmCountryBudgetAllocation", back_populates="film")
+    genres = relationship(
+        "Genre", secondary=lambda: FilmGenre.__table__, back_populates="films"
+    )
+    country_budget_allocations = relationship(
+        "FilmCountryBudgetAllocation", back_populates="film"
+    )
     trailer = relationship("Trailer", back_populates="film")
     poster = relationship("Poster", back_populates="film")
     film_credits = relationship("FilmCredit", back_populates="film")

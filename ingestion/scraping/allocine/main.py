@@ -1,9 +1,9 @@
 import argparse
-from datetime import datetime
 import json
 import os
 import re
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -57,7 +57,9 @@ def main() -> int:
     from ingestion.scraping.allocine.connector import AllocineAirbyteSource
 
     parser = argparse.ArgumentParser(description="Allocine Airbyte custom source")
-    parser.add_argument("command", choices=["spec", "check", "discover", "read", "sync"])
+    parser.add_argument(
+        "command", choices=["spec", "check", "discover", "read", "sync"]
+    )
     parser.add_argument("--config", dest="config_path")
     parser.add_argument("--catalog", dest="catalog_path")
     parser.add_argument("--state", dest="state_path")

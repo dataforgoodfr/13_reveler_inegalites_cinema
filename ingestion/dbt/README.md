@@ -1,16 +1,18 @@
-**Owner:** Joel Teixeira
-
-**Last reviewed:** 2026-05-07
-
-**Status:** active
-
-## Historique du document
-
-| # | Date       | Author         | Observations           |
-|---|------------|----------------|------------------------|
-| 1 | 2026-05-07 | Joel Teixeira  | Initial implementation |
-
 # dbt
+
+## Metadata du document
+
+**Responsable:** Joel Teixeira
+
+**Dernière révision:** 2026-05-08
+
+**Statut:** actif
+
+### Historique du document
+
+| #   | Date       | Auteur        | Observations           |
+| --- | ---------- | ------------- | ---------------------- |
+| 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
 
 Ce dossier contient le projet dbt du module ingestion.
 
@@ -51,26 +53,26 @@ Sources versionnées dans `models/sources.yml`:
 ### Phase 1
 
 1. `stg_agreement_cnc`
-Description: normalise et type les colonnes de `raw.agreement_cnc`.
-Tags: `phase1`.
-Tests déclarés: `visa_number` non nul.
+   Description: normalise et type les colonnes de `raw.agreement_cnc`.
+   Tags: `phase1`.
+   Tests déclarés: `visa_number` non nul.
 
 2. `int_agreement_cnc_latest_by_visa`
-Description: conserve la dernière version de chaque film par `visa_number` à partir des métadonnées d'extraction.
-Tags: `phase1`.
-Tests déclarés: `visa_number` non nul et unique.
+   Description: conserve la dernière version de chaque film par `visa_number` à partir des métadonnées d'extraction.
+   Tags: `phase1`.
+   Tests déclarés: `visa_number` non nul et unique.
 
 ### Phase 2
 
 1. `stg_allocine_data`
-Description: normalise les données brutes écrites par le scraping Allociné dans `raw.allocine_data`.
-Tags: `phase2`.
-Tests déclarés: `source_record_id` non nul, `extracted_at` non nul.
+   Description: normalise les données brutes écrites par le scraping Allociné dans `raw.allocine_data`.
+   Tags: `phase2`.
+   Tests déclarés: `source_record_id` non nul, `extracted_at` non nul.
 
 2. `int_allocine_data_latest_by_source_record`
-Description: conserve la dernière version de chaque enregistrement scrapé par `source_record_id`.
-Tags: `phase2`.
-Tests déclarés: `source_record_id` non nul et unique.
+   Description: conserve la dernière version de chaque enregistrement scrapé par `source_record_id`.
+   Tags: `phase2`.
+   Tests déclarés: `source_record_id` non nul et unique.
 
 ## Découpage d'exécution
 

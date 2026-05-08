@@ -51,6 +51,9 @@ lint.unfixable = []
 
 lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
 [tool.ruff.format]
 # Like Black, use double quotes for strings.
 quote-style = "double"
@@ -92,6 +95,3 @@ exclude = [
     "site-packages",
     "venv",
 ]
-
-[tool.ruff.mccabe]
-max-complexity = 10
