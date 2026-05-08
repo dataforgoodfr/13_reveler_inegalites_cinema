@@ -13,6 +13,7 @@
 | #   | Date       | Auteur        | Observations           |
 | --- | ---------- | ------------- | ---------------------- |
 | 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
+| 2   | 2026-05-08 | OpenAI Codex  | Documentation des limites CPU et memoire de la stack Docker ingestion |
 
 ## 1. Objectif
 
@@ -106,6 +107,14 @@ docker compose exec prefect-worker python3 /app/ingestion/scraping/allocine/main
 
 Cette stack ne remplace pas `Airbyte OSS` lui-même; elle dockerise le code d'ingestion versionné dans ce repo.
 
+Limites de ressources locales par défaut:
+
+1. `prefect-server`: `0.50` CPU, `512m` max, `256m` réservés;
+2. `prefect-worker`: `1.50` CPU, `2g` max, `768m` réservés;
+3. `browserless`: `1.00` CPU, `1g` max, `512m` réservés, `shm_size=512m`.
+
+Ces limites sont définies directement dans [ingestion/docker-compose.yml](/root/explore/13_reveler_inegalites_cinema/ingestion/docker-compose.yml:1) et peuvent être surchargées dans `ingestion/.env`.
+
 Stratégie opérationnelle retenue:
 
 1. `Airbyte` sert uniquement aux Google Sheets source;
@@ -152,6 +161,7 @@ Définir `PREFECT_API_DATABASE_CONNECTION_URL` vers la database Prefect dédiée
 Définir `AIRBYTE_HOST` et `AIRBYTE_PORT` pour l'instance Airbyte locale. L'URL UI se déduit en `http://$AIRBYTE_HOST:$AIRBYTE_PORT`.
 Définir obligatoirement `AIRBYTE_CLIENT_ID` et `AIRBYTE_CLIENT_SECRET` dans `.env` pour le bootstrap Airbyte et pour les syncs Airbyte via Prefect.
 Définir `AIRBYTE_SYNC_TIMEOUT_SECONDS` et `AIRBYTE_SYNC_POLL_SECONDS` pour contrôler l'attente des jobs Airbyte côté Prefect si les valeurs par défaut ne conviennent pas.
+Définir si besoin `PREFECT_SERVER_CPUS`, `PREFECT_SERVER_MEM_LIMIT`, `PREFECT_SERVER_MEM_RESERVATION`, `PREFECT_WORKER_CPUS`, `PREFECT_WORKER_MEM_LIMIT`, `PREFECT_WORKER_MEM_RESERVATION`, `BROWSERLESS_CPUS`, `BROWSERLESS_MEM_LIMIT`, `BROWSERLESS_MEM_RESERVATION` et `BROWSERLESS_SHM_SIZE` pour ajuster l'empreinte locale.
 
 Charger les variables dans le shell si nécessaire:
 

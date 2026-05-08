@@ -13,6 +13,7 @@
 | #   | Date       | Auteur        | Observations           |
 | --- | ---------- | ------------- | ---------------------- |
 | 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
+| 2   | 2026-05-08 | OpenAI Codex  | Ajout de limites CPU et memoire pour la stack Docker ingestion |
 
 Ce dossier regroupe les assets d'ingestion et de transformation de données, séparés du code applicatif principal.
 
@@ -167,6 +168,13 @@ Services fournis dans [docker-compose.yml](/root/explore/13_reveler_inegalites_c
 1. stack coeur démarrée par `docker compose up`: `prefect-server`, `prefect-worker`, `browserless`
 2. `prefect-worker` embarque par défaut `dbt` et le runtime du scraping Allociné
 
+Limitation de ressources locale:
+
+1. `prefect-server`: `0.50` CPU, `512m` max, `256m` réservés;
+2. `prefect-worker`: `1.50` CPU, `2g` max, `768m` réservés;
+3. `browserless`: `1.00` CPU, `1g` max, `512m` réservés et `shm_size=512m`;
+4. ces valeurs se surchargent dans `ingestion/.env` via `PREFECT_SERVER_*`, `PREFECT_WORKER_*` et `BROWSERLESS_*`.
+
 Exemples depuis `ingestion/`:
 
 ```bash
@@ -209,6 +217,7 @@ Pré-requis:
 5. vérifier que `dbt_user` existe et possède les grants attendus côté base applicative.
 6. renseigner `DBT_USER_POSTGRES_PASSWORD` dans `.env` pour `dbt` et le scraping Allociné.
 7. renseigner `AIRBYTE_CLIENT_ID` et `AIRBYTE_CLIENT_SECRET` dans `.env` pour le bootstrap Airbyte et pour les syncs Airbyte via Prefect.
+8. ajuster si besoin `PREFECT_SERVER_CPUS`, `PREFECT_SERVER_MEM_LIMIT`, `PREFECT_WORKER_CPUS`, `PREFECT_WORKER_MEM_LIMIT`, `BROWSERLESS_CPUS` et `BROWSERLESS_MEM_LIMIT`.
 
 Exemples depuis `ingestion/`:
 

@@ -1,6 +1,10 @@
 services:
   prefect-server:
     image: prefecthq/prefect:3-latest
+    cpus: ${PREFECT_SERVER_CPUS:-0.50}
+    mem_limit: ${PREFECT_SERVER_MEM_LIMIT:-512m}
+    mem_reservation: ${PREFECT_SERVER_MEM_RESERVATION:-256m}
+    pids_limit: ${PREFECT_SERVER_PIDS_LIMIT:-256}
     env_file:
       - .env
     environment:
@@ -26,6 +30,10 @@ services:
     build:
       context: ..
       dockerfile: ingestion/prefect/Dockerfile
+    cpus: ${PREFECT_WORKER_CPUS:-1.50}
+    mem_limit: ${PREFECT_WORKER_MEM_LIMIT:-2g}
+    mem_reservation: ${PREFECT_WORKER_MEM_RESERVATION:-768m}
+    pids_limit: ${PREFECT_WORKER_PIDS_LIMIT:-512}
     env_file:
       - .env
     depends_on:
@@ -43,6 +51,11 @@ services:
 
   browserless:
     image: browserless/chrome:latest
+    cpus: ${BROWSERLESS_CPUS:-1.00}
+    mem_limit: ${BROWSERLESS_MEM_LIMIT:-1g}
+    mem_reservation: ${BROWSERLESS_MEM_RESERVATION:-512m}
+    pids_limit: ${BROWSERLESS_PIDS_LIMIT:-512}
+    shm_size: ${BROWSERLESS_SHM_SIZE:-512m}
     ports:
       - "${BROWSERLESS_PORT:-3000}:3000"
     environment:
