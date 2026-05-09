@@ -44,7 +44,7 @@ Convention recommandée:
 
 Manifests déjà préparés depuis l'architecture cible:
 
-1. `src_gsheet_agreement_cnc.json`
+1. `src_gsheet_films.json`
 2. `src_gsheet_film_id_matching.json`
 3. `src_gsheet_fix_film_credits.json`
 4. `src_gsheet_fix_film_genres.json`
@@ -69,18 +69,6 @@ Le script lit `ingestion/.env` par défaut et attend au minimum:
 6. `AIRBYTE_CLIENT_ID`
 7. `AIRBYTE_CLIENT_SECRET`
 
-Variables facultatives:
-
-1. `AIRBYTE_WORKSPACE_ID`
-   Description: sinon le bootstrap l'infère si un seul workspace existe
-2. `AIRBYTE_DESTINATION_NAME`
-   Description: défaut `dst_pg_raw`
-3. `AIRBYTE_CONNECTION_NAME`
-4. `AIRBYTE_CONNECTION_PREFIX`
-5. `AIRBYTE_SYNC_TIMEOUT_SECONDS`
-   Description: timeout de poll des jobs Airbyte utilisé par Prefect, défaut `3600`
-6. `AIRBYTE_SYNC_POLL_SECONDS`
-   Description: intervalle de poll des jobs Airbyte utilisé par Prefect, défaut `10`
 
 ## Exemple de secret local
 

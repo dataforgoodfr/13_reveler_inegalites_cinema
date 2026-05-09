@@ -122,15 +122,15 @@ Note sur `status`:
 
 ## 5.1 User Story A - Titres CNC corrigés
 
-1. `stg_agreement_cnc`:
-   - lecture de l'onglet unique `AGREEMENT CNC`;
+1. `stg_films`:
+   - lecture de l'onglet unique `FILMS`;
    - cast/normalisation des colonnes;
    - ajout de `ingested_at`.
-2. `int_agreement_cnc_latest_by_visa`:
+2. `int_films_latest_by_visa`:
    - déduplication par `visa_number` (dernière version);
-   - l'année métier provient de `cnc_agrement_year`, pas du nom d'onglet.
+   - l'année métier provient de `cnc_agrement_year`
 3. `fnl_films` ou table finale équivalente:
-   - left join `ric_films` + `int_agreement_cnc_latest_by_visa`;
+   - left join `ric_films` + `int_films_latest_by_visa`;
    - `original_name_curated = coalesce(cnc.original_name, films.original_name)`;
    - conservation des deux colonnes:
      - valeur source (`original_name_source`)

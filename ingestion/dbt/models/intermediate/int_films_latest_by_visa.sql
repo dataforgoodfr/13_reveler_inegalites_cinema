@@ -5,7 +5,7 @@ with ranked as (
             partition by visa_number
             order by _airbyte_extracted_at desc, _airbyte_generation_id desc, _airbyte_raw_id desc
         ) as row_num
-    from {{ ref('stg_agreement_cnc') }}
+    from {{ ref('stg_films') }}
 )
 
 select

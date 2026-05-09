@@ -1,0 +1,10 @@
+{
+  "kind": "source",
+  "name": "src_gsheet_films",
+  "configuration": {
+    "spreadsheet_id": "https://docs.google.com/spreadsheets/d/1Ked_aSEd8c8FDMSZ8FIK-pGJvrqM9dd9HqW3PPGls8A/edit",
+    "credentials": {
+      "auth_type": "Service"
+    }
+  }
+}

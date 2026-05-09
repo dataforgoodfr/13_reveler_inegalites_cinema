@@ -164,7 +164,7 @@ flowchart LR
 
     subgraph GOOGLE_SHEETS[Google Sheets]
         direction TB
-        GS_CNC[GSheet AGREEMENT CNC]
+        GS_CNC[GSheet FILMS]
         GS_ID_MATCHING[GSheet Film ID matching]
         GS_FILM_CREDITS[GSheet Fix Film credits]
         GS_FILM_GENRES[GSheet Fix Film genres]
@@ -180,7 +180,7 @@ flowchart LR
 
     subgraph AIRBYTE_FLOW[Airbyte flow]
         direction TB
-        SRC_GS_CNC[src_gsheet_agreement_cnc]
+        SRC_GS_CNC[src_gsheet_films]
         SRC_GS_ID_MATCHING[src_gsheet_film_id_matching]
 
         SRC_GS_FILM_CREDITS[src_gsheet_fix_film_credits]
@@ -194,7 +194,7 @@ flowchart LR
         SRC_GS_FESTIVAL[src_gsheet_fix_festivals]
         SRC_GS_FESTIVAL_AWARDS[src_gsheet_fix_festival_awards]
 
-        AB_AGREEMENT[(raw.agreement_cnc)]
+        AB_FILMS[(raw.films)]
         AB_ID_MATCHING[(raw.id_matching)]
 
         AB_FILM_CREDITS[(raw.fix_film_credits)]
@@ -273,7 +273,7 @@ flowchart LR
 
 
     %% Airbyte/DBT flow
-    GS_CNC --> SRC_GS_CNC --> AB_AGREEMENT --> STG_FILMS --> INT_FILMS --> FNL_FILMS
+    GS_CNC --> SRC_GS_CNC --> AB_FILMS --> STG_FILMS --> INT_FILMS --> FNL_FILMS
     GS_ID_MATCHING --> SRC_GS_ID_MATCHING --> AB_ID_MATCHING
     GS_FILM_CREDITS --> SRC_GS_FILM_CREDITS --> AB_FILM_CREDITS --> STG_FILM_CREDITS --> INT_FILM_CREDITS --> FNL_FILM_CREDITS
     GS_FILM_GENRES --> SRC_GS_FILM_GENRES --> AB_FILM_GENRES --> STG_FILM_GENRES --> INT_FILMS_GENRES --> FNL_FILMS_GENRES
@@ -371,7 +371,7 @@ flowchart LR
 6. `airbyte sync` et `dbt phase 2` existent déjà comme sous-flows préparatoires, mais restent non implémentés fonctionnellement.
 7. Le flow principal chaîne déjà les quatre étapes dans l'ordre cible.
 8. Le job standalone Allociné existe dans `ingestion/scraping/allocine/` et suit déjà la logique `id_matching -> allocine_data`.
-9. Les modèles `stg_agreement_cnc`, `stg_allocine_data`, `int_agreement_cnc_latest_by_visa` et `int_allocine_data_latest_by_source_record` existent.
+9. Les modèles `stg_films`, `stg_allocine_data`, `int_films_latest_by_visa` et `int_allocine_data_latest_by_source_record` existent.
 10. Les tables finales `fnl_*` du schéma cible restent largement à construire.
 11. Le flux historique CSV/seeders existe encore en parallèle pour une partie du périmètre.
 

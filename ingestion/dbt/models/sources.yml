@@ -5,8 +5,8 @@ sources:
     schema: raw
     description: Tables brutes chargees par Airbyte et les scrapers.
     tables:
-      - name: agreement_cnc
-        description: Jeu de donnees AGREEMENT CNC charge depuis Google Sheets via Airbyte.
+      - name: films
+        description: Jeu de donnees FILMS charge depuis Google Sheets via Airbyte.
       - name: allocine_data
         description: Sortie brute du scraping Allocine.
         columns:

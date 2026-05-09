@@ -1,10 +1,10 @@
 version: 2
 
 models:
-  - name: stg_agreement_cnc
+  - name: stg_films
     config:
       tags: ["phase1"]
-    description: Typed and normalized staging model for the Airbyte-loaded Agreement CNC sheet.
+    description: Typed and normalized staging model for the Airbyte-loaded Films sheet.
     columns:
       - name: visa_number
         tests:
@@ -22,10 +22,10 @@ models:
         tests:
           - not_null
 
-  - name: int_agreement_cnc_latest_by_visa
+  - name: int_films_latest_by_visa
     config:
       tags: ["phase1"]
-    description: Latest Agreement CNC record per visa number, based on Airbyte extraction metadata.
+    description: Latest Films record per visa number, based on Airbyte extraction metadata.
     columns:
       - name: visa_number
         tests:

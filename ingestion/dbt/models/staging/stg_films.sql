@@ -21,7 +21,7 @@ with source_data as (
         nullif(trim("BONUS_PARITE"), '') as parity_bonus_raw,
         nullif(trim("AIDE_REGIONALE"), '') as regional_funding_raw,
         nullif(trim("CREDIT_D_IMPOT"), '') as tax_credit_raw
-    from {{ source('raw', 'agreement_cnc') }}
+    from {{ source('raw', 'films') }}
 ),
 
 normalized as (

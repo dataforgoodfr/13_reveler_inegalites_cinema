@@ -159,11 +159,18 @@ abctl local status
 abctl local credentials
 ```
 
+Enregistré dans `.env`:
+
+```bash
+AIRBYTE_CLIENT_ID=...
+AIRBYTE_CLIENT_SECRET=...
+``` 
+avec les valeurs affichées par `abctl local credentials`. 
+
 Préparer le bootstrap versionné:
 
 1. déposer un unique fichier JSON de service account dans `ingestion/airbyte/json_credentials/`
 2. renseigner les `spreadsheet_id` dans `ingestion/airbyte/sources/*.json`
-3. vérifier les variables Airbyte/Postgres dans `.env`
 
 Appliquer le bootstrap:
 
@@ -244,7 +251,7 @@ Avec sync Airbyte explicite:
 ```bash
 docker compose exec prefect-worker python3 /app/ingestion/prefect/flows.py main-ingestion \
   --run-airbyte-sync \
-  --airbyte-connection-name "src_gsheet_agreement_cnc -> dst_pg_raw"
+  --airbyte-connection-name "src_gsheet_films -> dst_pg_raw"
 ```
 
 ## 7. FAQ

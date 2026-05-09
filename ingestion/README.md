@@ -42,9 +42,9 @@ Ce que cela implique:
 
 Modèles implémentés:
 
-1. `stg_agreement_cnc`: normalisation et typage de `raw.agreement_cnc`.
+1. `stg_films`: normalisation et typage de `raw.films`.
 2. `stg_allocine_data`: normalisation de `raw.allocine_data`.
-3. `int_agreement_cnc_latest_by_visa`: derniere ligne Agreement CNC par `visa_number`.
+3. `int_films_latest_by_visa`: derniere ligne Films par `visa_number`.
 4. `int_allocine_data_latest_by_source_record`: dernière version Allociné par enregistrement source.
 
 Découpage d'exécution:
@@ -97,11 +97,6 @@ Variables d'environnement Airbyte désormais attendues dans `.env`:
 8. `AIRBYTE_SYNC_TIMEOUT_SECONDS`
 9. `AIRBYTE_SYNC_POLL_SECONDS`
 
-Variables Airbyte facultatives:
-
-1. `AIRBYTE_WORKSPACE_ID`
-2. `AIRBYTE_DESTINATION_NAME`
-3. `AIRBYTE_CONNECTION_PREFIX`
 
 Commandes utiles depuis `ingestion/`:
 
