@@ -1,7 +1,7 @@
 import json
 import random
 from os import getenv
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 from urllib.request import urlopen
 
 from playwright.async_api import async_playwright
@@ -16,8 +16,6 @@ DEFAULT_USER_AGENT = (
 )
 DEFAULT_VIEWPORT = {"width": 1280, "height": 800}
 DEFAULT_LOCALE = "fr-FR"
-HUMAN_LIKE_DELAY = random.uniform(1500, 3000)
-HUMAN_LIKE_SCROLL_Y = random.uniform(500, 3000)
 BLOCKED_STATUS_CODES = {403, 429}
 BLOCKED_PAGE_MARKERS = [
     "captcha",
@@ -33,30 +31,60 @@ class WebsiteBlockedError(RuntimeError):
     """Raised when a target website appears to be blocking automated access."""
 
 
+def _human_like_delay_ms() -> float:
+    return random.uniform(1500, 3000)
+
+
+def _human_like_scroll_y() -> float:
+    return random.uniform(500, 3000)
+
+
+def _merge_query_params(url: str, extra_params: dict[str, str]) -> str:
+    parsed = urlparse(url)
+    query_params = dict(parse_qsl(parsed.query, keep_blank_values=True))
+    query_params.update(extra_params)
+    return urlunparse(parsed._replace(query=urlencode(query_params)))
+
+
 class AsyncBrowserSession:
     """
     Context manager for interacting with a Playwright-controlled browser
     in a realistic, human-like way.
     """
 
-    def __init__(self, ws_endpoint=CHROMIUM_WS_ENDPOINT, user_agent=None):
+    def __init__(
+        self,
+        ws_endpoint=CHROMIUM_WS_ENDPOINT,
+        user_agent=None,
+        stealth=True,
+        solve=True,
+    ):
         self.ws_endpoint = ws_endpoint
         self.user_agent = user_agent or DEFAULT_USER_AGENT
+        self.stealth = stealth
+        self.solve = solve
         self.playwright = None
         self.browser = None
         self.context = None
         self.page = None
+
+    def _browserless_query_params(self) -> dict[str, str]:
+        params = {}
+        if self.solve:
+            params["solve"] = "true"
+        return params
 
     def _resolve_cdp_endpoint(self) -> str:
         if not self.ws_endpoint:
             raise RuntimeError("PLAYWRIGHT_WS_ENDPOINT is not set")
 
         parsed = urlparse(self.ws_endpoint)
+        browserless_params = self._browserless_query_params()
 
         # Accept direct websocket endpoints as-is. This supports Browserless-style
         # root websocket URLs as well as explicit `/devtools/browser/...` endpoints.
         if parsed.scheme in {"ws", "wss"}:
-            return self.ws_endpoint
+            return _merge_query_params(self.ws_endpoint, browserless_params)
 
         if parsed.scheme not in {"http", "https", "ws", "wss"}:
             raise RuntimeError(
@@ -65,7 +93,7 @@ class AsyncBrowserSession:
 
         http_scheme = "https" if parsed.scheme in {"https", "wss"} else "http"
         version_url = urlunparse(
-            (http_scheme, parsed.netloc, "/json/version", "", "", "")
+            (http_scheme, parsed.netloc, "/json/version", "", parsed.query, "")
         )
 
         try:
@@ -81,7 +109,7 @@ class AsyncBrowserSession:
             raise RuntimeError(
                 f"No webSocketDebuggerUrl found in {version_url} response"
             )
-        return ws_url
+        return _merge_query_params(ws_url, browserless_params)
 
     async def __aenter__(self):
         """Setup browser session with anti-bot scripts and open a new page."""
@@ -94,12 +122,13 @@ class AsyncBrowserSession:
             viewport=DEFAULT_VIEWPORT,
             locale=DEFAULT_LOCALE,
         )
-        await self.context.add_init_script("""
-            Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
-            window.chrome = { runtime: {} };
-            Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3] });
-            Object.defineProperty(navigator, 'languages', { get: () => ['fr-FR', 'fr'] });
-        """)
+        if self.stealth:
+            await self.context.add_init_script("""
+                Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+                window.chrome = { runtime: {} };
+                Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3] });
+                Object.defineProperty(navigator, 'languages', { get: () => ['fr-FR', 'fr'] });
+            """)
         self.page = await self.context.new_page()
         return self
 
@@ -121,9 +150,9 @@ class AsyncBrowserSession:
                 f"Website blocked the request for {url} with HTTP status {response.status}."
             )
 
-        await self.page.wait_for_timeout(HUMAN_LIKE_DELAY)
-        await self.page.mouse.wheel(0, HUMAN_LIKE_SCROLL_Y)
-        await self.page.wait_for_timeout(HUMAN_LIKE_DELAY)
+        await self.page.wait_for_timeout(_human_like_delay_ms())
+        await self.page.mouse.wheel(0, _human_like_scroll_y())
+        await self.page.wait_for_timeout(_human_like_delay_ms())
         html = await self.page.content()
         lowered_html = html.lower()
 

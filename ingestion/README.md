@@ -13,7 +13,6 @@
 | #   | Date       | Auteur        | Observations           |
 | --- | ---------- | ------------- | ---------------------- |
 | 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
-| 2   | 2026-05-08 | OpenAI Codex  | Ajout de limites CPU et memoire pour la stack Docker ingestion |
 
 Ce dossier regroupe les assets d'ingestion et de transformation de données, séparés du code applicatif principal.
 
@@ -78,7 +77,7 @@ Principe retenu:
 1. les manifests source sont versionnés dans `airbyte/sources/`;
 2. les secrets restent hors git dans `airbyte/json_credentials/`;
 3. l'utilisateur dépose un unique fichier JSON de compte de service dans `airbyte/json_credentials/`;
-4. l'utilisateur renseigne lui-même l'URL du Google Sheet dans `configuration.spreadsheet_id` pour chaque source;
+4. l'utilisateur renseigne lui-même l'URL du Google Sheet dans le parametre `configuration.spreadsheet_id` pour chaque source;
 5. `airbyte/bootstrap.py` lit obligatoirement `AIRBYTE_CLIENT_ID` et `AIRBYTE_CLIENT_SECRET` depuis l'environnement;
 6. `airbyte/bootstrap.py` infère automatiquement le workspace Airbyte s'il n'y en a qu'un;
 7. `airbyte/bootstrap.py` crée ou met à jour la source Google Sheets;
@@ -123,7 +122,7 @@ Le job `scraping/allocine/`:
 4. écrit les résultats enrichis dans `raw.allocine_data`;
 5. est lancé directement ou via Prefect, pas via Airbyte.
 
-## Demarrage
+## Démarrage
 
 Depuis la racine du repository, entrer dans ce workspace avant de lancer les commandes de setup:
 
@@ -133,9 +132,9 @@ cd ingestion
 
 ## Structure
 
-- `airbyte/`: configuration et assets lies aux syncs Google Sheets
+- `airbyte/`: configuration et assets liés aux syncs Google Sheets
 - `dbt/`: projet dbt Core
-- `scraping/`: jobs de scraping versionnes et dockerisables
+- `scraping/`: jobs de scraping versionnés et dockerisables
 - `prefect/`: flows et image d'orchestration
 - `docker-compose.yml`: stack Docker locale pour `prefect-server`, `prefect-worker` et `browserless`
 
@@ -147,17 +146,8 @@ Dans `dbt/models/`:
 
 ## Runbook
 
-Voir le [runbook de setup infra](../docs/runbooks/ingestion-runbook-infra-setup-dbt-core-airbyte-remote-postgres.md) pour les etapes de configuration et le troubleshooting.
+Voir le [runbook de setup infra](../docs/runbooks/ingestion-runbook-infra-setup-dbt-core-airbyte-remote-postgres.md) pour les etapes de configuration, troubleshooting.
 
-## Lancer les modèles
-
-Depuis `ingestion/`:
-
-```bash
-docker compose exec prefect-worker dbt build --profile ric --project-dir /app/ingestion/dbt
-```
-
-Cette commande construit les modèles dbt versionnés du module dans `prefect-worker`, qui est le runtime par défaut.
 
 ## Usage Docker
 
@@ -179,17 +169,7 @@ Exemples depuis `ingestion/`:
 
 ```bash
 docker compose up -d
-docker compose logs -f prefect-server prefect-worker browserless
-docker compose exec prefect-worker dbt debug --profile ric --project-dir /app/ingestion/dbt
-docker compose exec prefect-worker python3 /app/ingestion/scraping/allocine/main.py spec
 ```
-
-Note:
-
-1. `Airbyte OSS` lui-même n'est pas embarqué dans ce compose.
-2. le port hôte de `browserless` est piloté par `BROWSERLESS_PORT` dans `.env`;
-3. par défaut, `prefect-worker` parle au service Docker interne `browserless` sur `ws://browserless:3000`; il n'est pas nécessaire de mettre `PLAYWRIGHT_WS_ENDPOINT` dans `.env` pour ce cas standard;
-4. le service `browserless` est prévu pour le dev local; un endpoint externe `PLAYWRIGHT_WS_ENDPOINT` reste possible en override explicite.
 
 ## Usage Prefect
 
@@ -207,24 +187,6 @@ Services:
 
 1. `prefect-server`
 2. `prefect-worker`
-
-Pré-requis:
-
-1. créer une database PostgreSQL dédiée `prefect`;
-2. créer un utilisateur dédié `prefect_user`;
-3. renseigner `PREFECT_PORT` dans `.env` si `4200` ou `4222` ne conviennent pas;
-4. renseigner `PREFECT_API_DATABASE_CONNECTION_URL` dans `.env`;
-5. vérifier que `dbt_user` existe et possède les grants attendus côté base applicative.
-6. renseigner `DBT_USER_POSTGRES_PASSWORD` dans `.env` pour `dbt` et le scraping Allociné.
-7. renseigner `AIRBYTE_CLIENT_ID` et `AIRBYTE_CLIENT_SECRET` dans `.env` pour le bootstrap Airbyte et pour les syncs Airbyte via Prefect.
-8. ajuster si besoin `PREFECT_SERVER_CPUS`, `PREFECT_SERVER_MEM_LIMIT`, `PREFECT_WORKER_CPUS`, `PREFECT_WORKER_MEM_LIMIT`, `BROWSERLESS_CPUS` et `BROWSERLESS_MEM_LIMIT`.
-
-Exemples depuis `ingestion/`:
-
-```bash
-docker compose up -d
-docker compose logs -f prefect-server prefect-worker browserless
-```
 
 UI locale:
 
@@ -258,7 +220,7 @@ Les étapes internes restent visibles comme sous-flows distincts dans l'exécuti
 
 Deployments publiés automatiquement:
 
-1. `lancer-l-ingestion-complete`
+1. `lancer-ingestion-complete`
    Description: point d'entrée manuel recommandé pour les utilisateurs de l'UI Prefect.
 
 Important:
@@ -271,20 +233,11 @@ Important:
 6. l'étape Airbyte attend la fin de chaque job avant de passer à `dbt phase 1`;
 7. le flow principal exécute la bonne séquence et saute les étapes futures tant qu'elles ne sont pas activées.
 
-Exemples CLI optionnels, surtout utiles pour debug local:
-
-```bash
-docker compose exec prefect-worker dbt build --profile ric --project-dir /app/ingestion/dbt
-docker compose exec prefect-worker python3 /app/ingestion/prefect/flows.py main-ingestion
-docker compose exec prefect-worker python3 /app/ingestion/prefect/flows.py main-ingestion --run-airbyte-sync --airbyte-connection-name "src_gsheet_agreement_cnc -> dst_pg_raw"
-```
-
-Le parsing CLI ne conserve plus qu'un point d'entrée `main-ingestion`; les anciennes commandes `dbt-phase-1`, `allocine-scraping` ou `airbyte-sync` ne sont plus exposées comme points d'entrée CLI séparés.
 
 ## Résumé opératoire
 
 1. Airbyte sync les Google Sheets vers `raw`.
-2. Pour `Modification data`, Airbyte exécute un sync séparé par onglet métier.
+2. Pour la mise à jour de données, Airbyte exécute un sync séparé par onglet métier.
 3. `raw.airbyte_id_matching` sert de table d'entrée canonique du scraping.
 4. Prefect expose un seul deployment utilisateur pour lancer l'ingestion complète.
 5. Si l'option Airbyte est activée, Prefect déclenche les syncs demandés par noms de connexions et attend leur fin.
