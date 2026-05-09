@@ -2,7 +2,7 @@
   "kind": "source",
   "name": "src_gsheet_films",
   "configuration": {
-    "spreadsheet_id": "https://docs.google.com/spreadsheets/d/1Ked_aSEd8c8FDMSZ8FIK-pGJvrqM9dd9HqW3PPGls8A/edit",
+    "spreadsheet_id": "https://docs.google.com/spreadsheets/d/1mvKPVrZ3FAHuUB__3akr4Fr7K4MqgTba9bFwNdtL_To/edit?gid=2065887040#gid=2065887040",
     "credentials": {
       "auth_type": "Service"
     }
