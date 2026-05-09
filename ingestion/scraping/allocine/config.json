@@ -6,7 +6,7 @@
   "postgres_password": "${DBT_USER_POSTGRES_PASSWORD:-<secret>}",
   "postgres_sslmode": "${POSTGRES_SSLMODE:-disable}",
   "input_schema": "raw",
-  "input_table": "airbyte_id_matching",
+  "input_table": "id_matching",
   "output_schema": "raw",
   "output_table": "allocine_data",
   "input_id_column": "VISA",

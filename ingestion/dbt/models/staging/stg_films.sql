@@ -6,7 +6,7 @@ with source_data as (
         _airbyte_meta,
         nullif(trim("VISA"), '') as visa_number_raw,
         nullif(trim("TITRE"), '') as original_name_raw,
-        nullif(trim("ANNEE"), '') as cnc_agrement_year_raw,
+        nullif(trim("ANNEE_D_AGREMENT"), '') as cnc_agrement_year_raw,
         nullif(trim("RANG"), '') as cnc_rank_raw,
         nullif(trim("DEVIS"), '') as budget_raw,
         nullif(trim("ASR"), '') as asr_raw,
@@ -18,7 +18,7 @@ with source_data as (
         nullif(trim("PAYANT"), '') as broadcasters_paid_raw,
         nullif(trim("EOF"), '') as eof_raw,
         nullif(trim("SOFICA"), '') as sofica_funding_raw,
-        nullif(trim("BONUS_PARITE"), '') as parity_bonus_raw,
+        nullif(trim("BONUS_PARITE_"), '') as parity_bonus_raw,
         nullif(trim("AIDE_REGIONALE"), '') as regional_funding_raw,
         nullif(trim("CREDIT_D_IMPOT"), '') as tax_credit_raw
     from {{ source('raw', 'films') }}

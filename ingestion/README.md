@@ -55,7 +55,7 @@ Découpage d'exécution:
 
 Point important:
 
-1. l'entrée canonique actuelle du scraping est `raw.airbyte_id_matching`;
+1. l'entrée canonique actuelle du scraping est `raw.id_matching`;
 2. la sortie canonique du scraping Allociné est `raw.allocine_data`;
 3. les tables finales `fnl_*` de `schema1` restent encore largement à construire.
 4. stratégie comptes recommandée: `prefect_user` pour Prefect, `airbyte_user` pour Airbyte, `dbt_user` pour le runtime `dbt + scraping` du repo.
@@ -111,7 +111,7 @@ python3 -m ingestion.airbyte.bootstrap apply
 
 Le job `scraping/allocine/`:
 
-1. lit `raw.airbyte_id_matching`;
+1. lit `raw.id_matching`;
 2. relit `raw.allocine_data` pour éviter de retraiter ce qui est déjà terminé;
 3. scrape seulement les IDs manquants;
 4. écrit les résultats enrichis dans `raw.allocine_data`;
@@ -233,7 +233,7 @@ Important:
 
 1. Airbyte sync les Google Sheets vers `raw`.
 2. Pour la mise à jour de données, Airbyte exécute un sync séparé par onglet métier.
-3. `raw.airbyte_id_matching` sert de table d'entrée canonique du scraping.
+3. `raw.id_matching` sert de table d'entrée canonique du scraping.
 4. Prefect expose un seul deployment utilisateur pour lancer l'ingestion complète.
 5. Si l'option Airbyte est activée, Prefect déclenche les syncs demandés par noms de connexions et attend leur fin.
 6. Dans ce flow, Prefect lance ensuite `dbt phase 1` avant scraping.

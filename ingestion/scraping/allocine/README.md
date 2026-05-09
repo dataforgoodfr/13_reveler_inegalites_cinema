@@ -20,7 +20,7 @@ Objectif: remplacer le handoff CSV historique dans `database/data/allocine/` par
 
 ## Ce que fait la source
 
-1. Lit actuellement les films candidats depuis `raw.airbyte_id_matching`.
+1. Lit actuellement les films candidats depuis `raw.id_matching`.
 2. Crée automatiquement la table mémoire de sortie si elle n'existe pas encore.
 3. Lit les lignes déjà réussies dans `raw.allocine_data` pour ignorer les enregistrements déjà traités.
 4. Réutilise le parseur HTML Allociné historique et la session navigateur Playwright:
@@ -50,7 +50,7 @@ Exemple minimal:
   "postgres_password": "${DBT_USER_POSTGRES_PASSWORD:-secret}",
   "postgres_sslmode": "${POSTGRES_SSLMODE:-disable}",
   "input_schema": "raw",
-  "input_table": "airbyte_id_matching",
+  "input_table": "id_matching",
   "output_schema": "raw",
   "output_table": "allocine_data",
   "input_id_column": "VISA",
@@ -70,7 +70,7 @@ Le fichier `config.json` du dossier est le fichier de configuration runtime util
 
 Les valeurs au format `${ENV_VAR:-default}` du `config.json` sont résolues depuis l'environnement du runtime.
 
-Dans l'environnement Airbyte actuel, la table source par défaut est `raw.airbyte_id_matching` et reprend les noms de colonnes bruts du sheet (`VISA`, `TITRE`, `ID_ALLOCINE`). Les champs absents comme l'année CNC ou l'URL Allociné peuvent être laissés à `null`.
+Dans l'environnement Airbyte actuel, la table source par défaut est `raw.id_matching` et reprend les noms de colonnes bruts du sheet (`VISA`, `TITRE`, `ID_ALLOCINE`). Les champs absents comme l'année CNC ou l'URL Allociné peuvent être laissés à `null`.
 
 La configuration applique actuellement `scrape_limit: 10`, ce qui borne les runs de debug et évite un scraping trop large par défaut. Ajuster cette valeur, la mettre à `null` ou la supprimer pour changer le volume traité.
 
