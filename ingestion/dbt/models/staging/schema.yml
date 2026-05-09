@@ -1,0 +1,363 @@
+version: 2
+
+models:
+  - name: stg_films
+    description: "Table de staging issue du gsheet Cinéstats 50/50, qui regroupe toutes les données issues des rapports annuels du CNC.""
+    columns:
+      - name: movie_id
+        description: "Identifiant technique interne du film (généré via ROW_NUMBER)."
+      - name: cnc_visa
+        description: "Visa d’exploitation CNC du film."
+      - name: cnc_name
+        description: "Titre du film selon le CNC."
+      - name: genre
+        description: "Genre principal du film."
+      - name: cnc_agreement_year
+        description: "Année d’agrément CNC du film."
+      - name: budget
+        description: "Budget estimé du film, normalisé et exprimé en euros."
+      - name: director
+        description: "Liste des réalisateurs du film."
+      - name: director_rank
+        description: "Rang des réalisateurs lorsqu’il y en a plusieurs."
+      - name: producer
+        description: "Liste des producteurs du film."
+      - name: paid_broadcaster
+        description: "Diffuseurs payants associés au film."
+      - name: free_broadcaster
+        description: "Diffuseurs gratuits associés au film."
+      - name: country_funder
+        description: "Pays contributeurs au financement du film."
+      - name: has_eof
+        description: "Indique si le film bénéficie du dispositif EOF."
+      - name: has_parity_bonus
+        description: "Indique si le film bénéficie du bonus parité."
+      - name: has_asr
+        description: "Indique si le film bénéficie du dispositif ASR."
+      - name: has_sofica
+        description: "Indique si le film bénéficie d’un financement SOFICA."
+      - name: has_tax_credit
+        description: "Indique si le film bénéficie d’un crédit d’impôt."
+      - name: has_regional_funding
+        description: "Indique si le film bénéficie d’aides régionales."
+      - name: updated_date
+        description: "Date de dernière mise à jour des données du film."
+      - name: updated_by
+        description: "Utilisateur ayant effectué la correction via le gsheet Cinéstats 50/50."
+      - name: airbyte_raw_id
+        description: "Identifiant technique Airbyte de la ligne source."
+      - name: airbyte_generation_id
+        description: "Identifiant de génération Airbyte."
+      - name: airbyte_extraction_date
+        description: "Date d’extraction Airbyte."
+      - name: airbyte_meta
+        description: "Métadonnées techniques Airbyte."
+
+  - name: stg_id_matching
+    description: >
+      "Table de staging issue du gsheet Cinéstats 50/50, permettant de faire le rapprochement entre identifiants de films issus de différentes plateformes (CNC, Allociné, Mubi, TMDB). 
+      C'est sur cette table que repose le scrapping des données de ces différentes plateformes."
+    columns:
+      - name: cnc_visa
+        description: "Identifiant CNC (visa d’exploitation) du film."
+        tests:
+          - unique
+          - not_null
+      - name: cnc_name
+        description: "Titre du film selon le CNC."
+        tests:
+          - unique
+          - not_null
+      - name: allocine_id
+        description: "Identifiant du film sur Allociné."
+        tests:
+          - unique
+          - not_null
+      - name: mubi_id
+        description: "Identifiant du film sur Mubi."
+        tests:
+          - unique
+          - not_null
+      - name: tmdb_id
+        description: "Identifiant du film sur TMDB."
+        tests:
+          - unique
+          - not_null
+      - name: updated_date
+        description: "Date de dernière mise à jour du mapping."
+      - name: updated_by
+        description: "Utilisateur ayant effectué la correction via le gsheet Cinéstats 50/50."
+      - name: airbyte_raw_id
+        description: "Identifiant technique Airbyte de la ligne source."
+      - name: airbyte_generation_id
+        description: "Identifiant de génération Airbyte."
+      - name: airbyte_extraction_date
+        description: "Date d’extraction Airbyte."
+      - name: airbyte_meta
+        description: "Métadonnées techniques Airbyte."
+
+  - name: stg_fix_film_credits
+    description: "Table de staging issue du gsheet Cinéstats 50/50, permettant d’apporter des corrections aux crédits des films (associations entre films, rôles et personnes créditées)."
+    columns:
+      - name: id
+        description: "Identifiant unique du crédit de film."
+        tests:
+          - not_null
+      - name: film_id
+        description: "Identifiant du film concerné."
+      - name: role_id
+        description: "Identifiant du rôle occupé dans le film (acteur, réalisateur, etc.)."
+      - name: credit_holder_id
+        description: "Identifiant de la personne ou entité créditée dans le film."
+      - name: updated_date
+        description: "Date de dernière mise à jour du crédit."
+      - name: updated_by
+        description: "Utilisateur ayant effectué la correction via le gsheet Cinéstats 50/50."
+      - name: airbyte_raw_id
+        description: "Identifiant technique Airbyte de la ligne source."
+      - name: airbyte_generation_id
+        description: "Identifiant de génération Airbyte pour le suivi des extractions."
+      - name: airbyte_extraction_date
+        description: "Date d’extraction de la donnée depuis la source."
+      - name: airbyte_meta
+        description: "Métadonnées techniques issues d’Airbyte."
+
+  - name: stg_fix_film_country_budget_allocation
+    description: "Table de staging issue du gsheet Cinéstats 50/50, permettant d'apporter des corrections à la répartition du budget des films par pays (fnl_film_country_budget_allocation)."
+    columns:
+      - name: id
+        description: "Identifiant unique de l’allocation budgétaire par pays."
+        tests: 
+          - not_null
+      - name: country_id
+        description: "Identifiant du pays concerné."
+      - name: film_id
+        description: "Identifiant du film associé."
+      - name: budget_allocation
+        description: "Pourcentage ou montant du budget attribué à ce pays pour le film."
+      - name: updated_date
+        description: "Date de dernière mise à jour de la donnée."
+      - name: updated_by
+        description: "Utilisateur ayant effectué la dernière modification manuelle."
+      - name: airbyte_raw_id
+        description: "Identifiant technique de la ligne dans Airbyte."
+      - name: airbyte_generation_id
+        description: "Identifiant de génération Airbyte pour le suivi des extractions."
+      - name: airbyte_extraction_date
+        description: "Date d’extraction de la donnée depuis la source."
+      - name: airbyte_meta
+        description: "Métadonnées techniques issues d’Airbyte."
+
+  - name: stg_fix_film_genres
+    description: "Table de staging issue du gsheet Cinéstats 50/50, permettant d'apporter des corrections aux associations entre films et genres (fnl_film_genres)."
+    columns:
+      - name: id
+        description: "Identifiant unique de la relation film-genre."
+        tests: 
+          - not_null
+      - name: film_id
+        description: "Identifiant du film."
+      - name: genre_id
+        description: "Identifiant du genre cinématographique."
+      - name: updated_date
+        description: "Date de dernière mise à jour."
+      - name: updated_by
+        description: "Utilisateur ayant modifié la donnée."
+      - name: airbyte_raw_id
+        description: "Identifiant technique Airbyte."
+      - name: airbyte_generation_id
+        description: "Version de génération Airbyte."
+      - name: airbyte_extraction_date
+        description: "Date d’extraction de la donnée."
+      - name: airbyte_meta
+        description: "Métadonnées techniques Airbyte."
+
+  - name: stg_fix_award_nominations
+    description: "Table de staging issue du gsheet Cinéstats 50/50, permettant de corriger les nominations et récompenses des films (fnl_award_nominations)."
+    columns:
+      - name: id
+        description: "Identifiant unique de la nomination."
+        tests: 
+          - not_null
+      - name: film_id
+        description: "Film concerné par la nomination."
+      - name: credit_holder_id
+        description: "Personne ou entité nommée (acteur, réalisateur, etc.)."
+      - name: award_id
+        description: "Identifiant du prix ou de la récompense."
+      - name: nomination_date
+        description: "Date de la nomination."
+      - name: is_winner
+        description: "Indique si la nomination a été remportée (true/false)."
+      - name: updated_date
+        description: "Date de mise à jour de la donnée."
+      - name: updated_by
+        description: "Utilisateur ayant modifié la donnée."
+      - name: airbyte_raw_id
+        description: "Identifiant technique Airbyte."
+      - name: airbyte_generation_id
+        description: "Version de génération Airbyte."
+      - name: airbyte_extraction_date
+        description: "Date d’extraction Airbyte."
+      - name: airbyte_meta
+        description: "Métadonnées techniques Airbyte."
+
+  - name: stg_fix_credit_holders
+    description: "Table de staging issue du gsheet Cinéstats 50/50, permettant de corriger les informations des personnes et entités créditées dans les films (fnl_credit_holders)."
+    columns:
+      - name: id
+        description: "Identifiant unique de la personne ou entité."
+        tests: 
+          - not_null
+      - name: type
+        description: "Type de crédit (individu, société, etc.)."
+      - name: first_name
+        description: "Prénom de la personne."
+      - name: last_name
+        description: "Nom de famille."
+      - name: legal_name
+        description: "Nom légal ou complet de la personne ou entité."
+      - name: gender
+        description: "Genre de la personne (utile pour l’analyse des inégalités de représentation)."
+      - name: birthdate
+        description: "Date de naissance."
+      - name: updated_date
+        description: "Date de mise à jour."
+      - name: updated_by
+        description: "Utilisateur ayant effectué la modification."
+      - name: airbyte_raw_id
+        description: "Identifiant technique Airbyte."
+      - name: airbyte_generation_id
+        description: "Version de génération Airbyte."
+      - name: airbyte_extraction_date
+        description: "Date d’extraction Airbyte."
+      - name: airbyte_meta
+        description: "Métadonnées techniques Airbyte."
+
+  - name: stg_fix_roles
+    description: "Table de staging issue du gsheet Cinéstats 50/50, permettant de standardiser et corriger les rôles dans les productions cinématographiques (fnl_roles)."
+    columns:
+      - name: id
+        description: "Identifiant unique du rôle."
+        tests: 
+          - not_null
+      - name: name
+        description: "Nom du rôle."
+      - name: is_key_role
+        description: "Indique si le rôle est considéré comme un rôle clé dans une production."
+      - name: allocine_name
+        description: "Nom du rôle tel qu’utilisé sur Allociné."
+      - name: inclusive_name
+        description: "Nom inclusif du rôle pour harmonisation des données."
+      - name: updated_date
+        description: "Date de mise à jour."
+      - name: updated_by
+        description: "Utilisateur ayant effectué la modification."
+      - name: airbyte_raw_id
+        description: "Identifiant technique Airbyte."
+      - name: airbyte_generation_id
+        description: "Version de génération Airbyte."
+      - name: airbyte_extraction_date
+        description: "Date d’extraction Airbyte."
+      - name: airbyte_meta
+        description: "Métadonnées techniques Airbyte."
+
+  - name: stg_fix_genres
+    description: "Table de staging issue du gsheet Cinéstats 50/50, permettant de corriger et standardiser les genres cinématographiques (fnl_genres)."
+    columns:
+      - name: id
+        description: "Identifiant unique du genre."
+        tests: 
+          - not_null
+      - name: name
+        description: "Nom du genre cinématographique."
+      - name: updated_date
+        description: "Date de mise à jour."
+      - name: updated_by
+        description: "Utilisateur ayant modifié la donnée."
+      - name: airbyte_raw_id
+        description: "Identifiant technique Airbyte."
+      - name: airbyte_generation_id
+        description: "Version de génération Airbyte."
+      - name: airbyte_extraction_date
+        description: "Date d’extraction Airbyte."
+      - name: airbyte_meta
+        description: "Métadonnées techniques Airbyte."
+
+  - name: stg_fix_countries
+    description: "Table de staging issue du gsheet Cinéstats 50/50, permettant de corriger les référentiels pays utilisés pour l’analyse des films (fnl_countries)."
+    columns:
+      - name: id
+        description: "Identifiant unique du pays."
+        tests: 
+          - not_null
+      - name: name
+        description: "Nom du pays."
+      - name: updated_date
+        description: "Date de mise à jour."
+      - name: updated_by
+        description: "Utilisateur ayant modifié la donnée."
+      - name: airbyte_raw_id
+        description: "Identifiant technique Airbyte."
+      - name: airbyte_generation_id
+        description: "Version de génération Airbyte."
+      - name: airbyte_extraction_date
+        description: "Date d’extraction Airbyte."
+      - name: airbyte_meta
+        description: "Métadonnées techniques Airbyte."
+
+  - name: stg_fix_festival
+    description: "Table de staging issue du gsheet Cinéstats 50/50, permettant de corriger les informations des festivals de cinéma (fnl_festival)."
+    columns:
+      - name: id
+        description: "Identifiant unique du festival."
+        tests: 
+          - not_null
+      - name: name
+        description: "Nom du festival."
+      - name: description
+        description: "Description du festival."
+      - name: imagebase64
+        description: "Image ou logo du festival (encodé en base64 ou URL)."
+      - name: country_id
+        description: "Pays d’organisation du festival."
+      - name: updated_date
+        description: "Date de mise à jour."
+      - name: updated_by
+        description: "Utilisateur ayant modifié la donnée."
+      - name: airbyte_raw_id
+        description: "Identifiant technique Airbyte."
+      - name: airbyte_generation_id
+        description: "Version de génération Airbyte."
+      - name: airbyte_extraction_date
+        description: "Date d’extraction Airbyte."
+      - name: airbyte_meta
+        description: "Métadonnées techniques Airbyte."
+
+  - name: stg_fix_festival_awards
+    description: "Table de staging issue du gsheet Cinéstats 50/50, permettant de corriger les récompenses associées aux festivals de cinéma (fnl_festival_awards)."
+    columns:
+      - name: id
+        description: "Identifiant unique de la récompense."
+        tests: 
+          - not_null
+      - name: festival_id
+        description: "Festival associé à la récompense."
+      - name: mubi_label
+        description: "Libellé de la récompense selon Mubi."
+      - name: english_label
+        description: "Libellé de la récompense en anglais."
+      - name: french_label
+        description: "Libellé de la récompense en français."
+      - name: updated_date
+        description: "Date de mise à jour."
+      - name: updated_by
+        description: "Utilisateur ayant modifié la donnée."
+      - name: airbyte_raw_id
+        description: "Identifiant technique Airbyte."
+      - name: airbyte_generation_id
+        description: "Version de génération Airbyte."
+      - name: airbyte_extraction_date
+        description: "Date d’extraction Airbyte."
+      - name: airbyte_meta
+        description: "Métadonnées techniques Airbyte."

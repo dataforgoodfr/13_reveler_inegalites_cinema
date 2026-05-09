@@ -16,3 +16,15 @@ sources:
           - name: extracted_at
             tests:
               - not_null
+      - name: films
+      - name: id_matching
+      - name: award_nominations
+      - name: countries
+      - name: credit_holders
+      - name: festival_awards
+      - name: festivals
+      - name: film_country_budget_allocation
+      - name: film_credits
+      - name: film_genres
+      - name: genres
+      - name: roles
