@@ -18,8 +18,8 @@ models:
         description: "Budget estimé du film, normalisé et exprimé en euros."
       - name: director
         description: "Liste des réalisateurs du film."
-      - name: director_rank
-        description: "Rang des réalisateurs lorsqu’il y en a plusieurs."
+      - name: filmography_rank
+        description: "Rang du film dans la filmographie des réalisateurs lorsqu’il y en a plusieurs."
       - name: producer
         description: "Liste des producteurs du film."
       - name: paid_broadcaster
