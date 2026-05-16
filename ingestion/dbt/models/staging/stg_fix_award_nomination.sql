@@ -1,6 +1,7 @@
 {{
   config(materialized = 'view')
 }}
+
 SELECT
     CAST("ID" AS INTEGER) AS id,
     CAST("FILM_ID" AS INTEGER) AS film_id,

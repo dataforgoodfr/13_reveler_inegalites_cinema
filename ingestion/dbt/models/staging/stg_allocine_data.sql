@@ -1,3 +1,7 @@
+{{
+  config(materialized = 'view')
+}}
+
 SELECT
 	CAST(visa_number AS INTEGER) AS cnc_visa,	
 	CAST(NULLIF(REGEXP_REPLACE(allocine_visa_number, '[^0-9]', '', 'g'), '') AS INTEGER) AS allocine_visa,
