@@ -1,0 +1,47 @@
+version: 2
+
+models:
+  - name: fnl_films
+    description: >
+      Table finale des films constituant la table centrale de Cinéstats 50/50. 
+      Consolide les données CNC, Allociné et le financement français pour permettre 
+      l'analyse des inégalités de genre dans le cinéma français.
+    columns:
+      - name: movie_id
+        description: "Identifiant unique du film dans Cinéstats 50/50."
+        tests:
+          - not_null
+          - unique
+      - name: allocine_id
+        description: "Identifiant du film sur Allociné."
+      - name: mubi_id
+        description: "Identifiant du film sur Mubi."
+      - name: tmdb_id
+        description: "Identifiant du film sur TMDB."
+      - name: cnc_visa
+        description: "Visa d'exploitation CNC du film."
+        tests:
+          - not_null
+          - unique
+      - name: movie_name
+        description: "Titre du film tel qu'affiché dans Cinéstats 50/50, privilégiant le titre Allociné."
+        tests:
+          - not_null
+      - name: cnc_agreement_year
+        description: "Année d'agrément CNC du film, utilisée comme référence temporelle pour les analyses."
+      - name: release_date
+        description: "Date de sortie en salle du film."
+      - name: duration_mn
+        description: "Durée du film en minutes."
+      - name: budget
+        description: "Budget du film en euros."
+      - name: budget_category
+        description: "Tranche de budget du film (ex: petit, moyen, grand budget)."
+      - name: genre_category
+        description: "Genre cinématographique du film."
+      - name: broadcasters
+        description: "Diffuseurs TV associés au film (chaînes payantes et gratuites)."
+      - name: is_french_financed
+        description: "Vrai si la France finance au moins 50% du budget du film."
+      - name: has_parity_bonus
+        description: "Vrai si le film a bénéfi

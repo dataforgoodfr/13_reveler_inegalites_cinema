@@ -38,7 +38,21 @@ SELECT
 	STRING_TO_ARRAY(REPLACE("PRODUCTEURS", ' ', ''), ' / ') AS producer,
 	STRING_TO_ARRAY(REPLACE("PAYANT", ' ', ''), ' ') AS paid_broadcaster,
 	STRING_TO_ARRAY(REPLACE("CLAIR", ' ', ''), ' ') AS free_broadcaster,
-	STRING_TO_ARRAY(REPLACE("NATIONALITE", ' ', ''), ' / ') AS country_funder,
+    ARRAY(
+        SELECT JSONB_BUILD_OBJECT(
+            'country', INITCAP(UNACCENT(TRIM(REGEXP_REPLACE(elem, '[^a-zA-ZÀ-ÿ ]', '', 'g')))),
+            'budget_allocation', NULLIF(REGEXP_REPLACE(elem, '[^0-9]', '', 'g'), '')::INTEGER
+        )
+        FROM UNNEST(
+            STRING_TO_ARRAY(
+                REGEXP_REPLACE(
+                    REGEXP_REPLACE("NATIONALITE", '\s*/\s*', ' / ', 'g'),  -- normalise tous les '/' avec espaces
+                '\s+-', '-', 'g'),  -- supprime les espaces avant le '-'
+            ' / ')
+        ) AS elem
+        WHERE "NATIONALITE" IS NOT NULL
+            AND NULLIF(TRIM(elem), '') IS NOT NULL
+    ) AS country_budget_allocation,
     -- BOOLEANS
     CASE
         WHEN "EOF" = 'OUI' THEN TRUE

@@ -1,12 +1,12 @@
 SELECT
 	CAST(visa_number AS INTEGER) AS cnc_visa,	
-	CAST(allocine_visa_number AS INTEGER) AS allocine_visa,
+	CAST(NULLIF(REGEXP_REPLACE(allocine_visa_number, '[^0-9]', '', 'g'), '') AS INTEGER) AS allocine_visa,
 	CAST(allocine_id AS INTEGER) AS allocine_id,
 	--
 	original_name AS cnc_name,
 	allocine_title AS allocine_name, 
 	--
-	CAST(cnc_agrement_year AS INTEGER) AS cnc_agreement_year
+	CAST(cnc_agrement_year AS INTEGER) AS cnc_agreement_year,  
 	CAST(release_date AS DATE) AS release_date, 
 	CAST(duration_minutes AS INTEGER) AS duration_mn, 
 	--

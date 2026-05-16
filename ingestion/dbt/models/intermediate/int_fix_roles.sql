@@ -5,7 +5,6 @@ WITH dedup AS (
         ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_date DESC) AS rn
     FROM {{ ref('stg_fix_roles') }}
 )
-
 SELECT
     id,
     name,

@@ -5,6 +5,14 @@ SELECT
     genre, 
     cnc_agreement_year,
     budget,
+    CASE
+        WHEN budget < 2000000 THEN 'Moins de 2M€'
+        WHEN budget >= 2000000 AND budget < 5000000 THEN '2 à 5M€'
+        WHEN budget >= 5000000 AND budget < 10000000 THEN '5 à 10M€'
+        WHEN budget >= 10000000 AND budget < 20000000 THEN '10 à 20M€'
+        WHEN budget >= 20000000 THEN 'Plus de 20M€'
+        ELSE NULL
+    END AS budget_category,
     director,
     ARRAY(
         SELECT
@@ -29,7 +37,6 @@ SELECT
         ) AS str_broadcaster
         WHERE str_broadcaster != 'FranceÔ'
     ) AS broadcasters,
-    country_funder,
     has_eof,
     has_parity_bonus,
     has_asr,

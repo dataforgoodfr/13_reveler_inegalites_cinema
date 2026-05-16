@@ -26,8 +26,8 @@ models:
         description: "Diffuseurs payants associés au film."
       - name: free_broadcaster
         description: "Diffuseurs gratuits associés au film."
-      - name: country_funder
-        description: "Pays contributeurs au financement du film."
+      - name: country_budget_allocation
+        description: "Répartition du budget du film par pays contributeur."
       - name: has_eof
         description: "Indique si le film bénéficie du dispositif EOF."
       - name: has_parity_bonus
