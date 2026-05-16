@@ -191,11 +191,38 @@ class AsyncBrowserSession:
         return self
 
     async def __aexit__(self, exc_type, exc, tb):
-        """Gracefully close all browser resources."""
-        await self.page.close()
-        await self.context.close()
-        await self.browser.close()
-        await self.playwright.stop()
+        """Gracefully close all browser resources with proper error handling."""
+        # Close page
+        if self.page:
+            try:
+                await self.page.close()
+            except Exception as close_exc:
+                if self.verbose:
+                    print(f"  [browser] Warning: Failed to close page: {close_exc}")
+
+        # Close context
+        if self.context:
+            try:
+                await self.context.close()
+            except Exception as close_exc:
+                if self.verbose:
+                    print(f"  [browser] Warning: Failed to close context: {close_exc}")
+
+        # Close browser
+        if self.browser:
+            try:
+                await self.browser.close()
+            except Exception as close_exc:
+                if self.verbose:
+                    print(f"  [browser] Warning: Failed to close browser: {close_exc}")
+
+        # Stop playwright
+        if self.playwright:
+            try:
+                await self.playwright.stop()
+            except Exception as close_exc:
+                if self.verbose:
+                    print(f"  [browser] Warning: Failed to stop playwright: {close_exc}")
 
     async def _dismiss_allocine_fullscreen_if_present(self, url: str) -> bool:
         """Dismiss Allocine fullscreen consent/paywall overlay when it appears."""
@@ -226,53 +253,71 @@ class AsyncBrowserSession:
         Navigate to a URL, simulate human-like scrolling and waiting,
         and return the resulting HTML content.
         """
-        if self.verbose:
-            print(f"  [browser] GET {url}")
-        response = await self.page.goto(url)
-        if self.verbose:
-            http_status = response.status if response is not None else "no-response"
-            print(f"  [browser] Loaded (HTTP {http_status})")
-        if response is not None and response.status in BLOCKED_STATUS_CODES:
-            raise WebsiteBlockedError(
-                f"Website blocked the request for {url} with HTTP status {response.status}."
-            )
-        await self._debug_pause(f"Page loaded: {url}")
-
-        if self.verbose:
-            print(f"  [browser] Initial delay...")
-        await self.page.wait_for_timeout(_human_like_delay_ms())
-        await self._debug_pause("After initial delay")
-        if self.verbose:
-            print(f"  [browser] Dismissing consent overlay (1/2)...")
-        await self._dismiss_allocine_fullscreen_if_present(url)
-        await self._debug_pause("Before scroll")
-        if self.verbose:
-            print(f"  [browser] Scrolling...")
-        await self.page.mouse.wheel(0, _human_like_scroll_y())
-        await self._debug_pause("After scroll")
-        if self.verbose:
-            print(f"  [browser] Dismissing consent overlay (2/2)...")
-        await self._dismiss_allocine_fullscreen_if_present(url)
-        if self.verbose:
-            print(f"  [browser] Final delay...")
-        await self.page.wait_for_timeout(_human_like_delay_ms())
-        await self._debug_pause("Before reading page content")
-        if self.verbose:
-            print(f"  [browser] Reading page content...")
-        html = await self.page.content()
-        await self._debug_pause("After reading page content")
-        lowered_html = html.lower()
-
         try:
-            visible_text = await self.page.locator("body").inner_text()
-            blocked_detection_text = visible_text.lower()
-        except Exception:
-            blocked_detection_text = lowered_html
-
-        for marker in BLOCKED_PAGE_MARKERS:
-            if marker in blocked_detection_text:
+            if self.verbose:
+                print(f"  [browser] GET {url}")
+            response = await self.page.goto(url, wait_until="networkidle", timeout=30000)
+            if self.verbose:
+                http_status = response.status if response is not None else "no-response"
+                print(f"  [browser] Loaded (HTTP {http_status})")
+            if response is not None and response.status in BLOCKED_STATUS_CODES:
                 raise WebsiteBlockedError(
-                    f"Website blocking page detected for {url}: found marker '{marker}'."
+                    f"Website blocked the request for {url} with HTTP status {response.status}."
                 )
+            
+            # Ensure page has settled before proceeding
+            try:
+                await self.page.wait_for_load_state("networkidle", timeout=5000)
+            except Exception as e:
+                if self.verbose:
+                    print(f"  [browser] Warning: Failed to wait for networkidle: {e}")
+            
+            await self._debug_pause(f"Page loaded: {url}")
 
-        return html
+            if self.verbose:
+                print(f"  [browser] Initial delay...")
+            await self.page.wait_for_timeout(_human_like_delay_ms())
+            await self._debug_pause("After initial delay")
+            if self.verbose:
+                print(f"  [browser] Dismissing consent overlay (1/2)...")
+            await self._dismiss_allocine_fullscreen_if_present(url)
+            await self._debug_pause("Before scroll")
+            if self.verbose:
+                print(f"  [browser] Scrolling...")
+            await self.page.mouse.wheel(0, _human_like_scroll_y())
+            await self._debug_pause("After scroll")
+            if self.verbose:
+                print(f"  [browser] Dismissing consent overlay (2/2)...")
+            await self._dismiss_allocine_fullscreen_if_present(url)
+            if self.verbose:
+                print(f"  [browser] Final delay...")
+            await self.page.wait_for_timeout(_human_like_delay_ms())
+            await self._debug_pause("Before reading page content")
+            if self.verbose:
+                print(f"  [browser] Reading page content...")
+            html = await self.page.content()
+            await self._debug_pause("After reading page content")
+            lowered_html = html.lower()
+
+            try:
+                visible_text = await self.page.locator("body").inner_text()
+                blocked_detection_text = visible_text.lower()
+            except Exception:
+                blocked_detection_text = lowered_html
+
+            for marker in BLOCKED_PAGE_MARKERS:
+                if marker in blocked_detection_text:
+                    raise WebsiteBlockedError(
+                        f"Website blocking page detected for {url}: found marker '{marker}'."
+                    )
+
+            return html
+        except (RuntimeError, Exception) as e:
+            # Detect browser closure errors
+            error_msg = str(e).lower()
+            if any(phrase in error_msg for phrase in ["closed", "target page", "context", "browser"]):
+                raise RuntimeError(
+                    f"Browser connection lost while fetching {url}: {e}. "
+                    "This may indicate the browser session was terminated unexpectedly."
+                ) from e
+            raise
