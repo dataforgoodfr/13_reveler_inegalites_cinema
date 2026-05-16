@@ -8,9 +8,6 @@ from pathlib import Path
 from typing import Any
 from urllib import parse
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
 
 from ingestion.airbyte.client import (
     ensure_workspace_id,
@@ -25,6 +22,11 @@ from ingestion.airbyte.client import (
     list_workspaces,
     request_json,
 )
+
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 ROOT_DIR = REPO_ROOT
 INGESTION_DIR = ROOT_DIR / "ingestion"
