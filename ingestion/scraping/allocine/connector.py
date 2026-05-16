@@ -2,6 +2,7 @@ import asyncio
 import hashlib
 import json
 import os
+import random
 import re
 import uuid
 from dataclasses import dataclass
@@ -12,7 +13,7 @@ from urllib.parse import quote_plus
 from sqlalchemy import bindparam, create_engine, text
 
 from backend.utils.date_utils import parse_duration, parse_release_date
-from database.data.scraping_browser import WebsiteBlockedError
+from ingestion.scraping.browser import WebsiteBlockedError
 
 STREAM_NAME = "allocine_data"
 DEFAULT_INPUT_SCHEMA = "raw"
@@ -124,6 +125,26 @@ CONNECTION_SPECIFICATION = {
             "title": "Playwright websocket endpoint",
             "description": "Optional override for PLAYWRIGHT_WS_ENDPOINT.",
         },
+        "headless": {
+            "type": "boolean",
+            "title": "Headless browser",
+            "default": True,
+            "description": "Run the browser in headless mode. Set to false for local visual debugging (requires no ws_endpoint).",
+        },
+        "debug_pause_between_actions": {
+            "type": "boolean",
+            "title": "Pause between actions for debugging",
+            "default": False,
+            "description": "When true, pause for Enter between browser actions. Recommended only with headless=false.",
+        },
+        "parallel_sessions": {
+            "type": "integer",
+            "title": "Parallel browser sessions",
+            "default": 1,
+            "minimum": 1,
+            "maximum": 5,
+            "description": "Number of concurrent browser sessions. Values above 1 disable debug_pause_between_actions.",
+        },
     },
 }
 
@@ -183,6 +204,9 @@ class ConnectorConfig:
     completed_statuses: list[str]
     scrape_limit: int | None
     playwright_ws_endpoint: str | None
+    headless: bool
+    debug_pause_between_actions: bool
+    parallel_sessions: int
 
     @classmethod
     def from_dict(cls, raw_config: dict[str, Any]) -> "ConnectorConfig":
@@ -215,6 +239,11 @@ class ConnectorConfig:
             "scrape_limit": _normalize_positive_int(raw_config.get("scrape_limit")),
             "playwright_ws_endpoint": raw_config.get("playwright_ws_endpoint")
             or os.getenv("PLAYWRIGHT_WS_ENDPOINT"),
+            "headless": bool(raw_config.get("headless", True)),
+            "debug_pause_between_actions": bool(
+                raw_config.get("debug_pause_between_actions", False)
+            ),
+            "parallel_sessions": max(1, int(raw_config.get("parallel_sessions", 1) or 1)),
         }
 
         for key, value in values.items():
@@ -362,46 +391,45 @@ class AllocineAirbyteSource:
 
         scraper, browser_factory = self._load_scraping_dependencies()
         run_id = str(uuid.uuid4())
-        records: list[dict[str, Any]] = []
         total_rows = len(source_rows)
         summary_statuses = ["success", "not_found", "blocked", "error", "visa_mismatch"]
         status_counts = {status: 0 for status in summary_statuses}
 
         print(f"Allocine scraping started: {total_rows} pending rows to process.")
 
-        async with browser_factory(
-            ws_endpoint=config.playwright_ws_endpoint
-        ) as session:
-            for index, source_row in enumerate(source_rows, start=1):
-                record = await self._scrape_one_record(
-                    run_id=run_id,
-                    session=session,
-                    scraper=scraper,
-                    source_row=source_row,
+        # debug_pause_between_actions requires sequential execution
+        n_sessions = 1 if config.debug_pause_between_actions else config.parallel_sessions
+        chunks = [source_rows[i::n_sessions] for i in range(n_sessions) if source_rows[i::n_sessions]]
+
+        chunk_results = await asyncio.gather(*(
+            self._scrape_chunk(
+                run_id=run_id,
+                chunk=chunk,
+                browser_factory=browser_factory,
+                scraper=scraper,
+                config=config,
+                start_delay_s=i * 2.0,
+            )
+            for i, chunk in enumerate(chunks)
+        ))
+        records = [record for chunk_records in chunk_results for record in chunk_records]
+
+        for record in records:
+            status = record.get("scrape_status") or "error"
+            status_counts[status] = status_counts.get(status, 0) + 1
+            if status != "success":
+                source_label = record.get("source_record_id") or record.get("visa_number")
+                title = record.get("original_name") or "unknown-title"
+                reason = record.get("error_message") or "no reason provided"
+                print(
+                    "Allocine scraping issue: "
+                    f"status={status} "
+                    f"source_record_id={source_label} "
+                    f"title={title!r} "
+                    f"reason={reason}"
                 )
-                records.append(record)
-                status = record.get("scrape_status") or "error"
-                status_counts[status] = status_counts.get(status, 0) + 1
 
-                if status != "success":
-                    source_label = record.get("source_record_id") or record.get(
-                        "visa_number"
-                    )
-                    title = record.get("original_name") or "unknown-title"
-                    reason = record.get("error_message") or "no reason provided"
-                    print(
-                        "Allocine scraping issue: "
-                        f"status={status} "
-                        f"source_record_id={source_label} "
-                        f"title={title!r} "
-                        f"reason={reason}"
-                    )
-
-                if index % 10 == 0 or index == total_rows:
-                    print(
-                        f"Allocine scraping progress: {index}/{total_rows} rows processed."
-                    )
-
+        print(f"Allocine scraping progress: {total_rows}/{total_rows} rows processed.")
         print(
             "Allocine scraping summary: "
             + ", ".join(
@@ -412,9 +440,39 @@ class AllocineAirbyteSource:
 
         return records
 
+    async def _scrape_chunk(
+        self,
+        run_id: str,
+        chunk: list[dict[str, Any]],
+        browser_factory: Any,
+        scraper: Any,
+        config: "ConnectorConfig",
+        start_delay_s: float = 0.0,
+    ) -> list[dict[str, Any]]:
+        """Process a list of rows in a single browser session, with inter-film delays."""
+        records = []
+        if start_delay_s:
+            await asyncio.sleep(start_delay_s)
+        async with browser_factory(
+            ws_endpoint=config.playwright_ws_endpoint,
+            headless=config.headless,
+            debug_pause_between_actions=config.debug_pause_between_actions,
+        ) as session:
+            for index, source_row in enumerate(chunk):
+                if index > 0:
+                    await asyncio.sleep(random.uniform(2.0, 5.0))
+                record = await self._scrape_one_record(
+                    run_id=run_id,
+                    session=session,
+                    scraper=scraper,
+                    source_row=source_row,
+                )
+                records.append(record)
+        return records
+
     def _load_scraping_dependencies(self):
-        from database.data.allocine.allocine_scraper import AllocineScraper
-        from database.data.scraping_browser import AsyncBrowserSession
+        from ingestion.scraping.allocine.allocine_scraper import AllocineScraper
+        from ingestion.scraping.browser import AsyncBrowserSession
 
         return AllocineScraper(), AsyncBrowserSession
 
@@ -558,6 +616,10 @@ class AllocineAirbyteSource:
             if normalized_id and normalized_id in processed_ids:
                 continue
             pending_rows.append(row)
+
+        # Shuffle pending rows so concurrent runs are less likely to pick the same records.
+        random.shuffle(pending_rows)
+
         if config.scrape_limit is not None:
             return pending_rows[: config.scrape_limit]
         return pending_rows
