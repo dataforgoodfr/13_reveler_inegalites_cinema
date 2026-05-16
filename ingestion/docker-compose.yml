@@ -51,11 +51,11 @@ services:
 
   browserless:
     image: browserless/chrome:latest
-    cpus: ${BROWSERLESS_CPUS:-1.00}
-    mem_limit: ${BROWSERLESS_MEM_LIMIT:-1g}
-    mem_reservation: ${BROWSERLESS_MEM_RESERVATION:-512m}
-    pids_limit: ${BROWSERLESS_PIDS_LIMIT:-512}
-    shm_size: ${BROWSERLESS_SHM_SIZE:-512m}
+    cpus: ${BROWSERLESS_CPUS:-4.00}
+    mem_limit: ${BROWSERLESS_MEM_LIMIT:-4g}
+    mem_reservation: ${BROWSERLESS_MEM_RESERVATION:-2g}
+    pids_limit: ${BROWSERLESS_PIDS_LIMIT:-1024}
+    shm_size: ${BROWSERLESS_SHM_SIZE:-2g}
     ports:
       - "${BROWSERLESS_PORT:-3000}:3000"
     environment:

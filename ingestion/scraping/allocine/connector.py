@@ -145,6 +145,12 @@ CONNECTION_SPECIFICATION = {
             "maximum": 5,
             "description": "Number of concurrent browser sessions. Values above 1 disable debug_pause_between_actions.",
         },
+        "verbose": {
+            "type": "boolean",
+            "title": "Verbose logging",
+            "default": False,
+            "description": "When true, print detailed step-by-step progress during scraping.",
+        },
     },
 }
 
@@ -207,6 +213,7 @@ class ConnectorConfig:
     headless: bool
     debug_pause_between_actions: bool
     parallel_sessions: int
+    verbose: bool
 
     @classmethod
     def from_dict(cls, raw_config: dict[str, Any]) -> "ConnectorConfig":
@@ -244,6 +251,7 @@ class ConnectorConfig:
                 raw_config.get("debug_pause_between_actions", False)
             ),
             "parallel_sessions": max(1, int(raw_config.get("parallel_sessions", 1) or 1)),
+            "verbose": bool(raw_config.get("verbose", False)),
         }
 
         for key, value in values.items():
@@ -409,6 +417,7 @@ class AllocineAirbyteSource:
                 scraper=scraper,
                 config=config,
                 start_delay_s=i * 2.0,
+                session_index=i,
             )
             for i, chunk in enumerate(chunks)
         ))
@@ -448,26 +457,51 @@ class AllocineAirbyteSource:
         scraper: Any,
         config: "ConnectorConfig",
         start_delay_s: float = 0.0,
+        session_index: int = 0,
     ) -> list[dict[str, Any]]:
         """Process a list of rows in a single browser session, with inter-film delays."""
         records = []
         if start_delay_s:
+            if config.verbose:
+                print(f"[session {session_index}] Waiting {start_delay_s:.1f}s stagger delay before starting.")
             await asyncio.sleep(start_delay_s)
+        if config.verbose:
+            print(f"[session {session_index}] Connecting to browser...")
         async with browser_factory(
             ws_endpoint=config.playwright_ws_endpoint,
             headless=config.headless,
             debug_pause_between_actions=config.debug_pause_between_actions,
+            verbose=config.verbose,
         ) as session:
+            if config.verbose:
+                print(f"[session {session_index}] Browser ready. Processing {len(chunk)} records.")
             for index, source_row in enumerate(chunk):
                 if index > 0:
-                    await asyncio.sleep(random.uniform(2.0, 5.0))
+                    delay = random.uniform(2.0, 5.0)
+                    if config.verbose:
+                        print(f"[session {session_index}] Inter-film delay {delay:.1f}s...")
+                    await asyncio.sleep(delay)
+                label = (
+                    source_row.get("original_name")
+                    or source_row.get("visa_number")
+                    or source_row.get("source_record_id")
+                    or "?"
+                )
+                if config.verbose:
+                    print(f"[session {session_index}] Record {index + 1}/{len(chunk)}: {label!r}")
                 record = await self._scrape_one_record(
                     run_id=run_id,
                     session=session,
                     scraper=scraper,
                     source_row=source_row,
+                    verbose=config.verbose,
                 )
+                status = record.get("scrape_status", "?")
+                if config.verbose:
+                    print(f"[session {session_index}] Record {index + 1}/{len(chunk)} done: {label!r} -> {status}")
                 records.append(record)
+        if config.verbose:
+            print(f"[session {session_index}] Browser session closed.")
         return records
 
     def _load_scraping_dependencies(self):
@@ -740,6 +774,7 @@ class AllocineAirbyteSource:
         session: Any,
         scraper: Any,
         source_row: dict[str, Any],
+        verbose: bool = False,
     ) -> dict[str, Any]:
         extracted_at = _now_iso()
         source_record_id = _normalize_record_id(source_row)
@@ -801,11 +836,15 @@ class AllocineAirbyteSource:
                 search_url = scraper.SEARCH_URL.format(
                     film_title_url_styled=scraper._reformat_str_for_url(search_term)
                 )
+                if verbose:
+                    print(f"  [search] {search_term!r} -> {search_url}")
                 search_html = await session.fetch_html(search_url)
                 search_result = scraper.extract_searched_first_film(search_html)
                 base_record["search_url"] = search_url
 
                 if not search_result:
+                    if verbose:
+                        print(f"  [search] No result found for {search_term!r}")
                     base_record["scrape_status"] = "not_found"
                     base_record["source_url"] = search_url
                     base_record["record_hash"] = _hash_record(base_record)
@@ -813,17 +852,21 @@ class AllocineAirbyteSource:
 
                 allocine_id = search_result["id"]
                 allocine_url = f"{scraper.BASE_URL}{search_result['link']}"
+                if verbose:
+                    print(f"  [search] Found: allocine_id={allocine_id}, title={search_result['title']!r}")
                 base_record["allocine_id"] = allocine_id
                 base_record["allocine_title"] = search_result["title"]
                 base_record["allocine_url"] = allocine_url
                 base_record["source_url"] = allocine_url
 
-            details_html = await session.fetch_html(
-                scraper.FILM_URL.format(allocine_film_id=allocine_id)
-            )
-            casting_html = await session.fetch_html(
-                scraper.FILM_CASTING_URL.format(allocine_film_id=allocine_id)
-            )
+            details_url = scraper.FILM_URL.format(allocine_film_id=allocine_id)
+            casting_url = scraper.FILM_CASTING_URL.format(allocine_film_id=allocine_id)
+            if verbose:
+                print(f"  [details] {details_url}")
+            details_html = await session.fetch_html(details_url)
+            if verbose:
+                print(f"  [casting] {casting_url}")
+            casting_html = await session.fetch_html(casting_url)
             details = scraper.extract_film_details(details_html)
             casting = scraper.extract_film_casting(casting_html)
 

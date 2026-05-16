@@ -93,6 +93,7 @@ class AsyncBrowserSession:
         solve=True,
         headless=True,
         debug_pause_between_actions=False,
+        verbose=False,
     ):
         self.ws_endpoint = ws_endpoint
         self.user_agent = user_agent or DEFAULT_USER_AGENT
@@ -100,6 +101,7 @@ class AsyncBrowserSession:
         self.solve = solve
         self.headless = headless
         self.debug_pause_between_actions = debug_pause_between_actions
+        self.verbose = verbose
         self.playwright = None
         self.browser = None
         self.context = None
@@ -224,22 +226,39 @@ class AsyncBrowserSession:
         Navigate to a URL, simulate human-like scrolling and waiting,
         and return the resulting HTML content.
         """
+        if self.verbose:
+            print(f"  [browser] GET {url}")
         response = await self.page.goto(url)
+        if self.verbose:
+            http_status = response.status if response is not None else "no-response"
+            print(f"  [browser] Loaded (HTTP {http_status})")
         if response is not None and response.status in BLOCKED_STATUS_CODES:
             raise WebsiteBlockedError(
                 f"Website blocked the request for {url} with HTTP status {response.status}."
             )
         await self._debug_pause(f"Page loaded: {url}")
 
+        if self.verbose:
+            print(f"  [browser] Initial delay...")
         await self.page.wait_for_timeout(_human_like_delay_ms())
         await self._debug_pause("After initial delay")
+        if self.verbose:
+            print(f"  [browser] Dismissing consent overlay (1/2)...")
         await self._dismiss_allocine_fullscreen_if_present(url)
         await self._debug_pause("Before scroll")
+        if self.verbose:
+            print(f"  [browser] Scrolling...")
         await self.page.mouse.wheel(0, _human_like_scroll_y())
         await self._debug_pause("After scroll")
+        if self.verbose:
+            print(f"  [browser] Dismissing consent overlay (2/2)...")
         await self._dismiss_allocine_fullscreen_if_present(url)
+        if self.verbose:
+            print(f"  [browser] Final delay...")
         await self.page.wait_for_timeout(_human_like_delay_ms())
         await self._debug_pause("Before reading page content")
+        if self.verbose:
+            print(f"  [browser] Reading page content...")
         html = await self.page.content()
         await self._debug_pause("After reading page content")
         lowered_html = html.lower()
