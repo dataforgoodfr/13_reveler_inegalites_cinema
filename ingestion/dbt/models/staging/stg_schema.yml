@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: stg_films
-    description: "Table de staging issue du gsheet Cinéstats 50/50, qui regroupe toutes les données issues des rapports annuels du CNC.""
+    description: "Table de staging issue du gsheet Cinéstats 50/50, qui regroupe toutes les données issues des rapports annuels du CNC."
     columns:
       - name: movie_id
         description: "Identifiant technique interne du film (généré via ROW_NUMBER)."
