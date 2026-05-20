@@ -6,6 +6,11 @@ import { Toaster } from "@/components/ui/sonner";
 import Footer from "@/components/atoms/Footer";
 import { SearchProvider } from "@/contexts/SearchContext";
 import Script from "next/script";
+import {
+  SITE_NAME,
+  SITE_DESCRIPTION,
+  DEFAULT_KEYWORDS,
+} from "@/lib/seo";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -18,10 +23,13 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "CinéStats 50/50",
-  description: "Explorez les inégalités dans l'industrie cinématographique",
-  authors: [{ name: "Data4Good" }],
-  keywords: ["cinéma", "inégalités", "data", "analyse", "statistiques"],
+  title: {
+    default: `${SITE_NAME} — Inégalités de parité dans le cinéma`,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  authors: [{ name: "Data4Good" }, { name: "Collectif 50/50" }],
+  keywords: DEFAULT_KEYWORDS,
 };
 
 export default function RootLayout({

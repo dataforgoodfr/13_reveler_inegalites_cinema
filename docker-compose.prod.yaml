@@ -22,6 +22,7 @@ services:
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - INTERNAL_API_URL=http://backend:${BACKEND_PORT}
     depends_on:
       - backend
     networks:
