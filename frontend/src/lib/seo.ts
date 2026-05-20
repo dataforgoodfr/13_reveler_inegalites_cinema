@@ -12,30 +12,51 @@ export const DEFAULT_KEYWORDS = [
   "cinéma",
   "inégalités",
   "parité",
+  "genre",
   "femmes cinéma",
+  "diversité",
+  "inclusion",
+  "représentation",
   "Collectif 50/50",
   "Data for Good",
   "statistiques cinéma",
   "industrie cinématographique",
   "réalisatrices",
-  "diversité audiovisuel",
 ];
 
 export const HOME_KEYWORDS = [
   ...DEFAULT_KEYWORDS,
   "observatoire cinéma",
   "égalité femmes hommes cinéma",
-  "représentation cinéma",
   "base de données films",
+  "diversité audiovisuel",
 ];
 
 export const STATISTICS_KEYWORDS = [
   ...DEFAULT_KEYWORDS,
+  "statistiques",
   "statistiques parité cinéma",
   "données cinéma",
   "analyse inégalités industrie film",
   "dashboard cinéma",
   "tendances cinéma 50/50",
+  // Chef·fe·s de poste
+  "cheffe de poste",
+  "réalisatrice",
+  "compositrice",
+  "costumière",
+  "décoratrice",
+  "directrice photo",
+  "directrice production",
+  "directrice casting",
+  "effets spéciaux",
+  "ingénieure son",
+  "monteuse",
+  "scénariste",
+  "productrice",
+  // Indicateurs
+  "bonus parité",
+  "budget moyen",
 ];
 
 export const ABOUT_KEYWORDS = [
