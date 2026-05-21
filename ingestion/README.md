@@ -4,7 +4,7 @@
 
 **Responsable:** Joel Teixeira
 
-**Dernière révision:** 2026-05-08
+**Dernière révision:** 2026-05-21
 
 **Statut:** actif
 
@@ -13,6 +13,7 @@
 | #   | Date       | Auteur        | Observations           |
 | --- | ---------- | ------------- | ---------------------- |
 | 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
+| 2   | 2026-05-21 | Joel Teixeira | Ajout du deployment Prefect dédié au scraping Allociné |
 
 Ce dossier regroupe les assets d'ingestion et de transformation de données, séparés du code applicatif principal.
 
@@ -176,7 +177,7 @@ Elle utilise:
 2. `prefect-worker`: exécution des flows.
 3. une database distante dédiée `prefect` sur le serveur PostgreSQL existant.
 4. `dbt` et le scraping Allociné directement dans `prefect-worker`.
-5. un seul deployment Prefect utilisateur est publié automatiquement au démarrage du worker.
+5. deux deployments Prefect utilisateur sont publiés automatiquement au démarrage du worker.
 
 Services:
 
@@ -197,10 +198,12 @@ Mode opératoire recommandé:
 3. attendre la publication automatique des deployments par `prefect-worker`;
 4. déclencher manuellement les flows depuis l'UI.
 
-Le point d'entrée versionné est [flows.py](/root/explore/13_reveler_inegalites_cinema/ingestion/prefect/flows.py:1). Il expose maintenant un seul flow utilisateur dans Prefect:
+Le point d'entrée versionné est [flows.py](/root/explore/13_reveler_inegalites_cinema/ingestion/prefect/flows.py:1). Il expose maintenant deux flows utilisables directement depuis l'UI Prefect:
 
 1. `Lancer l'ingestion complete`: chaîne `airbyte sync -> dbt phase 1 -> scraping -> dbt phase 2`.
    Description: orchestration complète du pipeline avec étapes optionnelles activables au lancement.
+2. `Recuperer les donnees Allocine`: exécution du scraping Allociné seul.
+   Description: lance uniquement le scraping avec le fichier de configuration fourni.
 
 Les étapes internes restent visibles comme sous-flows distincts dans l'exécution du flow principal, avec des libellés lisibles:
 
@@ -215,8 +218,10 @@ Les étapes internes restent visibles comme sous-flows distincts dans l'exécuti
 
 Deployments publiés automatiquement:
 
-1. `lancer-ingestion-complete`
+1. `lancer-ingestion-donnees`
    Description: point d'entrée manuel recommandé pour les utilisateurs de l'UI Prefect.
+2. `lancer-scraping-allocine`
+   Description: exécute uniquement le flow de scraping Allociné, sans déclencher Airbyte ni dbt.
 
 Important:
 
@@ -234,7 +239,7 @@ Important:
 1. Airbyte sync les Google Sheets vers `raw`.
 2. Pour la mise à jour de données, Airbyte exécute un sync séparé par onglet métier.
 3. `raw.id_matching` sert de table d'entrée canonique du scraping.
-4. Prefect expose un seul deployment utilisateur pour lancer l'ingestion complète.
+4. Prefect expose deux deployments utilisateur: un pour l'ingestion complète, un pour le scraping Allociné seul.
 5. Si l'option Airbyte est activée, Prefect déclenche les syncs demandés par noms de connexions et attend leur fin.
 6. Dans ce flow, Prefect lance ensuite `dbt phase 1` avant scraping.
 7. Prefect lance ensuite le scraping Allociné.
