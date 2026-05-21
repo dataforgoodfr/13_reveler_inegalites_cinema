@@ -218,7 +218,7 @@ def run_allocine_scraping(config_path: str = str(ALLOCINE_CONFIG_PATH)) -> None:
     logger = get_run_logger()
     logger.info("Task parameters: config_path=%s", config_path)
     _run(
-        ["python3", str(ALLOCINE_MAIN_PATH), "sync", "--config", config_path],
+        ["python3", "-u", str(ALLOCINE_MAIN_PATH), "sync", "--config", config_path],
         step_name="Recuperer les donnees Allocine",
         cwd=REPO_ROOT,
     )

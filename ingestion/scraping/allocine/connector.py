@@ -1,12 +1,15 @@
 import asyncio
+import builtins
 import hashlib
 import json
 import os
 import random
 import re
+import time
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from functools import partial
 from typing import Any
 from urllib.parse import quote_plus
 
@@ -14,6 +17,8 @@ from sqlalchemy import bindparam, create_engine, text
 
 from backend.utils.date_utils import parse_duration, parse_release_date
 from ingestion.scraping.browser import WebsiteBlockedError
+
+print = partial(builtins.print, flush=True)
 
 STREAM_NAME = "allocine_data"
 DEFAULT_INPUT_SCHEMA = "raw"
@@ -145,6 +150,20 @@ CONNECTION_SPECIFICATION = {
             "maximum": 5,
             "description": "Number of concurrent browser sessions. Values above 1 disable debug_pause_between_actions.",
         },
+        "inter_film_delay_min_seconds": {
+            "type": "number",
+            "title": "Minimum delay between films",
+            "default": 2.0,
+            "minimum": 0,
+            "description": "Minimum wait time between two films in the same browser session.",
+        },
+        "inter_film_delay_max_seconds": {
+            "type": "number",
+            "title": "Maximum delay between films",
+            "default": 5.0,
+            "minimum": 0,
+            "description": "Maximum wait time between two films in the same browser session.",
+        },
         "verbose": {
             "type": "boolean",
             "title": "Verbose logging",
@@ -213,6 +232,8 @@ class ConnectorConfig:
     headless: bool
     debug_pause_between_actions: bool
     parallel_sessions: int
+    inter_film_delay_min_seconds: float
+    inter_film_delay_max_seconds: float
     verbose: bool
 
     @classmethod
@@ -251,8 +272,24 @@ class ConnectorConfig:
                 raw_config.get("debug_pause_between_actions", False)
             ),
             "parallel_sessions": max(1, int(raw_config.get("parallel_sessions", 1) or 1)),
+            "inter_film_delay_min_seconds": _normalize_non_negative_float(
+                raw_config.get("inter_film_delay_min_seconds", 2.0),
+                field_name="inter_film_delay_min_seconds",
+            ),
+            "inter_film_delay_max_seconds": _normalize_non_negative_float(
+                raw_config.get("inter_film_delay_max_seconds", 5.0),
+                field_name="inter_film_delay_max_seconds",
+            ),
             "verbose": bool(raw_config.get("verbose", False)),
         }
+
+        if (
+            values["inter_film_delay_max_seconds"]
+            < values["inter_film_delay_min_seconds"]
+        ):
+            raise ValueError(
+                "inter_film_delay_max_seconds must be greater than or equal to inter_film_delay_min_seconds"
+            )
 
         for key, value in values.items():
             if (
@@ -320,6 +357,16 @@ def _normalize_positive_int(value: Any) -> int | None:
         return None
     if normalized_value < 1:
         raise ValueError("scrape_limit must be greater than or equal to 1")
+    return normalized_value
+
+
+def _normalize_non_negative_float(value: Any, *, field_name: str) -> float:
+    try:
+        normalized_value = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{field_name} must be a number") from exc
+    if normalized_value < 0:
+        raise ValueError(f"{field_name} must be greater than or equal to 0")
     return normalized_value
 
 
@@ -426,17 +473,6 @@ class AllocineAirbyteSource:
         for record in records:
             status = record.get("scrape_status") or "error"
             status_counts[status] = status_counts.get(status, 0) + 1
-            if status != "success":
-                source_label = record.get("source_record_id") or record.get("visa_number")
-                title = record.get("original_name") or "unknown-title"
-                reason = record.get("error_message") or "no reason provided"
-                print(
-                    "Allocine scraping issue: "
-                    f"status={status} "
-                    f"source_record_id={source_label} "
-                    f"title={title!r} "
-                    f"reason={reason}"
-                )
 
         print(f"Allocine scraping progress: {total_rows}/{total_rows} rows processed.")
         print(
@@ -477,7 +513,10 @@ class AllocineAirbyteSource:
                 print(f"[session {session_index}] Browser ready. Processing {len(chunk)} records.")
             for index, source_row in enumerate(chunk):
                 if index > 0:
-                    delay = random.uniform(2.0, 5.0)
+                    delay = random.uniform(
+                        config.inter_film_delay_min_seconds,
+                        config.inter_film_delay_max_seconds,
+                    )
                     if config.verbose:
                         print(f"[session {session_index}] Inter-film delay {delay:.1f}s...")
                     await asyncio.sleep(delay)
@@ -487,8 +526,10 @@ class AllocineAirbyteSource:
                     or source_row.get("source_record_id")
                     or "?"
                 )
-                if config.verbose:
-                    print(f"[session {session_index}] Record {index + 1}/{len(chunk)}: {label!r}")
+                print(
+                    f"[session {session_index}] Record {index + 1}/{len(chunk)} started: {label!r}"
+                )
+                started_at = time.monotonic()
                 record = await self._scrape_one_record(
                     run_id=run_id,
                     session=session,
@@ -497,8 +538,21 @@ class AllocineAirbyteSource:
                     verbose=config.verbose,
                 )
                 status = record.get("scrape_status", "?")
-                if config.verbose:
-                    print(f"[session {session_index}] Record {index + 1}/{len(chunk)} done: {label!r} -> {status}")
+                duration_seconds = time.monotonic() - started_at
+                print(
+                    f"[session {session_index}] Record {index + 1}/{len(chunk)} done: {label!r} -> {status} ({duration_seconds:.1f}s)"
+                )
+                if status != "success":
+                    source_label = record.get("source_record_id") or record.get("visa_number")
+                    title = record.get("original_name") or label
+                    reason = record.get("error_message") or "no reason provided"
+                    print(
+                        "Allocine scraping issue: "
+                        f"status={status} "
+                        f"source_record_id={source_label} "
+                        f"title={title!r} "
+                        f"reason={reason}"
+                    )
                 records.append(record)
         if config.verbose:
             print(f"[session {session_index}] Browser session closed.")

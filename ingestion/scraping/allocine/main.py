@@ -1,9 +1,11 @@
 import argparse
+import builtins
 import json
 import os
 import re
 import sys
 from datetime import datetime
+from functools import partial
 from pathlib import Path
 from typing import Any
 
@@ -13,6 +15,8 @@ if str(ROOT_DIR) not in sys.path:
 
 
 ENV_PATTERN = re.compile(r"^\$\{(?P<name>[A-Z0-9_]+)(?::-?(?P<default>.*))?\}$")
+
+print = partial(builtins.print, flush=True)
 
 
 def _resolve_env_placeholders(value: Any) -> Any:

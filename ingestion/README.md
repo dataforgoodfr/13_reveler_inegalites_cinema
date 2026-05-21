@@ -13,7 +13,7 @@
 | #   | Date       | Auteur        | Observations           |
 | --- | ---------- | ------------- | ---------------------- |
 | 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
-| 2   | 2026-05-21 | Joel Teixeira | Ajout du deployment Prefect dédié au scraping Allociné |
+| 2   | 2026-05-21 | Joel Teixeira | Ajout du deployment Prefect dédié au scraping Allociné. Planification automatique du scraping Allociné toutes les 10 minutes |
 
 Ce dossier regroupe les assets d'ingestion et de transformation de données, séparés du code applicatif principal.
 
@@ -178,6 +178,7 @@ Elle utilise:
 3. une database distante dédiée `prefect` sur le serveur PostgreSQL existant.
 4. `dbt` et le scraping Allociné directement dans `prefect-worker`.
 5. deux deployments Prefect utilisateur sont publiés automatiquement au démarrage du worker.
+6. les services internes Prefect (scheduler/runner) sont activés pour permettre la création des runs planifiés.
 
 Services:
 
@@ -196,7 +197,7 @@ Mode opératoire recommandé:
 1. démarrer la stack avec `docker compose up -d`;
 2. ouvrir l'UI Prefect;
 3. attendre la publication automatique des deployments par `prefect-worker`;
-4. déclencher manuellement les flows depuis l'UI.
+4. déclencher manuellement `lancer-ingestion-donnees` selon besoin; `lancer-scraping-allocine` s'exécute automatiquement toutes les 10 minutes.
 
 Le point d'entrée versionné est [flows.py](/root/explore/13_reveler_inegalites_cinema/ingestion/prefect/flows.py:1). Il expose maintenant deux flows utilisables directement depuis l'UI Prefect:
 
@@ -221,7 +222,7 @@ Deployments publiés automatiquement:
 1. `lancer-ingestion-donnees`
    Description: point d'entrée manuel recommandé pour les utilisateurs de l'UI Prefect.
 2. `lancer-scraping-allocine`
-   Description: exécute uniquement le flow de scraping Allociné, sans déclencher Airbyte ni dbt.
+   Description: exécute uniquement le flow de scraping Allociné, sans déclencher Airbyte ni dbt, avec un schedule automatique toutes les 10 minutes et une limite de concurrence à 1.
 
 Important:
 
