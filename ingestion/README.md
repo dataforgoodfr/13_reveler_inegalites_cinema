@@ -4,7 +4,7 @@
 
 **Responsable:** Joel Teixeira
 
-**Dernière révision:** 2026-05-21
+**Dernière révision:** 2026-05-22
 
 **Statut:** actif
 
@@ -14,6 +14,7 @@
 | --- | ---------- | ------------- | ---------------------- |
 | 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
 | 2   | 2026-05-21 | Joel Teixeira | Ajout du deployment Prefect dédié au scraping Allociné. Planification automatique du scraping Allociné toutes les 10 minutes |
+| 3   | 2026-05-22 | Joel Teixeira | Alignement version Prefect server/worker et ajout du troubleshooting de migration Prefect |
 
 Ce dossier regroupe les assets d'ingestion et de transformation de données, séparés du code applicatif principal.
 
@@ -97,6 +98,12 @@ Variables d'environnement Airbyte désormais attendues dans `.env`:
 7. `AIRBYTE_CLIENT_SECRET`
 8. `AIRBYTE_SYNC_TIMEOUT_SECONDS`
 9. `AIRBYTE_SYNC_POLL_SECONDS`
+
+Variables d'environnement Prefect désormais attendues dans `.env`:
+
+1. `PREFECT_VERSION`
+2. `PREFECT_API_DATABASE_CONNECTION_URL`
+3. `PREFECT_PORT`
 
 
 Commandes utiles depuis `ingestion/`:
@@ -191,6 +198,14 @@ UI locale:
 2. API Prefect: `http://localhost:$PREFECT_PORT/api`
 
 Valeur par défaut dans `.env.example`: `PREFECT_PORT=4222`.
+
+Important:
+
+1. `prefect-server` et `prefect-worker` doivent utiliser la meme valeur `PREFECT_VERSION`;
+2. les deux services Prefect sont construits depuis la meme image locale `ric-prefect:${PREFECT_VERSION}` pour eviter les ecarts entre tag Docker publie et version Python installee;
+3. si la base `prefect` a deja ete initialisee par une autre ligne de versions Prefect, le serveur peut echouer au demarrage avec `Can't locate revision identified by '...'`;
+4. dans ce cas, utiliser une base Prefect dediee neuve pour ce stack, ou realigner `PREFECT_VERSION` sur la version exacte qui a cree cette base.
+5. pour un setup local base Docker, `prefect-server` et `prefect-worker` peuvent rejoindre le reseau externe `postgres_ric_default` et utiliser `postgres_ric:5432` comme hote interne PostgreSQL.
 
 Mode opératoire recommandé:
 

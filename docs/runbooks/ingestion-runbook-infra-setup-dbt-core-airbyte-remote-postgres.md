@@ -4,7 +4,7 @@
 
 **Responsable:** Joel Teixeira
 
-**Dernière révision:** 2026-05-09
+**Dernière révision:** 2026-05-22
 
 **Statut:** actif
 
@@ -13,6 +13,7 @@
 | #   | Date       | Auteur         | Observations                                            |
 | --- | ---------- | -------------- | ------------------------------------------------------- |
 | 1   | 2026-05-07 | Joel Teixeira  | Initial implementation                                  |
+| 2   | 2026-05-22 | Joel Teixeira | Ajout du pinning de version Prefect et du troubleshooting de revision Alembic inconnue |
 
 ## 1. Objectif
 
@@ -86,10 +87,11 @@ Variables indispensables à renseigner:
 
 1. `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_SSLMODE`
 2. `DBT_USER_POSTGRES_PASSWORD`
-3. `PREFECT_API_DATABASE_CONNECTION_URL`
-4. `AIRBYTE_HOST`, `AIRBYTE_PORT`, `AIRBYTE_CLIENT_ID`, `AIRBYTE_CLIENT_SECRET`
-5. `AIRBYTE_DESTINATION_POSTGRES_PASSWORD`
-6. `PREFECT_PORT` et `BROWSERLESS_PORT` si vous voulez des ports hôtes non défaut
+3. `PREFECT_VERSION`
+4. `PREFECT_API_DATABASE_CONNECTION_URL`
+5. `AIRBYTE_HOST`, `AIRBYTE_PORT`, `AIRBYTE_CLIENT_ID`, `AIRBYTE_CLIENT_SECRET`
+6. `AIRBYTE_DESTINATION_POSTGRES_PASSWORD`
+7. `PREFECT_PORT` et `BROWSERLESS_PORT` si vous voulez des ports hôtes non défaut
 
 Charger les variables dans le shell (optionnel):
 
@@ -139,6 +141,7 @@ GRANT CONNECT ON DATABASE prefect TO prefect_user;
 Exemple `.env`:
 
 ```bash
+PREFECT_VERSION=3.4.24
 PREFECT_API_DATABASE_CONNECTION_URL=postgresql+asyncpg://prefect_user:<replace>@<db-host>:<db-port>/prefect
 ```
 
@@ -283,6 +286,24 @@ Vérifier:
 1. `PREFECT_API_DATABASE_CONNECTION_URL`
 2. existence de la base `prefect`
 3. droits de `prefect_user`
+
+Si les logs montrent `Can't locate revision identified by '...'`:
+
+1. la base `prefect` a deja ete initialisee par une autre ligne de versions Prefect;
+2. verifier que `PREFECT_VERSION` est identique pour `prefect-server` et `prefect-worker`;
+3. si le probleme persiste, recreer une base `prefect` dediee vide pour ce stack, ou revenir exactement a la version Prefect qui a cree cette base.
+
+Si vous utilisez le container Docker local `postgres_ric`:
+
+1. connecter `prefect-server` et `prefect-worker` au reseau externe `postgres_ric_default`;
+2. utiliser `postgres_ric:5432` comme host interne PostgreSQL depuis les containers ingestion;
+3. preferer une base dediee neuve comme `prefect_ingestion` plutot que la base `prefect` si celle-ci contient deja une revision Alembic obsolete.
+
+Si les logs montrent `manifest for prefecthq/prefect:<version> not found`:
+
+1. ne pas supposer qu'un tag Docker existe pour chaque version Python `prefect`;
+2. utiliser l'image locale construite par `docker compose`, deja partagee entre `prefect-server` et `prefect-worker`;
+3. relancer avec `docker compose up --build -d`.
 
 ## 8. Références
 

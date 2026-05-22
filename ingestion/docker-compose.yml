@@ -1,6 +1,11 @@
 services:
   prefect-server:
-    image: prefecthq/prefect:3-latest
+    image: ric-prefect:${PREFECT_VERSION:-3.4.24}
+    build:
+      context: ..
+      dockerfile: ingestion/prefect/Dockerfile
+      args:
+        PREFECT_VERSION: ${PREFECT_VERSION:-3.4.24}
     cpus: ${PREFECT_SERVER_CPUS:-0.50}
     mem_limit: ${PREFECT_SERVER_MEM_LIMIT:-512m}
     mem_reservation: ${PREFECT_SERVER_MEM_RESERVATION:-256m}
@@ -10,9 +15,12 @@ services:
     environment:
       PREFECT_SERVER_API_HOST: 0.0.0.0
       PREFECT_SERVER_UI_API_URL: http://localhost:${PREFECT_PORT:-4222}/api
-    command: prefect server start --host 0.0.0.0
+    command: server start --host 0.0.0.0
     ports:
       - "${PREFECT_PORT:-4222}:4200"
+    networks:
+      - default
+      - postgres_ric
     healthcheck:
       test:
         [
@@ -27,9 +35,12 @@ services:
       start_period: 60s
 
   prefect-worker:
+    image: ric-prefect:${PREFECT_VERSION:-3.4.24}
     build:
       context: ..
       dockerfile: ingestion/prefect/Dockerfile
+      args:
+        PREFECT_VERSION: ${PREFECT_VERSION:-3.4.24}
     cpus: ${PREFECT_WORKER_CPUS:-1.50}
     mem_limit: ${PREFECT_WORKER_MEM_LIMIT:-2g}
     mem_reservation: ${PREFECT_WORKER_MEM_RESERVATION:-768m}
@@ -48,6 +59,9 @@ services:
     entrypoint: [/bin/bash, /app/ingestion/prefect/start_worker.sh]
     volumes:
       - ..:/app
+    networks:
+      - default
+      - postgres_ric
 
   browserless:
     image: browserless/chrome:latest
@@ -63,3 +77,8 @@ services:
       KEEP_ALIVE: "true"
       CONNECTION_TIMEOUT: "600000"
       MAX_CONCURRENT_SESSIONS: "4"
+
+networks:
+  postgres_ric:
+    external: true
+    name: postgres_ric_default
