@@ -382,6 +382,21 @@ def _normalize_record_id(source_row: dict[str, Any]) -> str | None:
     return None
 
 
+def _normalize_visa_for_compare(value: Any) -> str | None:
+    if value in (None, ""):
+        return None
+
+    raw = str(value).strip()
+    if not raw:
+        return None
+
+    if raw in {"-", "--", "n/a", "na", "none", "null"}:
+        return None
+
+    digits_only = re.sub(r"\D", "", raw)
+    return digits_only or None
+
+
 def _hash_record(record: dict[str, Any]) -> str:
     payload = json.dumps(record, sort_keys=True, ensure_ascii=False, default=str)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
@@ -952,16 +967,12 @@ class AllocineAirbyteSource:
                 }
             )
 
-            row_visa = str(visa_number) if visa_number not in (None, "") else None
-            allocine_visa = (
-                str(allocine_visa_number)
-                if allocine_visa_number not in (None, "")
-                else None
-            )
+            row_visa = _normalize_visa_for_compare(visa_number)
+            allocine_visa = _normalize_visa_for_compare(allocine_visa_number)
             if row_visa and allocine_visa and row_visa != allocine_visa:
                 base_record["scrape_status"] = "visa_mismatch"
                 base_record["error_message"] = (
-                    f"Allocine visa {allocine_visa} differs from source visa {row_visa}."
+                    f"Allocine visa {allocine_visa_number} differs from source visa {visa_number}."
                 )
             else:
                 base_record["scrape_status"] = "success"
