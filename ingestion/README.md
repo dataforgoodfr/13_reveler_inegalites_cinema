@@ -15,6 +15,7 @@
 | 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
 | 2   | 2026-05-21 | Joel Teixeira | Ajout du deployment Prefect dédié au scraping Allociné. Planification automatique du scraping Allociné toutes les 10 minutes |
 | 3   | 2026-05-22 | Joel Teixeira | Alignement version Prefect server/worker et ajout du troubleshooting de migration Prefect |
+| 4   | 2026-05-22 | Joel Teixeira | Ajout de l'authentification basic sur l'UI et l'API Prefect |
 
 Ce dossier regroupe les assets d'ingestion et de transformation de données, séparés du code applicatif principal.
 
@@ -104,6 +105,8 @@ Variables d'environnement Prefect désormais attendues dans `.env`:
 1. `PREFECT_VERSION`
 2. `PREFECT_API_DATABASE_CONNECTION_URL`
 3. `PREFECT_PORT`
+4. `PREFECT_SERVER_API_AUTH_STRING`
+5. `PREFECT_API_AUTH_STRING`
 
 
 Commandes utiles depuis `ingestion/`:
@@ -178,6 +181,8 @@ docker compose up -d
 
 La stack Prefect est volontairement légère.
 
+L'UI et l'API sont protégées par une authentification basic Prefect. Au premier accès, le navigateur demande la même chaîne définie dans `.env` pour le serveur et pour les clients.
+
 Elle utilise:
 
 1. `prefect-server`: API + UI Prefect locale.
@@ -202,9 +207,10 @@ Valeur par défaut dans `.env.example`: `PREFECT_PORT=4222`.
 Important:
 
 1. `prefect-server` et `prefect-worker` doivent utiliser la meme valeur `PREFECT_VERSION`;
-2. les deux services Prefect sont construits depuis la meme image locale `ric-prefect:${PREFECT_VERSION}` pour eviter les ecarts entre tag Docker publie et version Python installee;
-3. si la base `prefect` a deja ete initialisee par une autre ligne de versions Prefect, le serveur peut echouer au demarrage avec `Can't locate revision identified by '...'`;
-4. dans ce cas, utiliser une base Prefect dediee neuve pour ce stack, ou realigner `PREFECT_VERSION` sur la version exacte qui a cree cette base.
+2. `prefect-server` doit recevoir `PREFECT_SERVER_API_AUTH_STRING` et `prefect-worker` doit recevoir `PREFECT_API_AUTH_STRING` avec la meme valeur;
+3. les deux services Prefect sont construits depuis la meme image locale `ric-prefect:${PREFECT_VERSION}` pour eviter les ecarts entre tag Docker publie et version Python installee;
+4. si la base `prefect` a deja ete initialisee par une autre ligne de versions Prefect, le serveur peut echouer au demarrage avec `Can't locate revision identified by '...'`;
+5. dans ce cas, utiliser une base Prefect dediee neuve pour ce stack, ou realigner `PREFECT_VERSION` sur la version exacte qui a cree cette base.
 
 Mode opératoire recommandé:
 
