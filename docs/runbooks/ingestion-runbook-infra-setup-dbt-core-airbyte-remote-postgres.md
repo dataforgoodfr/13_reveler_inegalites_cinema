@@ -279,32 +279,6 @@ docker compose up -d
 
 Choisir un autre port dans `.env` (ex: `AIRBYTE_PORT=8001`) puis relancer `abctl local install`.
 
-### 7.3 Prefect ne se connecte pas à sa base
-
-Vérifier:
-
-1. `PREFECT_API_DATABASE_CONNECTION_URL`
-2. existence de la base `prefect`
-3. droits de `prefect_user`
-
-Si les logs montrent `Can't locate revision identified by '...'`:
-
-1. la base `prefect` a deja ete initialisee par une autre ligne de versions Prefect;
-2. verifier que `PREFECT_VERSION` est identique pour `prefect-server` et `prefect-worker`;
-3. si le probleme persiste, recreer une base `prefect` dediee vide pour ce stack, ou revenir exactement a la version Prefect qui a cree cette base.
-
-Si vous utilisez le container Docker local `postgres_ric`:
-
-1. connecter `prefect-server` et `prefect-worker` au reseau externe `postgres_ric_default`;
-2. utiliser `postgres_ric:5432` comme host interne PostgreSQL depuis les containers ingestion;
-3. preferer une base dediee neuve comme `prefect_ingestion` plutot que la base `prefect` si celle-ci contient deja une revision Alembic obsolete.
-
-Si les logs montrent `manifest for prefecthq/prefect:<version> not found`:
-
-1. ne pas supposer qu'un tag Docker existe pour chaque version Python `prefect`;
-2. utiliser l'image locale construite par `docker compose`, deja partagee entre `prefect-server` et `prefect-worker`;
-3. relancer avec `docker compose up --build -d`.
-
 ## 8. Références
 
 1. démarrage rapide Airbyte OSS: [https://docs.airbyte.com/platform/using-airbyte/getting-started/oss-quickstart](https://docs.airbyte.com/platform/using-airbyte/getting-started/oss-quickstart)

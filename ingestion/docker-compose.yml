@@ -18,9 +18,6 @@ services:
     command: server start --host 0.0.0.0
     ports:
       - "${PREFECT_PORT:-4222}:4200"
-    networks:
-      - default
-      - postgres_ric
     healthcheck:
       test:
         [
@@ -59,9 +56,6 @@ services:
     entrypoint: [/bin/bash, /app/ingestion/prefect/start_worker.sh]
     volumes:
       - ..:/app
-    networks:
-      - default
-      - postgres_ric
 
   browserless:
     image: browserless/chrome:latest
@@ -77,8 +71,3 @@ services:
       KEEP_ALIVE: "true"
       CONNECTION_TIMEOUT: "600000"
       MAX_CONCURRENT_SESSIONS: "4"
-
-networks:
-  postgres_ric:
-    external: true
-    name: postgres_ric_default

@@ -205,7 +205,6 @@ Important:
 2. les deux services Prefect sont construits depuis la meme image locale `ric-prefect:${PREFECT_VERSION}` pour eviter les ecarts entre tag Docker publie et version Python installee;
 3. si la base `prefect` a deja ete initialisee par une autre ligne de versions Prefect, le serveur peut echouer au demarrage avec `Can't locate revision identified by '...'`;
 4. dans ce cas, utiliser une base Prefect dediee neuve pour ce stack, ou realigner `PREFECT_VERSION` sur la version exacte qui a cree cette base.
-5. pour un setup local base Docker, `prefect-server` et `prefect-worker` peuvent rejoindre le reseau externe `postgres_ric_default` et utiliser `postgres_ric:5432` comme hote interne PostgreSQL.
 
 Mode opératoire recommandé:
 
