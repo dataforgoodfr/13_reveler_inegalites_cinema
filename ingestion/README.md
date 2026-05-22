@@ -16,6 +16,7 @@
 | 2   | 2026-05-21 | Joel Teixeira | Ajout du deployment Prefect dédié au scraping Allociné. Planification automatique du scraping Allociné toutes les 10 minutes |
 | 3   | 2026-05-22 | Joel Teixeira | Alignement version Prefect server/worker et ajout du troubleshooting de migration Prefect |
 | 4   | 2026-05-22 | Joel Teixeira | Ajout de l'authentification basic sur l'UI et l'API Prefect |
+| 5   | 2026-05-22 | Joel Teixeira | Le CLI de scraping Allociné charge automatiquement `ingestion/.env` avant de résoudre les placeholders JSON |
 
 Ce dossier regroupe les assets d'ingestion et de transformation de données, séparés du code applicatif principal.
 
@@ -30,6 +31,8 @@ Strategie retenue:
 3. `dbt` transforme les tables brutes et les sorties de scraping, puis publie les tables finales prévues par `schema1`.
 4. `scraping/allocine/` exécute le scraping Allociné et écrit les données enrichies dans `raw.allocine_data`.
 5. `Prefect` orchestre les syncs Airbyte via API, puis les étapes `dbt` et `scraping allocine`.
+
+Pour les configs locales de debug, le CLI de scraping charge automatiquement `ingestion/.env` avant de résoudre les placeholders JSON de type `${...}`.
 
 Ce que cela implique:
 

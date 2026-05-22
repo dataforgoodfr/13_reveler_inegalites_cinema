@@ -13,10 +13,34 @@ ROOT_DIR = Path(__file__).resolve().parents[3]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
+INGESTION_DIR = ROOT_DIR / "ingestion"
+DEFAULT_ENV_PATH = INGESTION_DIR / ".env"
+
 
 ENV_PATTERN = re.compile(r"^\$\{(?P<name>[A-Z0-9_]+)(?::-?(?P<default>.*))?\}$")
 
 print = partial(builtins.print, flush=True)
+
+
+def _load_dotenv(path: Path) -> None:
+    if not path.exists():
+        return
+
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if not key or key in os.environ:
+            continue
+
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+            value = value[1:-1]
+
+        os.environ[key] = value
 
 
 def _resolve_env_placeholders(value: Any) -> Any:
@@ -59,6 +83,8 @@ def _epoch_millis(iso_value: str) -> int:
 
 def main() -> int:
     from ingestion.scraping.allocine.connector import AllocineAirbyteSource
+
+    _load_dotenv(DEFAULT_ENV_PATH)
 
     parser = argparse.ArgumentParser(description="Allocine Airbyte custom source")
     parser.add_argument(
