@@ -14,9 +14,7 @@
 | --- | ---------- | ------------- | ---------------------- |
 | 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
 | 2   | 2026-05-21 | Joel Teixeira | Ajout du deployment Prefect dédié au scraping Allociné. Planification automatique du scraping Allociné toutes les 10 minutes |
-| 3   | 2026-05-22 | Joel Teixeira | Alignement version Prefect server/worker et ajout du troubleshooting de migration Prefect |
-| 4   | 2026-05-22 | Joel Teixeira | Ajout de l'authentification basic sur l'UI et l'API Prefect |
-| 5   | 2026-05-22 | Joel Teixeira | Le CLI de scraping Allociné charge automatiquement `ingestion/.env` avant de résoudre les placeholders JSON |
+| 3   | 2026-05-22 | Joel Teixeira | Alignement version Prefect server/worker et ajout du troubleshooting de migration Prefect. Ajout de l'authentification basic sur l'UI et l'API Prefect. Le CLI de scraping Allociné charge automatiquement `ingestion/.env` avant de résoudre les placeholders JSON |
 
 Ce dossier regroupe les assets d'ingestion et de transformation de données, séparés du code applicatif principal.
 
