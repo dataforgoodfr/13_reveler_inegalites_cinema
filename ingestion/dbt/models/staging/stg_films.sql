@@ -1,107 +1,92 @@
-with source_data as (
-    select
-        _airbyte_raw_id,
-        _airbyte_extracted_at,
-        _airbyte_generation_id,
-        _airbyte_meta,
-        nullif(trim("VISA"), '') as visa_number_raw,
-        nullif(trim("TITRE"), '') as original_name_raw,
-        nullif(trim("ANNEE_D_AGREMENT"), '') as cnc_agrement_year_raw,
-        nullif(trim("RANG"), '') as cnc_rank_raw,
-        nullif(trim("DEVIS"), '') as budget_raw,
-        nullif(trim("ASR"), '') as asr_raw,
-        nullif(trim("GENRE"), '') as genre_raw,
-        nullif(trim("REALISATEUR"), '') as directors_raw,
-        nullif(trim("PRODUCTEURS"), '') as producers_raw,
-        nullif(trim("NATIONALITE"), '') as nationality_raw,
-        nullif(trim("CLAIR"), '') as broadcasters_free_raw,
-        nullif(trim("PAYANT"), '') as broadcasters_paid_raw,
-        nullif(trim("EOF"), '') as eof_raw,
-        nullif(trim("SOFICA"), '') as sofica_funding_raw,
-        nullif(trim("BONUS_PARITE_"), '') as parity_bonus_raw,
-        nullif(trim("AIDE_REGIONALE"), '') as regional_funding_raw,
-        nullif(trim("CREDIT_D_IMPOT"), '') as tax_credit_raw
-    from {{ source('raw', 'films') }}
-),
+{{
+  config(materialized = 'view')
+}}
 
-normalized as (
-    select
-        _airbyte_raw_id,
-        _airbyte_extracted_at,
-        _airbyte_generation_id,
-        _airbyte_meta,
-        nullif(regexp_replace(visa_number_raw, '[^0-9A-Za-z]', '', 'g'), '') as visa_number,
-        original_name_raw as original_name,
-        case
-            when cnc_agrement_year_raw ~ '^[0-9]+$' then cnc_agrement_year_raw::integer
-            else null
-        end as cnc_agrement_year,
-        case
-            when regexp_replace(cnc_rank_raw, '[^0-9]', '', 'g') <> ''
-                then regexp_replace(cnc_rank_raw, '[^0-9]', '', 'g')::integer
-            else null
-        end as cnc_rank,
-        case
-            when regexp_replace(budget_raw, '[^0-9]', '', 'g') <> ''
-                then regexp_replace(budget_raw, '[^0-9]', '', 'g')::numeric
-            else null
-        end as budget,
-        asr_raw as asr,
-        genre_raw as genre_raw,
-        directors_raw,
-        producers_raw,
-        nationality_raw,
-        broadcasters_free_raw,
-        broadcasters_paid_raw,
-        case
-            when upper(eof_raw) in ('X', 'OUI', 'TRUE', '1', 'YES') then true
-            when eof_raw is null then null
-            else false
-        end as eof,
-        case
-            when upper(sofica_funding_raw) in ('X', 'OUI', 'TRUE', '1', 'YES') then true
-            when sofica_funding_raw is null then null
-            else false
-        end as sofica_funding,
-        case
-            when upper(parity_bonus_raw) in ('X', 'OUI', 'TRUE', '1', 'YES') then true
-            when parity_bonus_raw is null then null
-            else false
-        end as parity_bonus,
-        case
-            when upper(regional_funding_raw) in ('X', 'OUI', 'TRUE', '1', 'YES') then true
-            when regional_funding_raw is null then null
-            else false
-        end as regional_funding,
-        case
-            when upper(tax_credit_raw) in ('X', 'OUI', 'TRUE', '1', 'YES') then true
-            when tax_credit_raw is null then null
-            else false
-        end as tax_credit
-    from source_data
-)
-
-select
-    _airbyte_raw_id,
-    _airbyte_extracted_at,
-    _airbyte_generation_id,
-    _airbyte_meta,
-    visa_number,
-    original_name,
-    cnc_agrement_year,
-    cnc_rank,
-    budget,
-    asr,
-    genre_raw,
-    directors_raw,
-    producers_raw,
-    nationality_raw,
-    broadcasters_free_raw,
-    broadcasters_paid_raw,
-    eof,
-    sofica_funding,
-    parity_bonus,
-    regional_funding,
-    tax_credit
-from normalized
-where visa_number is not null
+SELECT
+	ROW_NUMBER() OVER (ORDER BY "VISA") AS movie_id,    
+	CAST("VISA" AS INTEGER) AS cnc_visa,
+    "TITRE" AS cnc_name,
+    "GENRE" AS genre,
+    CAST("ANNEE_D_AGREMENT" AS INTEGER) AS cnc_agreement_year,
+	CASE
+	    -- Si l'année est >= 2013, on multiplie par 1 000 000 (peu importe le format)
+	    WHEN CAST("ANNEE_D_AGREMENT" AS INTEGER) >= 2013 THEN
+	        CAST(
+	            REPLACE(
+	                REPLACE(
+	                    REPLACE("DEVIS", ' ', ''),
+	                    ' ', ''
+	                ),
+	                ',', '.'
+	            ) AS FLOAT
+	        ) * 1000000
+	    -- Sinon, on ne multiplie pas
+	    ELSE
+	        CAST(
+	            REPLACE(
+	                REPLACE(
+	                    REPLACE("DEVIS", ' ', ''),
+	                    ' ', ''
+	                ),
+	                ',', '.'
+	            ) AS FLOAT
+	        )
+	END AS budget,
+    -- ARRAYS
+	STRING_TO_ARRAY(REPLACE("REALISATEUR", ' ', ''), ' / ') AS director,
+   	STRING_TO_ARRAY(REPLACE("RANG", ' ', ''), ' / ') AS filmography_rank,
+	STRING_TO_ARRAY(REPLACE("PRODUCTEURS", ' ', ''), ' / ') AS producer,
+	STRING_TO_ARRAY(REPLACE("PAYANT", ' ', ''), ' ') AS paid_broadcaster,
+	STRING_TO_ARRAY(REPLACE("CLAIR", ' ', ''), ' ') AS free_broadcaster,
+    ARRAY(
+        SELECT JSONB_BUILD_OBJECT(
+            'country', INITCAP(UNACCENT(TRIM(REGEXP_REPLACE(elem, '[^a-zA-ZÀ-ÿ ]', '', 'g')))),
+            'budget_allocation', NULLIF(REGEXP_REPLACE(elem, '[^0-9]', '', 'g'), '')::INTEGER
+        )
+        FROM UNNEST(
+            STRING_TO_ARRAY(
+                REGEXP_REPLACE(
+                    REGEXP_REPLACE("NATIONALITE", '\s*/\s*', ' / ', 'g'),  -- normalise tous les '/' avec espaces
+                '\s+-', '-', 'g'),  -- supprime les espaces avant le '-'
+            ' / ')
+        ) AS elem
+        WHERE "NATIONALITE" IS NOT NULL
+            AND NULLIF(TRIM(elem), '') IS NOT NULL
+    ) AS country_budget_allocation,
+    -- BOOLEANS
+    CASE
+        WHEN "EOF" = 'OUI' THEN TRUE
+        WHEN "EOF" = 'NON' THEN FALSE
+        ELSE NULL
+    END AS has_eof,
+    CASE
+        WHEN LOWER("BONUS_PARITE_") = 'x' THEN TRUE
+        ELSE FALSE
+    END AS has_parity_bonus,
+    CASE
+        WHEN LOWER("ASR") = 'x' THEN TRUE
+        ELSE FALSE
+    END AS has_asr,
+    CASE
+        WHEN LOWER("SOFICA") = 'x' THEN TRUE
+        ELSE FALSE
+    END AS has_sofica,
+    CASE
+        WHEN LOWER("CREDIT_D_IMPOT") = 'x' THEN TRUE
+        ELSE FALSE
+    END AS has_tax_credit,
+    CASE
+        WHEN LOWER("AIDE_REGIONALE") = 'x' THEN TRUE
+        ELSE FALSE
+    END AS has_regional_funding,
+	-- METADATA
+	TO_DATE("UPDATED_DATE", 'DD/MM/YYYY') AS updated_date,
+    "UPDATED_BY" AS updated_by,
+    _airbyte_raw_id AS airbyte_raw_id,
+    CAST(_airbyte_generation_id AS INTEGER) AS airbyte_generation_id,
+    CAST(_airbyte_extracted_at AS TIMESTAMP)  AS airbyte_extraction_date,
+    CAST(_airbyte_meta AS JSON) AS airbyte_meta
+FROM {{ source('raw', 'films') }}
+WHERE 1 = 1
+	AND "UPDATED_DATE" IS NOT NULL
+	AND "UPDATED_BY" IS NOT NULL

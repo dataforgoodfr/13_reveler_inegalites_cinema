@@ -1,0 +1,253 @@
+version: 2
+
+models:
+  - name: int_films
+    description: "Table intermédiaire issue de stg_films. Applique les transformations métier sur les diffuseurs (fusion paid/free, normalisation FranceTV) et sur le rang de filmographie des réalisateurs."
+    columns:
+      - name: movie_id
+        description: "Identifiant technique interne du film (généré via ROW_NUMBER)."
+      - name: cnc_visa
+        description: "Visa d'exploitation CNC du film."
+      - name: cnc_name
+        description: "Titre du film selon le CNC."
+      - name: genre
+        description: "Genre principal du film."
+      - name: cnc_agreement_year
+        description: "Année d'agrément CNC du film."
+      - name: budget
+        description: "Budget estimé du film, normalisé et exprimé en euros."
+      - name: director
+        description: "Liste des réalisateurs du film."
+      - name: filmography_rank
+        description: "Rang du film dans la filmographie de chaque réalisateur, catégorisé en '1er film', '2e film', ou '3e film ou plus'."
+      - name: producer
+        description: "Liste des producteurs du film."
+      - name: broadcasters
+        description: "Liste unifiée des diffuseurs (payants et gratuits), avec normalisation des noms (France5 → FranceTV, suppression de FranceÔ)."
+      - name: has_eof
+        description: "Indique si le film bénéficie du dispositif EOF."
+      - name: has_parity_bonus
+        description: "Indique si le film bénéficie du bonus parité."
+      - name: has_asr
+        description: "Indique si le film bénéficie du dispositif ASR."
+      - name: has_sofica
+        description: "Indique si le film bénéficie d'un financement SOFICA."
+      - name: has_tax_credit
+        description: "Indique si le film bénéficie d'un crédit d'impôt."
+      - name: has_regional_funding
+        description: "Indique si le film bénéficie d'aides régionales."
+
+  - name: int_id_matching
+    description: "Table intermédiaire issue de stg_id_matching. Expose les identifiants de correspondance entre plateformes, sans les métadonnées techniques."
+    columns:
+      - name: cnc_visa
+        description: "Identifiant CNC (visa d'exploitation) du film."
+        tests:
+          - unique
+          - not_null
+      - name: cnc_name
+        description: "Titre du film selon le CNC."
+        tests:
+          - unique
+          - not_null
+      - name: allocine_id
+        description: "Identifiant du film sur Allociné."
+        tests:
+          - unique
+          - not_null
+      - name: mubi_id
+        description: "Identifiant du film sur Mubi."
+        tests:
+          - unique
+          - not_null
+      - name: tmdb_id
+        description: "Identifiant du film sur TMDB."
+        tests:
+          - unique
+          - not_null
+
+  - name: int_film_country_budget_allocation
+    description: >
+      Table intermédiaire issue de stg_films. Dénormalise la colonne country_budget_allocation 
+      (array de JSONB) pour obtenir une ligne par couple film × pays. Applique une normalisation 
+      des noms de pays (gestion des abréviations, variantes orthographiques, accents et tirets).
+    columns:
+      - name: id
+        description: "Identifiant unique de l'allocation budgétaire par pays (généré via CONCATENATE de movie_id et country_id)."
+        tests:
+          - not_null
+          - unique
+      - name: movie_id
+        description: "Identifiant technique interne du film (généré via ROW_NUMBER dans stg_films)."
+        tests:
+          - not_null
+      - name: cnc_visa
+        description: "Visa d'exploitation CNC du film."
+        tests:
+          - not_null
+      - name: country_id
+        description: "Identifiant unique par pays, généré via DENSE_RANK() sur le nom de pays normalisé."
+      - name: country_name
+        description: >
+          Nom du pays normalisé : accents rétablis, abréviations développées (ex: Fr → France, 
+          Gb → Grande-Bretagne, All → Allemagne), variantes orthographiques harmonisées. 
+          Les cas non couverts par le CASE WHEN sont traités par INITCAP(UNACCENT()).
+        tests:
+          - not_null
+      - name: budget_allocation
+        description: "Part du budget du film attribuée à ce pays, exprimée en pourcentage (somme = 100 par film)."
+  - name: int_fix_award_nominations
+    description: "Table intermédiaire issue de stg_fix_award_nominations. Expose les corrections manuelles sur les nominations et récompenses, sans les métadonnées techniques. En cas de corrections multiples sur un même id, seule la plus récente (order by updated_date DESC) est conservée."
+    columns:
+      - name: id
+        description: "Identifiant unique de la nomination."
+        tests:
+          - not_null
+          - unique
+      - name: film_id
+        description: "Film concerné par la nomination."
+      - name: credit_holder_id
+        description: "Personne ou entité nommée."
+      - name: award_id
+        description: "Identifiant du prix ou de la récompense."
+      - name: nomination_date
+        description: "Date de la nomination."
+      - name: is_winner
+        description: "Indique si la nomination a été remportée (true/false)."
+
+  - name: int_fix_countries
+    description: "Table intermédiaire issue de stg_fix_countries. Expose les corrections manuelles sur le référentiel pays, sans les métadonnées techniques. En cas de corrections multiples sur un même id, seule la plus récente (order by updated_date DESC) est conservée."
+    columns:
+      - name: id
+        description: "Identifiant unique du pays."
+        tests:
+          - not_null
+          - unique
+      - name: name
+        description: "Nom du pays."
+
+  - name: int_fix_credit_holders
+    description: "Table intermédiaire issue de stg_fix_credit_holders. Expose les corrections manuelles sur les personnes et entités créditées, sans les métadonnées techniques. En cas de corrections multiples sur un même id, seule la plus récente (order by updated_date DESC) est conservée."
+    columns:
+      - name: id
+        description: "Identifiant unique de la personne ou entité."
+        tests:
+          - not_null
+          - unique
+      - name: type
+        description: "Type de crédit (individu, société, etc.)."
+      - name: first_name
+        description: "Prénom de la personne."
+      - name: last_name
+        description: "Nom de famille."
+      - name: legal_name
+        description: "Nom légal ou complet de la personne ou entité."
+      - name: gender
+        description: "Genre de la personne."
+      - name: birthdate
+        description: "Date de naissance."
+
+  - name: int_fix_festival_awards
+    description: "Table intermédiaire issue de stg_fix_festival_awards. Expose les corrections manuelles sur les récompenses de festivals, sans les métadonnées techniques. En cas de corrections multiples sur un même id, seule la plus récente (order by updated_date DESC) est conservée."
+    columns:
+      - name: id
+        description: "Identifiant unique de la récompense."
+        tests:
+          - not_null
+          - unique
+      - name: festival_id
+        description: "Festival associé à la récompense."
+      - name: mubi_label
+        description: "Libellé de la récompense selon Mubi."
+      - name: english_label
+        description: "Libellé de la récompense en anglais."
+      - name: french_label
+        description: "Libellé de la récompense en français."
+
+  - name: int_fix_festivals
+    description: "Table intermédiaire issue de stg_fix_festivals. Expose les corrections manuelles sur les festivals de cinéma, sans les métadonnées techniques. En cas de corrections multiples sur un même id, seule la plus récente (order by updated_date DESC) est conservée."
+    columns:
+      - name: id
+        description: "Identifiant unique du festival."
+        tests:
+          - not_null
+          - unique
+      - name: name
+        description: "Nom du festival."
+      - name: description
+        description: "Description du festival."
+      - name: imagebase64
+        description: "Image ou logo du festival (encodé en base64 ou URL)."
+      - name: country_id
+        description: "Pays d'organisation du festival."
+
+  - name: int_fix_film_country_budget_allocation
+    description: "Table intermédiaire issue de stg_fix_film_country_budget_allocation. Expose les corrections manuelles sur la répartition budgétaire par pays, sans les métadonnées techniques. En cas de corrections multiples sur un même id, seule la plus récente (order by updated_date DESC) est conservée."
+    columns:
+      - name: id
+        description: "Identifiant unique de l'allocation budgétaire par pays."
+        tests:
+          - not_null
+          - unique
+      - name: country_id
+        description: "Identifiant du pays concerné."
+      - name: film_id
+        description: "Identifiant du film associé."
+      - name: budget_allocation
+        description: "Pourcentage ou montant du budget attribué à ce pays pour le film."
+
+  - name: int_fix_film_credits
+    description: "Table intermédiaire issue de stg_fix_film_credits. Expose les corrections manuelles sur les crédits des films, sans les métadonnées techniques. En cas de corrections multiples sur un même id, seule la plus récente (order by updated_date DESC) est conservée."
+    columns:
+      - name: id
+        description: "Identifiant unique du crédit de film."
+        tests:
+          - not_null
+          - unique
+      - name: film_id
+        description: "Identifiant du film concerné."
+      - name: role_id
+        description: "Identifiant du rôle occupé dans le film."
+      - name: credit_holder_id
+        description: "Identifiant de la personne ou entité créditée."
+
+  - name: int_fix_film_genres
+    description: "Table intermédiaire issue de stg_fix_film_genres. Expose les corrections manuelles sur les associations film-genre, sans les métadonnées techniques. En cas de corrections multiples sur un même id, seule la plus récente (order by updated_date DESC) est conservée."
+    columns:
+      - name: id
+        description: "Identifiant unique de la relation film-genre."
+        tests:
+          - not_null
+          - unique
+      - name: film_id
+        description: "Identifiant du film."
+      - name: genre_id
+        description: "Identifiant du genre cinématographique."
+
+  - name: int_fix_genres
+    description: "Table intermédiaire issue de stg_fix_genres. Expose les corrections manuelles sur le référentiel des genres, sans les métadonnées techniques. En cas de corrections multiples sur un même id, seule la plus récente (order by updated_date DESC) est conservée."
+    columns:
+      - name: id
+        description: "Identifiant unique du genre."
+        tests:
+          - not_null
+          - unique
+      - name: name
+        description: "Nom du genre cinématographique."
+
+  - name: int_fix_roles
+    description: "Table intermédiaire issue de stg_fix_roles. Expose les corrections manuelles sur les rôles, sans les métadonnées techniques. En cas de corrections multiples sur un même id, seule la plus récente (order by updated_date DESC) est conservée."
+    columns:
+      - name: id
+        description: "Identifiant unique du rôle."
+        tests:
+          - not_null
+          - unique
+      - name: name
+        description: "Nom du rôle."
+      - name: is_key_role
+        description: "Indique si le rôle est considéré comme un rôle clé dans une production."
+      - name: allocine_name
+        description: "Nom du rôle tel qu'utilisé sur Allociné."
+      - name: inclusive_name
+        description: "Nom inclusif du rôle pour harmonisation des données."
