@@ -2,7 +2,7 @@
   "kind": "source",
   "name": "src_gsheet_fix_film_credits",
   "configuration": {
-    "spreadsheet_id": "",
+    "spreadsheet_id": "https://docs.google.com/spreadsheets/d/1mvKPVrZ3FAHuUB__3akr4Fr7K4MqgTba9bFwNdtL_To/edit?gid=538542575#gid=538542575",
     "credentials": {
       "auth_type": "Service"
     }

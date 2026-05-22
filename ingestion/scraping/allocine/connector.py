@@ -1,18 +1,24 @@
 import asyncio
+import builtins
 import hashlib
 import json
 import os
+import random
 import re
+import time
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from functools import partial
 from typing import Any
 from urllib.parse import quote_plus
 
 from sqlalchemy import bindparam, create_engine, text
 
 from backend.utils.date_utils import parse_duration, parse_release_date
-from database.data.scraping_browser import WebsiteBlockedError
+from ingestion.scraping.browser import WebsiteBlockedError
+
+print = partial(builtins.print, flush=True)
 
 STREAM_NAME = "allocine_data"
 DEFAULT_INPUT_SCHEMA = "raw"
@@ -124,6 +130,46 @@ CONNECTION_SPECIFICATION = {
             "title": "Playwright websocket endpoint",
             "description": "Optional override for PLAYWRIGHT_WS_ENDPOINT.",
         },
+        "headless": {
+            "type": "boolean",
+            "title": "Headless browser",
+            "default": True,
+            "description": "Run the browser in headless mode. Set to false for local visual debugging (requires no ws_endpoint).",
+        },
+        "debug_pause_between_actions": {
+            "type": "boolean",
+            "title": "Pause between actions for debugging",
+            "default": False,
+            "description": "When true, pause for Enter between browser actions. Recommended only with headless=false.",
+        },
+        "parallel_sessions": {
+            "type": "integer",
+            "title": "Parallel browser sessions",
+            "default": 1,
+            "minimum": 1,
+            "maximum": 5,
+            "description": "Number of concurrent browser sessions. Values above 1 disable debug_pause_between_actions.",
+        },
+        "inter_film_delay_min_seconds": {
+            "type": "number",
+            "title": "Minimum delay between films",
+            "default": 2.0,
+            "minimum": 0,
+            "description": "Minimum wait time between two films in the same browser session.",
+        },
+        "inter_film_delay_max_seconds": {
+            "type": "number",
+            "title": "Maximum delay between films",
+            "default": 5.0,
+            "minimum": 0,
+            "description": "Maximum wait time between two films in the same browser session.",
+        },
+        "verbose": {
+            "type": "boolean",
+            "title": "Verbose logging",
+            "default": False,
+            "description": "When true, print detailed step-by-step progress during scraping.",
+        },
     },
 }
 
@@ -183,6 +229,12 @@ class ConnectorConfig:
     completed_statuses: list[str]
     scrape_limit: int | None
     playwright_ws_endpoint: str | None
+    headless: bool
+    debug_pause_between_actions: bool
+    parallel_sessions: int
+    inter_film_delay_min_seconds: float
+    inter_film_delay_max_seconds: float
+    verbose: bool
 
     @classmethod
     def from_dict(cls, raw_config: dict[str, Any]) -> "ConnectorConfig":
@@ -215,7 +267,29 @@ class ConnectorConfig:
             "scrape_limit": _normalize_positive_int(raw_config.get("scrape_limit")),
             "playwright_ws_endpoint": raw_config.get("playwright_ws_endpoint")
             or os.getenv("PLAYWRIGHT_WS_ENDPOINT"),
+            "headless": bool(raw_config.get("headless", True)),
+            "debug_pause_between_actions": bool(
+                raw_config.get("debug_pause_between_actions", False)
+            ),
+            "parallel_sessions": max(1, int(raw_config.get("parallel_sessions", 1) or 1)),
+            "inter_film_delay_min_seconds": _normalize_non_negative_float(
+                raw_config.get("inter_film_delay_min_seconds", 2.0),
+                field_name="inter_film_delay_min_seconds",
+            ),
+            "inter_film_delay_max_seconds": _normalize_non_negative_float(
+                raw_config.get("inter_film_delay_max_seconds", 5.0),
+                field_name="inter_film_delay_max_seconds",
+            ),
+            "verbose": bool(raw_config.get("verbose", False)),
         }
+
+        if (
+            values["inter_film_delay_max_seconds"]
+            < values["inter_film_delay_min_seconds"]
+        ):
+            raise ValueError(
+                "inter_film_delay_max_seconds must be greater than or equal to inter_film_delay_min_seconds"
+            )
 
         for key, value in values.items():
             if (
@@ -286,6 +360,16 @@ def _normalize_positive_int(value: Any) -> int | None:
     return normalized_value
 
 
+def _normalize_non_negative_float(value: Any, *, field_name: str) -> float:
+    try:
+        normalized_value = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{field_name} must be a number") from exc
+    if normalized_value < 0:
+        raise ValueError(f"{field_name} must be greater than or equal to 0")
+    return normalized_value
+
+
 def _normalize_record_id(source_row: dict[str, Any]) -> str | None:
     for key in ("source_record_id", "film_id", "visa_number"):
         value = source_row.get(key)
@@ -296,6 +380,21 @@ def _normalize_record_id(source_row: dict[str, Any]) -> str | None:
     if title:
         return f"{title}:{year}"
     return None
+
+
+def _normalize_visa_for_compare(value: Any) -> str | None:
+    if value in (None, ""):
+        return None
+
+    raw = str(value).strip()
+    if not raw:
+        return None
+
+    if raw in {"-", "--", "n/a", "na", "none", "null"}:
+        return None
+
+    digits_only = re.sub(r"\D", "", raw)
+    return digits_only or None
 
 
 def _hash_record(record: dict[str, Any]) -> str:
@@ -362,46 +461,35 @@ class AllocineAirbyteSource:
 
         scraper, browser_factory = self._load_scraping_dependencies()
         run_id = str(uuid.uuid4())
-        records: list[dict[str, Any]] = []
         total_rows = len(source_rows)
         summary_statuses = ["success", "not_found", "blocked", "error", "visa_mismatch"]
         status_counts = {status: 0 for status in summary_statuses}
 
         print(f"Allocine scraping started: {total_rows} pending rows to process.")
 
-        async with browser_factory(
-            ws_endpoint=config.playwright_ws_endpoint
-        ) as session:
-            for index, source_row in enumerate(source_rows, start=1):
-                record = await self._scrape_one_record(
-                    run_id=run_id,
-                    session=session,
-                    scraper=scraper,
-                    source_row=source_row,
-                )
-                records.append(record)
-                status = record.get("scrape_status") or "error"
-                status_counts[status] = status_counts.get(status, 0) + 1
+        # debug_pause_between_actions requires sequential execution
+        n_sessions = 1 if config.debug_pause_between_actions else config.parallel_sessions
+        chunks = [source_rows[i::n_sessions] for i in range(n_sessions) if source_rows[i::n_sessions]]
 
-                if status != "success":
-                    source_label = record.get("source_record_id") or record.get(
-                        "visa_number"
-                    )
-                    title = record.get("original_name") or "unknown-title"
-                    reason = record.get("error_message") or "no reason provided"
-                    print(
-                        "Allocine scraping issue: "
-                        f"status={status} "
-                        f"source_record_id={source_label} "
-                        f"title={title!r} "
-                        f"reason={reason}"
-                    )
+        chunk_results = await asyncio.gather(*(
+            self._scrape_chunk(
+                run_id=run_id,
+                chunk=chunk,
+                browser_factory=browser_factory,
+                scraper=scraper,
+                config=config,
+                start_delay_s=i * 2.0,
+                session_index=i,
+            )
+            for i, chunk in enumerate(chunks)
+        ))
+        records = [record for chunk_records in chunk_results for record in chunk_records]
 
-                if index % 10 == 0 or index == total_rows:
-                    print(
-                        f"Allocine scraping progress: {index}/{total_rows} rows processed."
-                    )
+        for record in records:
+            status = record.get("scrape_status") or "error"
+            status_counts[status] = status_counts.get(status, 0) + 1
 
+        print(f"Allocine scraping progress: {total_rows}/{total_rows} rows processed.")
         print(
             "Allocine scraping summary: "
             + ", ".join(
@@ -412,9 +500,82 @@ class AllocineAirbyteSource:
 
         return records
 
+    async def _scrape_chunk(
+        self,
+        run_id: str,
+        chunk: list[dict[str, Any]],
+        browser_factory: Any,
+        scraper: Any,
+        config: "ConnectorConfig",
+        start_delay_s: float = 0.0,
+        session_index: int = 0,
+    ) -> list[dict[str, Any]]:
+        """Process a list of rows in a single browser session, with inter-film delays."""
+        records = []
+        if start_delay_s:
+            if config.verbose:
+                print(f"[session {session_index}] Waiting {start_delay_s:.1f}s stagger delay before starting.")
+            await asyncio.sleep(start_delay_s)
+        if config.verbose:
+            print(f"[session {session_index}] Connecting to browser...")
+        async with browser_factory(
+            ws_endpoint=config.playwright_ws_endpoint,
+            headless=config.headless,
+            debug_pause_between_actions=config.debug_pause_between_actions,
+            verbose=config.verbose,
+        ) as session:
+            if config.verbose:
+                print(f"[session {session_index}] Browser ready. Processing {len(chunk)} records.")
+            for index, source_row in enumerate(chunk):
+                if index > 0:
+                    delay = random.uniform(
+                        config.inter_film_delay_min_seconds,
+                        config.inter_film_delay_max_seconds,
+                    )
+                    if config.verbose:
+                        print(f"[session {session_index}] Inter-film delay {delay:.1f}s...")
+                    await asyncio.sleep(delay)
+                label = (
+                    source_row.get("original_name")
+                    or source_row.get("visa_number")
+                    or source_row.get("source_record_id")
+                    or "?"
+                )
+                print(
+                    f"[session {session_index}] Record {index + 1}/{len(chunk)} started: {label!r}"
+                )
+                started_at = time.monotonic()
+                record = await self._scrape_one_record(
+                    run_id=run_id,
+                    session=session,
+                    scraper=scraper,
+                    source_row=source_row,
+                    verbose=config.verbose,
+                )
+                status = record.get("scrape_status", "?")
+                duration_seconds = time.monotonic() - started_at
+                print(
+                    f"[session {session_index}] Record {index + 1}/{len(chunk)} done: {label!r} -> {status} ({duration_seconds:.1f}s)"
+                )
+                if status != "success":
+                    source_label = record.get("source_record_id") or record.get("visa_number")
+                    title = record.get("original_name") or label
+                    reason = record.get("error_message") or "no reason provided"
+                    print(
+                        "Allocine scraping issue: "
+                        f"status={status} "
+                        f"source_record_id={source_label} "
+                        f"title={title!r} "
+                        f"reason={reason}"
+                    )
+                records.append(record)
+        if config.verbose:
+            print(f"[session {session_index}] Browser session closed.")
+        return records
+
     def _load_scraping_dependencies(self):
-        from database.data.allocine.allocine_scraper import AllocineScraper
-        from database.data.scraping_browser import AsyncBrowserSession
+        from ingestion.scraping.allocine.allocine_scraper import AllocineScraper
+        from ingestion.scraping.browser import AsyncBrowserSession
 
         return AllocineScraper(), AsyncBrowserSession
 
@@ -558,6 +719,10 @@ class AllocineAirbyteSource:
             if normalized_id and normalized_id in processed_ids:
                 continue
             pending_rows.append(row)
+
+        # Shuffle pending rows so concurrent runs are less likely to pick the same records.
+        random.shuffle(pending_rows)
+
         if config.scrape_limit is not None:
             return pending_rows[: config.scrape_limit]
         return pending_rows
@@ -678,6 +843,7 @@ class AllocineAirbyteSource:
         session: Any,
         scraper: Any,
         source_row: dict[str, Any],
+        verbose: bool = False,
     ) -> dict[str, Any]:
         extracted_at = _now_iso()
         source_record_id = _normalize_record_id(source_row)
@@ -739,11 +905,15 @@ class AllocineAirbyteSource:
                 search_url = scraper.SEARCH_URL.format(
                     film_title_url_styled=scraper._reformat_str_for_url(search_term)
                 )
+                if verbose:
+                    print(f"  [search] {search_term!r} -> {search_url}")
                 search_html = await session.fetch_html(search_url)
                 search_result = scraper.extract_searched_first_film(search_html)
                 base_record["search_url"] = search_url
 
                 if not search_result:
+                    if verbose:
+                        print(f"  [search] No result found for {search_term!r}")
                     base_record["scrape_status"] = "not_found"
                     base_record["source_url"] = search_url
                     base_record["record_hash"] = _hash_record(base_record)
@@ -751,17 +921,21 @@ class AllocineAirbyteSource:
 
                 allocine_id = search_result["id"]
                 allocine_url = f"{scraper.BASE_URL}{search_result['link']}"
+                if verbose:
+                    print(f"  [search] Found: allocine_id={allocine_id}, title={search_result['title']!r}")
                 base_record["allocine_id"] = allocine_id
                 base_record["allocine_title"] = search_result["title"]
                 base_record["allocine_url"] = allocine_url
                 base_record["source_url"] = allocine_url
 
-            details_html = await session.fetch_html(
-                scraper.FILM_URL.format(allocine_film_id=allocine_id)
-            )
-            casting_html = await session.fetch_html(
-                scraper.FILM_CASTING_URL.format(allocine_film_id=allocine_id)
-            )
+            details_url = scraper.FILM_URL.format(allocine_film_id=allocine_id)
+            casting_url = scraper.FILM_CASTING_URL.format(allocine_film_id=allocine_id)
+            if verbose:
+                print(f"  [details] {details_url}")
+            details_html = await session.fetch_html(details_url)
+            if verbose:
+                print(f"  [casting] {casting_url}")
+            casting_html = await session.fetch_html(casting_url)
             details = scraper.extract_film_details(details_html)
             casting = scraper.extract_film_casting(casting_html)
 
@@ -793,16 +967,12 @@ class AllocineAirbyteSource:
                 }
             )
 
-            row_visa = str(visa_number) if visa_number not in (None, "") else None
-            allocine_visa = (
-                str(allocine_visa_number)
-                if allocine_visa_number not in (None, "")
-                else None
-            )
+            row_visa = _normalize_visa_for_compare(visa_number)
+            allocine_visa = _normalize_visa_for_compare(allocine_visa_number)
             if row_visa and allocine_visa and row_visa != allocine_visa:
                 base_record["scrape_status"] = "visa_mismatch"
                 base_record["error_message"] = (
-                    f"Allocine visa {allocine_visa} differs from source visa {row_visa}."
+                    f"Allocine visa {allocine_visa_number} differs from source visa {visa_number}."
                 )
             else:
                 base_record["scrape_status"] = "success"

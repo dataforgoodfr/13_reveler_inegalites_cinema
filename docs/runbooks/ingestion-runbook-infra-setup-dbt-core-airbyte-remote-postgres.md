@@ -4,7 +4,7 @@
 
 **Responsable:** Joel Teixeira
 
-**Dernière révision:** 2026-05-09
+**Dernière révision:** 2026-05-22
 
 **Statut:** actif
 
@@ -13,6 +13,7 @@
 | #   | Date       | Auteur         | Observations                                            |
 | --- | ---------- | -------------- | ------------------------------------------------------- |
 | 1   | 2026-05-07 | Joel Teixeira  | Initial implementation                                  |
+| 2   | 2026-05-22 | Joel Teixeira | Ajout du pinning de version Prefect et du troubleshooting de revision Alembic inconnue |
 
 ## 1. Objectif
 
@@ -86,10 +87,11 @@ Variables indispensables à renseigner:
 
 1. `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_SSLMODE`
 2. `DBT_USER_POSTGRES_PASSWORD`
-3. `PREFECT_API_DATABASE_CONNECTION_URL`
-4. `AIRBYTE_HOST`, `AIRBYTE_PORT`, `AIRBYTE_CLIENT_ID`, `AIRBYTE_CLIENT_SECRET`
-5. `AIRBYTE_DESTINATION_POSTGRES_PASSWORD`
-6. `PREFECT_PORT` et `BROWSERLESS_PORT` si vous voulez des ports hôtes non défaut
+3. `PREFECT_VERSION`
+4. `PREFECT_API_DATABASE_CONNECTION_URL`
+5. `AIRBYTE_HOST`, `AIRBYTE_PORT`, `AIRBYTE_CLIENT_ID`, `AIRBYTE_CLIENT_SECRET`
+6. `AIRBYTE_DESTINATION_POSTGRES_PASSWORD`
+7. `PREFECT_PORT` et `BROWSERLESS_PORT` si vous voulez des ports hôtes non défaut
 
 Charger les variables dans le shell (optionnel):
 
@@ -139,6 +141,7 @@ GRANT CONNECT ON DATABASE prefect TO prefect_user;
 Exemple `.env`:
 
 ```bash
+PREFECT_VERSION=3.4.24
 PREFECT_API_DATABASE_CONNECTION_URL=postgresql+asyncpg://prefect_user:<replace>@<db-host>:<db-port>/prefect
 ```
 
@@ -159,11 +162,18 @@ abctl local status
 abctl local credentials
 ```
 
+Enregistré dans `.env`:
+
+```bash
+AIRBYTE_CLIENT_ID=...
+AIRBYTE_CLIENT_SECRET=...
+``` 
+avec les valeurs affichées par `abctl local credentials`. 
+
 Préparer le bootstrap versionné:
 
 1. déposer un unique fichier JSON de service account dans `ingestion/airbyte/json_credentials/`
 2. renseigner les `spreadsheet_id` dans `ingestion/airbyte/sources/*.json`
-3. vérifier les variables Airbyte/Postgres dans `.env`
 
 Appliquer le bootstrap:
 
@@ -244,7 +254,7 @@ Avec sync Airbyte explicite:
 ```bash
 docker compose exec prefect-worker python3 /app/ingestion/prefect/flows.py main-ingestion \
   --run-airbyte-sync \
-  --airbyte-connection-name "src_gsheet_agreement_cnc -> dst_pg_raw"
+  --airbyte-connection-name "src_gsheet_films -> dst_pg_raw"
 ```
 
 ## 7. FAQ
@@ -268,14 +278,6 @@ docker compose up -d
 ### 7.2 Airbyte ne démarre pas (port déjà pris)
 
 Choisir un autre port dans `.env` (ex: `AIRBYTE_PORT=8001`) puis relancer `abctl local install`.
-
-### 7.3 Prefect ne se connecte pas à sa base
-
-Vérifier:
-
-1. `PREFECT_API_DATABASE_CONNECTION_URL`
-2. existence de la base `prefect`
-3. droits de `prefect_user`
 
 ## 8. Références
 

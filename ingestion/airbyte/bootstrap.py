@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 from urllib import parse
 
+
 from ingestion.airbyte.client import (
     ensure_workspace_id,
     find_by_name,
@@ -22,7 +23,12 @@ from ingestion.airbyte.client import (
     request_json,
 )
 
-ROOT_DIR = Path(__file__).resolve().parents[2]
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+ROOT_DIR = REPO_ROOT
 INGESTION_DIR = ROOT_DIR / "ingestion"
 AIRBYTE_DIR = INGESTION_DIR / "airbyte"
 DEFAULT_ENV_PATH = INGESTION_DIR / ".env"
@@ -470,6 +476,21 @@ def iter_source_manifests(paths: list[str]) -> list[Path]:
     return result
 
 
+def should_skip_source_manifest(manifest_path: Path) -> bool:
+    manifest = resolve_env_placeholders(json_load(manifest_path))
+    configuration = manifest.get("configuration")
+    if not isinstance(configuration, dict):
+        raise RuntimeError(
+            f"Manifest {manifest_path} is missing required object field: configuration"
+        )
+
+    spreadsheet_id = configuration.get("spreadsheet_id")
+    if not spreadsheet_id:
+        return True
+
+    return str(spreadsheet_id).startswith("REPLACE_WITH_")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Bootstrap Airbyte sources, Postgres destination and connections from versioned manifests."
@@ -529,6 +550,12 @@ def main() -> int:
 
     destination = ensure_destination(api_base_url, token, dry_run=args.dry_run)
     for manifest_path in manifests:
+        if should_skip_source_manifest(manifest_path.resolve()):
+            print(
+                f"[source:skip] {manifest_path.resolve()} missing configuration.spreadsheet_id"
+            )
+            continue
+
         source = ensure_source(
             api_base_url,
             token,

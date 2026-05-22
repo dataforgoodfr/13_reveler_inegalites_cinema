@@ -4,7 +4,7 @@
   "postgres_db": "${POSTGRES_DB}",
   "postgres_user": "dbt_user",
   "postgres_password": "${DBT_USER_POSTGRES_PASSWORD}",
-  "postgres_sslmode": "disable",
+  "postgres_sslmode": "${POSTGRES_SSLMODE:-disable}",
   "input_schema": "raw",
   "input_table": "id_matching",
   "output_schema": "raw",
@@ -16,11 +16,11 @@
   "input_allocine_id_column": "ID_ALLOCINE",
   "input_allocine_url_column": null,
   "completed_statuses": ["success", "not_found", "visa_mismatch"],
-  "scrape_limit": 10,
-  "playwright_ws_endpoint": "${PLAYWRIGHT_WS_ENDPOINT:-ws://browserless:3000}",
+  "scrape_limit": 20,
+  "playwright_ws_endpoint": null,
+  "headless": false,
+  "debug_pause_between_actions": false,
   "parallel_sessions": 1,
   "inter_film_delay_min_seconds": 1.5,
-  "inter_film_delay_max_seconds": 4.0,
-  "headless": true,
-  "verbose": false
+  "inter_film_delay_max_seconds": 4.0
 }
