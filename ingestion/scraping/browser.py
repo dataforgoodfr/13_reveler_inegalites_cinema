@@ -3,6 +3,7 @@ import json
 import random
 import time
 from os import getenv
+from socket import gaierror
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 from urllib.request import urlopen
 
@@ -156,12 +157,46 @@ class AsyncBrowserSession:
             )
         return _merge_query_params(ws_url, browserless_params)
 
+    async def _connect_over_cdp_with_retries(self, cdp_endpoint: str):
+        # Docker DNS resolution can intermittently fail during startup (EAI_AGAIN).
+        # Retry a few times with backoff before giving up.
+        retries = 6
+        base_delay_seconds = 1.5
+
+        for attempt in range(1, retries + 1):
+            try:
+                return await self.playwright.chromium.connect_over_cdp(cdp_endpoint)
+            except Exception as exc:
+                error_text = str(exc).lower()
+                is_transient_network_error = any(
+                    marker in error_text
+                    for marker in (
+                        "eai_again",
+                        "getaddrinfo",
+                        "name or service not known",
+                        "connection refused",
+                        "econnrefused",
+                    )
+                ) or isinstance(exc, gaierror)
+
+                if attempt == retries or not is_transient_network_error:
+                    raise
+
+                delay_seconds = base_delay_seconds * attempt
+                if self.verbose:
+                    print(
+                        "  [browser] CDP connection failed "
+                        f"(attempt {attempt}/{retries}): {exc}. "
+                        f"Retrying in {delay_seconds:.1f}s..."
+                    )
+                await asyncio.sleep(delay_seconds)
+
     async def __aenter__(self):
         """Setup browser session with anti-bot scripts and open a new page."""
         self.playwright = await async_playwright().start()
 
         if self.ws_endpoint:
-            self.browser = await self.playwright.chromium.connect_over_cdp(
+            self.browser = await self._connect_over_cdp_with_retries(
                 self._resolve_cdp_endpoint()
             )
         else:
@@ -275,26 +310,26 @@ class AsyncBrowserSession:
             await self._debug_pause(f"Page loaded: {url}")
 
             if self.verbose:
-                print(f"  [browser] Initial delay...")
+                print("  [browser] Initial delay...")
             await self.page.wait_for_timeout(_human_like_delay_ms())
             await self._debug_pause("After initial delay")
             if self.verbose:
-                print(f"  [browser] Dismissing consent overlay (1/2)...")
+                print("  [browser] Dismissing consent overlay (1/2)...")
             await self._dismiss_allocine_fullscreen_if_present(url)
             await self._debug_pause("Before scroll")
             if self.verbose:
-                print(f"  [browser] Scrolling...")
+                print("  [browser] Scrolling...")
             await self.page.mouse.wheel(0, _human_like_scroll_y())
             await self._debug_pause("After scroll")
             if self.verbose:
-                print(f"  [browser] Dismissing consent overlay (2/2)...")
+                print("  [browser] Dismissing consent overlay (2/2)...")
             await self._dismiss_allocine_fullscreen_if_present(url)
             if self.verbose:
-                print(f"  [browser] Final delay...")
+                print("  [browser] Final delay...")
             await self.page.wait_for_timeout(_human_like_delay_ms())
             await self._debug_pause("Before reading page content")
             if self.verbose:
-                print(f"  [browser] Reading page content...")
+                print("  [browser] Reading page content...")
             html = await self.page.content()
             await self._debug_pause("After reading page content")
             lowered_html = html.lower()
