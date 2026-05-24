@@ -59,6 +59,7 @@ services:
 
   browserless:
     image: browserless/chrome:latest
+    restart: unless-stopped
     cpus: ${BROWSERLESS_CPUS:-4.00}
     mem_limit: ${BROWSERLESS_MEM_LIMIT:-4g}
     mem_reservation: ${BROWSERLESS_MEM_RESERVATION:-2g}

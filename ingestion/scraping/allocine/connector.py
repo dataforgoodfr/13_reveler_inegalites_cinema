@@ -516,16 +516,35 @@ class AllocineAirbyteSource:
             if config.verbose:
                 print(f"[session {session_index}] Waiting {start_delay_s:.1f}s stagger delay before starting.")
             await asyncio.sleep(start_delay_s)
-        if config.verbose:
-            print(f"[session {session_index}] Connecting to browser...")
-        async with browser_factory(
-            ws_endpoint=config.playwright_ws_endpoint,
-            headless=config.headless,
-            debug_pause_between_actions=config.debug_pause_between_actions,
-            verbose=config.verbose,
-        ) as session:
+        session_cm = None
+        session = None
+
+        async def _open_session() -> None:
+            nonlocal session_cm, session
+            if config.verbose:
+                print(f"[session {session_index}] Connecting to browser...")
+            session_cm = browser_factory(
+                ws_endpoint=config.playwright_ws_endpoint,
+                headless=config.headless,
+                debug_pause_between_actions=config.debug_pause_between_actions,
+                verbose=config.verbose,
+            )
+            session = await session_cm.__aenter__()
             if config.verbose:
                 print(f"[session {session_index}] Browser ready. Processing {len(chunk)} records.")
+
+        async def _close_session() -> None:
+            nonlocal session_cm, session
+            if session_cm is None:
+                return
+            try:
+                await session_cm.__aexit__(None, None, None)
+            finally:
+                session_cm = None
+                session = None
+
+        await _open_session()
+        try:
             for index, source_row in enumerate(chunk):
                 if index > 0:
                     delay = random.uniform(
@@ -535,6 +554,7 @@ class AllocineAirbyteSource:
                     if config.verbose:
                         print(f"[session {session_index}] Inter-film delay {delay:.1f}s...")
                     await asyncio.sleep(delay)
+
                 label = (
                     source_row.get("original_name")
                     or source_row.get("visa_number")
@@ -568,9 +588,21 @@ class AllocineAirbyteSource:
                         f"title={title!r} "
                         f"reason={reason}"
                     )
+                    if (
+                        status == "error"
+                        and isinstance(reason, str)
+                        and "browser connection lost" in reason.lower()
+                        and index < len(chunk) - 1
+                    ):
+                        if config.verbose:
+                            print(f"[session {session_index}] Browser dropped; restarting session for remaining records.")
+                        await _close_session()
+                        await _open_session()
                 records.append(record)
-        if config.verbose:
-            print(f"[session {session_index}] Browser session closed.")
+        finally:
+            await _close_session()
+            if config.verbose:
+                print(f"[session {session_index}] Browser session closed.")
         return records
 
     def _load_scraping_dependencies(self):
