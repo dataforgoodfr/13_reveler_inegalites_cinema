@@ -26,6 +26,7 @@ DEFAULT_INPUT_TABLE = "id_matching"
 DEFAULT_OUTPUT_SCHEMA = "raw"
 DEFAULT_OUTPUT_TABLE = STREAM_NAME
 DEFAULT_COMPLETED_STATUSES = ["success", "not_found", "visa_mismatch"]
+DEFAULT_RECORD_TIMEOUT_SECONDS = 180.0
 IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
@@ -124,6 +125,13 @@ CONNECTION_SPECIFICATION = {
             "title": "Maximum number of pending items to scrape",
             "minimum": 1,
             "description": "Optional debug limit applied after filtering already processed records.",
+        },
+        "record_timeout_seconds": {
+            "type": "number",
+            "title": "Per-record scrape timeout",
+            "default": DEFAULT_RECORD_TIMEOUT_SECONDS,
+            "minimum": 0,
+            "description": "Timeout in seconds for scraping one record. Set to 0 to disable the timeout.",
         },
         "playwright_ws_endpoint": {
             "type": "string",
@@ -228,6 +236,7 @@ class ConnectorConfig:
     input_allocine_url_column: str | None
     completed_statuses: list[str]
     scrape_limit: int | None
+    record_timeout_seconds: float
     playwright_ws_endpoint: str | None
     headless: bool
     debug_pause_between_actions: bool
@@ -265,6 +274,10 @@ class ConnectorConfig:
                 str(status).lower() for status in completed_statuses
             ],
             "scrape_limit": _normalize_positive_int(raw_config.get("scrape_limit")),
+            "record_timeout_seconds": _normalize_non_negative_float(
+                raw_config.get("record_timeout_seconds", DEFAULT_RECORD_TIMEOUT_SECONDS),
+                field_name="record_timeout_seconds",
+            ),
             "playwright_ws_endpoint": raw_config.get("playwright_ws_endpoint")
             or os.getenv("PLAYWRIGHT_WS_ENDPOINT"),
             "headless": bool(raw_config.get("headless", True)),
@@ -573,13 +586,28 @@ class AllocineAirbyteSource:
                 max_attempts = 2
                 while True:
                     started_at = time.monotonic()
-                    record = await self._scrape_one_record(
-                        run_id=run_id,
-                        session=session,
-                        scraper=scraper,
-                        source_row=source_row,
-                        verbose=config.verbose,
-                    )
+                    try:
+                        scrape_task = self._scrape_one_record(
+                            run_id=run_id,
+                            session=session,
+                            scraper=scraper,
+                            source_row=source_row,
+                            verbose=config.verbose,
+                        )
+                        if config.record_timeout_seconds > 0:
+                            record = await asyncio.wait_for(
+                                scrape_task,
+                                timeout=config.record_timeout_seconds,
+                            )
+                        else:
+                            record = await scrape_task
+                    except asyncio.TimeoutError:
+                        record = self._build_timeout_error_record(
+                            run_id=run_id,
+                            source_row=source_row,
+                            timeout_seconds=config.record_timeout_seconds,
+                        )
+
                     status = record.get("scrape_status", "?")
                     duration_seconds = time.monotonic() - started_at
                     print(
@@ -602,7 +630,10 @@ class AllocineAirbyteSource:
                     normalized_reason = reason.lower() if isinstance(reason, str) else ""
                     browser_unstable = (
                         status == "error"
-                        and any(marker in normalized_reason for marker in browser_instability_markers)
+                        and (
+                            "timed out" in normalized_reason
+                            or any(marker in normalized_reason for marker in browser_instability_markers)
+                        )
                     )
                     if browser_unstable and attempt < max_attempts:
                         attempt += 1
@@ -628,6 +659,51 @@ class AllocineAirbyteSource:
             if config.verbose:
                 print(f"[session {session_index}] Browser session closed.")
         return records
+
+    def _build_timeout_error_record(
+        self,
+        run_id: str,
+        source_row: dict[str, Any],
+        timeout_seconds: float,
+    ) -> dict[str, Any]:
+        source_record_id = _normalize_record_id(source_row)
+        visa_number = source_row.get("visa_number")
+        original_name = source_row.get("original_name")
+        record = {
+            "run_id": run_id,
+            "extracted_at": _now_iso(),
+            "source_record_id": source_record_id,
+            "visa_number": str(visa_number) if visa_number not in (None, "") else None,
+            "original_name": (
+                str(original_name) if original_name not in (None, "") else None
+            ),
+            "cnc_agrement_year": _normalize_int(source_row.get("cnc_agrement_year")),
+            "match_strategy": "search",
+            "search_url": None,
+            "source_url": None,
+            "allocine_id": _normalize_int(source_row.get("allocine_id")),
+            "allocine_title": None,
+            "allocine_url": source_row.get("allocine_url"),
+            "allocine_visa_number": None,
+            "release_date_raw": None,
+            "release_date": None,
+            "duration_raw": None,
+            "duration_minutes": None,
+            "genres": None,
+            "trailer_url": None,
+            "direction": None,
+            "casting": None,
+            "screenwriters": None,
+            "production": None,
+            "technical_team": None,
+            "soundtrack": None,
+            "distribution": None,
+            "companies": None,
+            "scrape_status": "error",
+            "error_message": f"Record timed out after {timeout_seconds:.0f}s while scraping Allocine.",
+        }
+        record["record_hash"] = _hash_record(record)
+        return record
 
     def _load_scraping_dependencies(self):
         from ingestion.scraping.allocine.allocine_scraper import AllocineScraper

@@ -31,7 +31,7 @@ prefect deploy "${FLOWS_FILE}:main_ingestion_flow" \
 prefect deploy "${FLOWS_FILE}:run_allocine_scraping" \
 	--name "lancer-scraping-allocine" \
 	--description "Execution manuelle du scraping Allocine seul avec configuration parametrable." \
-	--concurrency-limit 2 \
+	--concurrency-limit 1 \
 	--interval 600 \
 	--pool "${POOL_NAME}" >/tmp/prefect-deploy-allocine.log 2>&1 || {
 	cat /tmp/prefect-deploy-allocine.log
