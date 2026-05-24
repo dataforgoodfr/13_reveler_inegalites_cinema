@@ -545,6 +545,11 @@ class AllocineAirbyteSource:
 
         await _open_session()
         try:
+            browser_instability_markers = (
+                "browser connection lost",
+                "page crashed",
+                "target page, context or browser has been closed",
+            )
             for index, source_row in enumerate(chunk):
                 if index > 0:
                     delay = random.uniform(
@@ -564,20 +569,25 @@ class AllocineAirbyteSource:
                 print(
                     f"[session {session_index}] Record {index + 1}/{len(chunk)} started: {label!r}"
                 )
-                started_at = time.monotonic()
-                record = await self._scrape_one_record(
-                    run_id=run_id,
-                    session=session,
-                    scraper=scraper,
-                    source_row=source_row,
-                    verbose=config.verbose,
-                )
-                status = record.get("scrape_status", "?")
-                duration_seconds = time.monotonic() - started_at
-                print(
-                    f"[session {session_index}] Record {index + 1}/{len(chunk)} done: {label!r} -> {status} ({duration_seconds:.1f}s)"
-                )
-                if status != "success":
+                attempt = 1
+                max_attempts = 2
+                while True:
+                    started_at = time.monotonic()
+                    record = await self._scrape_one_record(
+                        run_id=run_id,
+                        session=session,
+                        scraper=scraper,
+                        source_row=source_row,
+                        verbose=config.verbose,
+                    )
+                    status = record.get("scrape_status", "?")
+                    duration_seconds = time.monotonic() - started_at
+                    print(
+                        f"[session {session_index}] Record {index + 1}/{len(chunk)} done: {label!r} -> {status} ({duration_seconds:.1f}s)"
+                    )
+                    if status == "success":
+                        break
+
                     source_label = record.get("source_record_id") or record.get("visa_number")
                     title = record.get("original_name") or label
                     reason = record.get("error_message") or "no reason provided"
@@ -588,26 +598,30 @@ class AllocineAirbyteSource:
                         f"title={title!r} "
                         f"reason={reason}"
                     )
+
                     normalized_reason = reason.lower() if isinstance(reason, str) else ""
-                    should_restart_session = (
+                    browser_unstable = (
                         status == "error"
-                        and index < len(chunk) - 1
-                        and any(
-                            marker in normalized_reason
-                            for marker in (
-                                "browser connection lost",
-                                "page crashed",
-                                "target page, context or browser has been closed",
-                            )
-                        )
+                        and any(marker in normalized_reason for marker in browser_instability_markers)
                     )
-                    if should_restart_session:
+                    if browser_unstable and attempt < max_attempts:
+                        attempt += 1
+                        if config.verbose:
+                            print(
+                                f"[session {session_index}] Browser became unstable; restarting session and retrying record {index + 1}/{len(chunk)} (attempt {attempt}/{max_attempts})."
+                            )
+                        await _close_session()
+                        await _open_session()
+                        continue
+
+                    if browser_unstable and index < len(chunk) - 1:
                         if config.verbose:
                             print(
                                 f"[session {session_index}] Browser became unstable; restarting session for remaining records."
                             )
                         await _close_session()
                         await _open_session()
+                    break
                 records.append(record)
         finally:
             await _close_session()
