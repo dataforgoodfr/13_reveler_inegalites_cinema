@@ -588,14 +588,24 @@ class AllocineAirbyteSource:
                         f"title={title!r} "
                         f"reason={reason}"
                     )
-                    if (
+                    normalized_reason = reason.lower() if isinstance(reason, str) else ""
+                    should_restart_session = (
                         status == "error"
-                        and isinstance(reason, str)
-                        and "browser connection lost" in reason.lower()
                         and index < len(chunk) - 1
-                    ):
+                        and any(
+                            marker in normalized_reason
+                            for marker in (
+                                "browser connection lost",
+                                "page crashed",
+                                "target page, context or browser has been closed",
+                            )
+                        )
+                    )
+                    if should_restart_session:
                         if config.verbose:
-                            print(f"[session {session_index}] Browser dropped; restarting session for remaining records.")
+                            print(
+                                f"[session {session_index}] Browser became unstable; restarting session for remaining records."
+                            )
                         await _close_session()
                         await _open_session()
                 records.append(record)
