@@ -160,8 +160,8 @@ class AsyncBrowserSession:
     async def _connect_over_cdp_with_retries(self, cdp_endpoint: str):
         # Docker DNS resolution can intermittently fail during startup (EAI_AGAIN).
         # Retry a few times with backoff before giving up.
-        retries = 6
-        base_delay_seconds = 1.5
+        retries = 10
+        base_delay_seconds = 1.0
 
         for attempt in range(1, retries + 1):
             try:
@@ -182,7 +182,7 @@ class AsyncBrowserSession:
                 if attempt == retries or not is_transient_network_error:
                     raise
 
-                delay_seconds = base_delay_seconds * attempt
+                delay_seconds = min(base_delay_seconds * (2 ** (attempt - 1)), 20.0)
                 if self.verbose:
                     print(
                         "  [browser] CDP connection failed "
