@@ -10,6 +10,7 @@ from urllib.request import urlopen
 from playwright.async_api import async_playwright
 
 CHROMIUM_WS_ENDPOINT = getenv("PLAYWRIGHT_WS_ENDPOINT")
+CDP_CONNECT_TIMEOUT_MS = 15000
 
 DEFAULT_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -159,13 +160,17 @@ class AsyncBrowserSession:
 
     async def _connect_over_cdp_with_retries(self, cdp_endpoint: str):
         # Docker DNS resolution can intermittently fail during startup (EAI_AGAIN).
+        # Browserless can also accept the socket and then hang during CDP setup.
         # Retry a few times with backoff before giving up.
         retries = 10
         base_delay_seconds = 1.0
 
         for attempt in range(1, retries + 1):
             try:
-                return await self.playwright.chromium.connect_over_cdp(cdp_endpoint)
+                return await self.playwright.chromium.connect_over_cdp(
+                    cdp_endpoint,
+                    timeout=CDP_CONNECT_TIMEOUT_MS,
+                )
             except Exception as exc:
                 error_text = str(exc).lower()
                 is_transient_network_error = any(
@@ -176,6 +181,8 @@ class AsyncBrowserSession:
                         "name or service not known",
                         "connection refused",
                         "econnrefused",
+                        "timed out",
+                        "timeout",
                     )
                 ) or isinstance(exc, gaierror)
 
