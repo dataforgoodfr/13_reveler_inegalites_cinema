@@ -19,6 +19,9 @@ delete_deployment_if_exists "Preparer les donnees/preparer-les-donnees"
 delete_deployment_if_exists "Recuperer les donnees Allocine/recuperer-les-donnees-allocine"
 delete_deployment_if_exists "Finaliser les donnees/finaliser-les-donnees"
 delete_deployment_if_exists "Recuperer les donnees Allocine/lancer-scraping-allocine"
+delete_deployment_if_exists "Traiter les demandes d'ingestion/traiter-les-demandes-d-ingestion"
+delete_deployment_if_exists "Traiter les demandes d'ingestion/traiter-les-demandes-ingestion"
+delete_deployment_if_exists "Requeue les demandes d'ingestion stale/requeue-les-demandes-d-ingestion-stale"
 
 prefect deploy "${FLOWS_FILE}:main_ingestion_flow" \
 	--name "lancer-ingestion-donnees" \
@@ -35,6 +38,16 @@ prefect deploy "${FLOWS_FILE}:run_allocine_scraping" \
 	--interval 900 \
 	--pool "${POOL_NAME}" >/tmp/prefect-deploy-allocine.log 2>&1 || {
 	cat /tmp/prefect-deploy-allocine.log
+	exit 1
+}
+
+prefect deploy "${FLOWS_FILE}:dispatch_ingestion_requests" \
+	--name "traiter-les-demandes-ingestion" \
+	--description "Poll les demandes Metabase dans ops.ingestion_run_requests, claim une ligne et declenche le deployment principal." \
+	--concurrency-limit 1 \
+	--interval "${INGESTION_REQUEST_POLL_INTERVAL_SECONDS:-30}" \
+	--pool "${POOL_NAME}" >/tmp/prefect-deploy-dispatch.log 2>&1 || {
+	cat /tmp/prefect-deploy-dispatch.log
 	exit 1
 }
 

@@ -96,8 +96,8 @@ models:
           - not_null
       - name: budget_allocation
         description: "Part du budget du film attribuée à ce pays, exprimée en pourcentage (somme = 100 par film)."
-  - name: int_fix_award_nominations
-    description: "Table intermédiaire issue de stg_fix_award_nominations. Expose les corrections manuelles sur les nominations et récompenses, sans les métadonnées techniques. En cas de corrections multiples sur un même id, seule la plus récente (order by updated_date DESC) est conservée."
+  - name: int_fix_award_nomination
+    description: "Table intermédiaire issue de stg_fix_award_nomination. Expose les corrections manuelles sur les nominations et récompenses, sans les métadonnées techniques. En cas de corrections multiples sur un même id, seule la plus récente (order by updated_date DESC) est conservée."
     columns:
       - name: id
         description: "Identifiant unique de la nomination."

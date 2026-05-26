@@ -24,3 +24,6 @@ models:
     fnl:
       +materialized: table
       +schema: fnl
+    ops:
+      +materialized: view
+      +schema: ops

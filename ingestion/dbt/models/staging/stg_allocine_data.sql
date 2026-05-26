@@ -32,8 +32,9 @@ SELECT
 	run_id AS run_id, 
 	CAST(extracted_at AS TIMESTAMP) AS extracted_ts,
 	CAST(source_record_id AS INTEGER) AS source_record_id, 
-	match_strategy AS match_strategy, 
-	scrape_status AS scrapping_status, 
-	error_hash AS record_hash
+	match_strategy AS match_strategy,
+	scrape_status AS scrapping_status,
+	error_message AS error_message,
+	record_hash AS record_hash
 FROM {{ source('raw', 'allocine_data') }}
 WHERE source_record_id IS NOT NULL

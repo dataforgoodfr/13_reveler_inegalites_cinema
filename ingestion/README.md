@@ -4,7 +4,7 @@
 
 **Responsable:** Joel Teixeira
 
-**Dernière révision:** 2026-05-22
+**Dernière révision:** 2026-05-26
 
 **Statut:** actif
 
@@ -15,6 +15,7 @@
 | 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
 | 2   | 2026-05-21 | Joel Teixeira | Ajout du deployment Prefect dédié au scraping Allociné. Planification automatique du scraping Allociné toutes les 10 minutes |
 | 3   | 2026-05-22 | Joel Teixeira | Alignement version Prefect server/worker et ajout du troubleshooting de migration Prefect. Ajout de l'authentification basic sur l'UI et l'API Prefect. Le CLI de scraping Allociné charge automatiquement `ingestion/.env` avant de résoudre les placeholders JSON |
+| 4   | 2026-05-26 | Joel Teixeira | Ajout du polling de file `ops.ingestion_run_requests` directement dans Prefect, du monitoring `ops.v_allocine_pipeline_status` et du wiring Docker Compose associé |
 
 Ce dossier regroupe les assets d'ingestion et de transformation de données, séparés du code applicatif principal.
 
@@ -29,6 +30,7 @@ Strategie retenue:
 3. `dbt` transforme les tables brutes et les sorties de scraping, puis publie les tables finales prévues par `schema1`.
 4. `scraping/allocine/` exécute le scraping Allociné et écrit les données enrichies dans `raw.allocine_data`.
 5. `Prefect` orchestre les syncs Airbyte via API, puis les étapes `dbt` et `scraping allocine`.
+6. `Prefect` poll aussi la file `ops.ingestion_run_requests` dans la base projet, claim une requête à la fois et déclenche le deployment Prefect principal.
 
 Pour les configs locales de debug, le CLI de scraping charge automatiquement `ingestion/.env` avant de résoudre les placeholders JSON de type `${...}`.
 
@@ -39,7 +41,7 @@ Ce que cela implique:
 3. le Google Sheet `Modification data` n'est pas un flux unique: il faut un sync Airbyte distinct par onglet / table métier;
 4. `dbt` ne scrape rien: il transforme seulement les tables d'entrée;
 5. `Prefect` devient le point d'entrée opérationnel du flux complet, y compris pour déclencher les syncs Airbyte via API.
-6. le runtime Prefect est désormais structuré autour d'un flow principal unique et de sous-flows par étape pour garder une visibilité séparée dans l'UI;
+6. le runtime Prefect expose un flow principal unique, un flow de scraping seul et un poller de demandes Metabase;
 7. côté exécution réelle, `dbt phase 1` et `scraping Allociné` sont finalisés;
 8. `airbyte sync` est maintenant exécutable dans Prefect à partir de noms de connexions explicites;
 9. `dbt phase 2` est modélisé et exécutable lorsqu'il est explicitement activé.
@@ -48,7 +50,7 @@ Modèles implémentés:
 
 1. `stg_films`: normalisation et typage de `raw.films`.
 2. `stg_allocine_data`: normalisation de `raw.allocine_data`.
-3. `int_films_latest_by_visa`: derniere ligne Films par `visa_number`.
+3. `int_films_latest_by_visa`: derniere ligne Films par `cnc_visa`.
 4. `int_allocine_data_latest_by_source_record`: dernière version Allociné par enregistrement source.
 
 Découpage d'exécution:
@@ -71,6 +73,7 @@ Point important:
 2. `dbt/`: transformations SQL, staging, intermediate et futures tables finales `fnl_*` dans `fnl`.
 3. `scraping/allocine/`: job standalone de scraping/enrichissement Allociné.
 4. `prefect/`: orchestration du pipeline d'ingestion.
+5. `ops/`: schéma PostgreSQL dédié au monitoring Allociné et à la file de déclenchement ingestion.
 
 ## Bootstrap Airbyte
 
@@ -106,8 +109,19 @@ Variables d'environnement Prefect désormais attendues dans `.env`:
 1. `PREFECT_VERSION`
 2. `PREFECT_API_DATABASE_CONNECTION_URL`
 3. `PREFECT_PORT`
-4. `PREFECT_SERVER_API_AUTH_STRING`
-5. `PREFECT_API_AUTH_STRING`
+4. `PREFECT_AUTH_STRING`
+
+Variables d'environnement du poller de demandes ingestion désormais attendues dans `.env`:
+
+1. `INGESTION_REQUEST_POSTGRES_USER` ou, par défaut, `prefect_user`
+2. `INGESTION_REQUEST_POSTGRES_PASSWORD`
+3. `INGESTION_REQUEST_MAIN_DEPLOYMENT_NAME`
+4. `INGESTION_REQUEST_POLL_INTERVAL_SECONDS`
+5. `INGESTION_REQUEST_CLAIM_TIMEOUT_SECONDS`
+6. `INGESTION_REQUEST_AUTO_INIT_QUEUE_SCHEMA`
+7. `INGESTION_REQUEST_RUN_AIRBYTE_SYNC_STEP`
+8. `INGESTION_REQUEST_RUN_DBT_PHASE_2_STEP`
+9. `INGESTION_REQUEST_AIRBYTE_CONNECTION_NAMES`
 
 
 Commandes utiles depuis `ingestion/`:
@@ -163,7 +177,7 @@ Le module `ingestion/` est maintenant dockerisable côté repo.
 Services fournis dans [docker-compose.yml](/root/explore/13_reveler_inegalites_cinema/ingestion/docker-compose.yml:1):
 
 1. stack coeur démarrée par `docker compose up`: `prefect-server`, `prefect-worker`, `browserless`
-2. `prefect-worker` embarque par défaut `dbt` et le runtime du scraping Allociné
+2. `prefect-worker` embarque par défaut `dbt`, le runtime du scraping Allociné et le poller des demandes d'ingestion
 
 Limitation de ressources locale:
 
@@ -190,14 +204,13 @@ Elle utilise:
 2. `prefect-worker`: exécution des flows.
 3. une database distante dédiée `prefect` sur le serveur PostgreSQL existant.
 4. `dbt` et le scraping Allociné directement dans `prefect-worker`.
-5. deux deployments Prefect utilisateur sont publiés automatiquement au démarrage du worker.
+5. trois deployments Prefect utilisateur sont publiés automatiquement au démarrage du worker.
 6. les services internes Prefect (scheduler/runner) sont activés pour permettre la création des runs planifiés.
 
 Services:
 
 1. `prefect-server`
 2. `prefect-worker`
-
 UI locale:
 
 1. dashboard Prefect: `http://localhost:$PREFECT_PORT`
@@ -208,7 +221,7 @@ Valeur par défaut dans `.env.example`: `PREFECT_PORT=4222`.
 Important:
 
 1. `prefect-server` et `prefect-worker` doivent utiliser la meme valeur `PREFECT_VERSION`;
-2. `prefect-server` doit recevoir `PREFECT_SERVER_API_AUTH_STRING` et `prefect-worker` doit recevoir `PREFECT_API_AUTH_STRING` avec la meme valeur;
+2. `prefect-server` et `prefect-worker` doivent partager la meme valeur `PREFECT_AUTH_STRING`;
 3. les deux services Prefect sont construits depuis la meme image locale `ric-prefect:${PREFECT_VERSION}` pour eviter les ecarts entre tag Docker publie et version Python installee;
 4. si la base `prefect` a deja ete initialisee par une autre ligne de versions Prefect, le serveur peut echouer au demarrage avec `Can't locate revision identified by '...'`;
 5. dans ce cas, utiliser une base Prefect dediee neuve pour ce stack, ou realigner `PREFECT_VERSION` sur la version exacte qui a cree cette base.
@@ -220,14 +233,16 @@ Mode opératoire recommandé:
 3. attendre la publication automatique des deployments par `prefect-worker`;
 4. déclencher manuellement `lancer-ingestion-donnees` selon besoin; `lancer-scraping-allocine` s'exécute automatiquement toutes les 10 minutes.
 
-Le point d'entrée versionné est [flows.py](/root/explore/13_reveler_inegalites_cinema/ingestion/prefect/flows.py:1). Il expose maintenant deux flows utilisables directement depuis l'UI Prefect:
+Le point d'entrée versionné est [flows.py](/root/explore/13_reveler_inegalites_cinema/ingestion/prefect/flows.py:1). Il expose maintenant plusieurs flows utilisables directement depuis l'UI Prefect:
 
 1. `Lancer l'ingestion complete`: chaîne `airbyte sync -> dbt phase 1 -> scraping -> dbt phase 2`.
    Description: orchestration complète du pipeline avec étapes optionnelles activables au lancement.
 2. `Recuperer les donnees Allocine`: exécution du scraping Allociné seul.
    Description: lance uniquement le scraping avec le fichier de configuration fourni.
+3. `Traiter les demandes d'ingestion`: polling de la file `ops.ingestion_run_requests`.
+   Description: claim une demande Metabase et déclenche le deployment principal.
 
-Les étapes internes restent visibles comme sous-flows distincts dans l'exécution du flow principal, avec des libellés lisibles:
+Dans le flow principal, les étapes sont exécutées en séquence dans le même flow run pour éviter la création de sous-flows Prefect imbriqués:
 
 1. `Synchroniser les sources`
    Description: déclenche les synchronisations Airbyte demandées par nom de connexion, attend leur statut terminal et réutilise un job déjà en cours si nécessaire.
@@ -244,10 +259,12 @@ Deployments publiés automatiquement:
    Description: point d'entrée manuel recommandé pour les utilisateurs de l'UI Prefect.
 2. `lancer-scraping-allocine`
    Description: exécute uniquement le flow de scraping Allociné, sans déclencher Airbyte ni dbt, avec un schedule automatique toutes les 10 minutes et une limite de concurrence à 1.
+3. `traiter-les-demandes-ingestion`
+   Description: poller schedulé qui lit `ops.ingestion_run_requests`, claim une ligne `pending`, lance `lancer-ingestion-donnees`, puis laisse le flow principal écrire l'état terminal.
 
 Important:
 
-1. la séparation `dbt avant scraping` / `dbt après scraping` est toujours conservée dans le code et reste visible sous forme de sous-flows enfants du flow principal;
+1. la séparation `dbt avant scraping` / `dbt après scraping` est toujours conservée dans le code;
 2. `dbt phase 1` exécute `dbt build --select tag:phase1`;
 3. `allocine scraping` est opérationnel;
 4. `dbt phase 2` exécute `dbt build --select tag:phase2`, mais reste une étape aval désactivée par défaut;
@@ -255,13 +272,36 @@ Important:
 6. l'étape Airbyte attend la fin de chaque job avant de passer à `dbt phase 1`;
 7. le flow principal exécute la bonne séquence et saute les étapes futures tant qu'elles ne sont pas activées.
 
+## Usage Poller
+
+Le polling Metabase est maintenant porté directement par des flows Prefect:
+
+1. `Traiter les demandes d'ingestion` lit la file `ops.ingestion_run_requests` déjà initialisée;
+2. `request_id` est maintenant généré automatiquement par PostgreSQL via `gen_random_uuid()`;
+3. il claim au plus une ligne `pending` par run via `FOR UPDATE SKIP LOCKED` et la passe en `processing`;
+4. il déclenche ensuite uniquement le deployment Prefect `lancer-ingestion-donnees`;
+5. le flow d'ingestion écrit ensuite l'état terminal `success` ou `failed` dans la même table;
+6. `Requeue les demandes d'ingestion stale` reste disponible en CLI/code comme maintenance explicite pour les lignes `processing` trop anciennes sans flow run associé; il n'est pas publié automatiquement comme deployment schedulé.
+
+Important:
+
+1. par défaut, le poller n'exécute pas de DDL sur la base projet;
+2. `INGESTION_REQUEST_AUTO_INIT_QUEUE_SCHEMA=true` doit être réservé à un compte PostgreSQL ayant les droits de création/altération sur `ops`;
+3. en exploitation normale avec un compte restreint, créer la table/index une fois manuellement puis laisser cette option à `false`.
+
+Artefacts associés:
+
+1. [flows.py](/root/explore/13_reveler_inegalites_cinema/ingestion/prefect/flows.py:1): flows d'orchestration, polling SQL et maintenance.
+2. [start_worker.sh](/root/explore/13_reveler_inegalites_cinema/ingestion/prefect/start_worker.sh:1): publication automatique des deployments, dont le poller schedulé.
+3. [v_allocine_pipeline_status.sql](/root/explore/13_reveler_inegalites_cinema/ingestion/dbt/models/ops/v_allocine_pipeline_status.sql:1): vue `ops` pour le dashboard Metabase.
+
 
 ## Résumé opératoire
 
 1. Airbyte sync les Google Sheets vers `raw`.
 2. Pour la mise à jour de données, Airbyte exécute un sync séparé par onglet métier.
 3. `raw.id_matching` sert de table d'entrée canonique du scraping.
-4. Prefect expose deux deployments utilisateur: un pour l'ingestion complète, un pour le scraping Allociné seul.
+4. Prefect expose maintenant trois deployments utiles: ingestion complète, scraping Allociné seul, et poller des demandes d'ingestion.
 5. Si l'option Airbyte est activée, Prefect déclenche les syncs demandés par noms de connexions et attend leur fin.
 6. Dans ce flow, Prefect lance ensuite `dbt phase 1` avant scraping.
 7. Prefect lance ensuite le scraping Allociné.

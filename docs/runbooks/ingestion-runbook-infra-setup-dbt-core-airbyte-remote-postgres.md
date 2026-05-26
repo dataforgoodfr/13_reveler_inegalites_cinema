@@ -4,7 +4,7 @@
 
 **Responsable:** Joel Teixeira
 
-**Dernière révision:** 2026-05-22
+**Dernière révision:** 2026-05-26
 
 **Statut:** actif
 
@@ -14,6 +14,7 @@
 | --- | ---------- | -------------- | ------------------------------------------------------- |
 | 1   | 2026-05-07 | Joel Teixeira  | Initial implementation                                  |
 | 2   | 2026-05-22 | Joel Teixeira | Ajout du pinning de version Prefect et du troubleshooting de revision Alembic inconnue |
+| 3   | 2026-05-26 | Joel Teixeira | Alignement avec les deployments Prefect actuels, le poller `ops.ingestion_run_requests` et les grants `ops` |
 
 ## 1. Objectif
 
@@ -38,15 +39,16 @@ Topologie cible en local:
 3. `prefect-worker` exécute:
    - `dbt` (phase 1, puis phase 2 optionnelle)
    - scraping Allociné via `ingestion/scraping/allocine/main.py`
+   - le poller Prefect des demandes Metabase via `ops.ingestion_run_requests`
 4. PostgreSQL distant héberge:
-   - la base applicative (`raw`, `staging`, `intermediate`, `fnl`)
+   - la base applicative (`raw`, `staging`, `intermediate`, `fnl`, `ops`)
    - la base dédiée `prefect`
 
 Conventions utilisateurs:
 
 1. `airbyte_user` pour la zone `raw`
 2. `dbt_user` pour le runtime dbt + scraping
-3. `prefect_user` pour la base `prefect`
+3. `prefect_user` pour la base `prefect` et les updates de lifecycle dans `ops.ingestion_run_requests`
 
 ## 3. Répertoire de travail
 
@@ -91,7 +93,9 @@ Variables indispensables à renseigner:
 4. `PREFECT_API_DATABASE_CONNECTION_URL`
 5. `AIRBYTE_HOST`, `AIRBYTE_PORT`, `AIRBYTE_CLIENT_ID`, `AIRBYTE_CLIENT_SECRET`
 6. `AIRBYTE_DESTINATION_POSTGRES_PASSWORD`
-7. `PREFECT_PORT` et `BROWSERLESS_PORT` si vous voulez des ports hôtes non défaut
+7. `PREFECT_AUTH_STRING`
+8. `INGESTION_REQUEST_POSTGRES_PASSWORD`
+9. `PREFECT_PORT` et `BROWSERLESS_PORT` si vous voulez des ports hôtes non défaut
 
 Charger les variables dans le shell (optionnel):
 
@@ -117,6 +121,8 @@ CREATE SCHEMA IF NOT EXISTS raw;
 CREATE SCHEMA IF NOT EXISTS staging;
 CREATE SCHEMA IF NOT EXISTS intermediate;
 CREATE SCHEMA IF NOT EXISTS fnl;
+CREATE SCHEMA IF NOT EXISTS ops;
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 ALTER SCHEMA raw OWNER TO airbyte_user;
 ALTER SCHEMA staging OWNER TO dbt_user;
@@ -128,6 +134,7 @@ GRANT USAGE, CREATE ON SCHEMA raw TO dbt_user;
 GRANT USAGE, CREATE ON SCHEMA staging TO dbt_user;
 GRANT USAGE, CREATE ON SCHEMA intermediate TO dbt_user;
 GRANT USAGE, CREATE ON SCHEMA fnl TO dbt_user;
+GRANT USAGE, CREATE ON SCHEMA ops TO dbt_user;
 ```
 
 Base Prefect dédiée:
@@ -138,11 +145,45 @@ CREATE DATABASE prefect OWNER prefect_user;
 GRANT CONNECT ON DATABASE prefect TO prefect_user;
 ```
 
+Table de demandes ingestion côté base projet:
+
+```sql
+CREATE TABLE IF NOT EXISTS ops.ingestion_run_requests (
+  request_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  requested_at TIMESTAMP NOT NULL DEFAULT now(),
+  requested_by_metabase_user TEXT NOT NULL,
+  requested_by_metabase_group TEXT,
+  request_source TEXT NOT NULL DEFAULT 'metabase',
+  request_status TEXT NOT NULL DEFAULT 'pending',
+  claimed_at TIMESTAMP,
+  claimed_by TEXT,
+  processed_at TIMESTAMP,
+  triggered_flow_run_id TEXT,
+  trigger_error TEXT,
+  dedupe_key TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_ingestion_run_requests_status_requested_at
+  ON ops.ingestion_run_requests (request_status, requested_at ASC);
+
+DROP INDEX IF EXISTS ops.idx_ingestion_run_requests_dedupe_key_active;
+
+CREATE UNIQUE INDEX idx_ingestion_run_requests_dedupe_key_active
+  ON ops.ingestion_run_requests (dedupe_key)
+  WHERE request_status IN ('pending', 'processing');
+
+GRANT USAGE ON SCHEMA ops TO prefect_user;
+GRANT SELECT, UPDATE ON ops.ingestion_run_requests TO prefect_user;
+```
+
 Exemple `.env`:
 
 ```bash
 PREFECT_VERSION=3.4.24
 PREFECT_API_DATABASE_CONNECTION_URL=postgresql+asyncpg://prefect_user:<replace>@<db-host>:<db-port>/prefect
+PREFECT_AUTH_STRING=<user>:<password>
+INGESTION_REQUEST_POSTGRES_USER=prefect_user
+INGESTION_REQUEST_POSTGRES_PASSWORD=<replace>
 ```
 
 ### 4.4 Setup, configuration et bootstrap Airbyte
@@ -195,7 +236,7 @@ Comportement attendu:
 
 1. `prefect-server` sert l'UI/API sur `http://localhost:$PREFECT_PORT`
 2. `prefect-worker` crée le work pool `ingestion-pool`
-3. `prefect-worker` publie le deployment du flow principal
+3. `prefect-worker` publie les deployments `lancer-ingestion-donnees`, `lancer-scraping-allocine` et `traiter-les-demandes-ingestion`
 4. `browserless` est utilisé par le scraping Allociné
 
 ## 5. Vérifications
@@ -208,6 +249,7 @@ Checklist courte:
 4. l'UI Prefect est accessible: `http://localhost:$PREFECT_PORT`
 5. après bootstrap Airbyte, source + destination + connexion sont visibles dans Airbyte
 6. `docker compose exec prefect-worker dbt debug --profile ric --project-dir /app/ingestion/dbt` passe
+7. `docker compose exec prefect-worker dbt parse --profile ric --project-dir /app/ingestion/dbt` passe
 
 Contrôle SQL minimal après sync Airbyte:
 
@@ -236,12 +278,22 @@ Parcours UI:
 4. cliquer sur `Run`
 5. suivre le run du flow `Lancer l'ingestion complete`
 
-Les sous-flows visibles pendant l'exécution:
+Les étapes visibles dans les logs du même flow run:
 
 1. `Synchroniser les sources` (optionnel)
 2. `Preparer les donnees`
 3. `Recuperer les donnees Allocine`
 4. `Finaliser les donnees` (optionnel)
+
+### Déclencher depuis Metabase
+
+Préparer:
+
+1. table `ops.ingestion_run_requests` créée;
+2. grants `INSERT`/`SELECT` donnés au user Metabase;
+3. deployment `traiter-les-demandes-ingestion` actif dans Prefect.
+
+La requête d'action Metabase insère une ligne `pending`. Le poller la passe en `processing`, lance `lancer-ingestion-donnees`, puis le flow principal met `success` ou `failed`.
 
 Option CLI (debug):
 
@@ -267,6 +319,8 @@ Mettre à jour dans `.env`:
 2. `DBT_USER_POSTGRES_PASSWORD`
 3. `AIRBYTE_DESTINATION_POSTGRES_PASSWORD`
 4. `PREFECT_API_DATABASE_CONNECTION_URL`
+5. `PREFECT_AUTH_STRING`
+6. `INGESTION_REQUEST_POSTGRES_PASSWORD`
 
 Puis relancer:
 

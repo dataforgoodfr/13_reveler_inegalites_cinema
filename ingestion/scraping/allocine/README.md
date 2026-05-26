@@ -4,7 +4,7 @@
 
 **Responsable:** Joel Teixeira
 
-**Dernière révision:** 2026-05-08
+**Dernière révision:** 2026-05-26
 
 **Statut:** actif
 
@@ -13,6 +13,7 @@
 | #   | Date       | Auteur        | Observations           |
 | --- | ---------- | ------------- | ---------------------- |
 | 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
+| 2   | 2026-05-26 | Joel Teixeira | Alignement avec le flow Prefect actuel et la phase dbt post-scraping exécutable |
 
 Job de scraping standalone pour le sous-graphe cible `Scraping flow`.
 
@@ -144,8 +145,8 @@ Dans la stratégie retenue:
 Séparation assumée:
 
 1. la phase `dbt` avant scraping est finalisée côté Prefect;
-2. la phase `dbt` après scraping existe déjà comme flow Prefect préparatoire, mais pas encore comme traitement réel;
-3. un flow `airbyte sync` préparatoire existe aussi dans Prefect;
+2. la phase `dbt` après scraping exécute `dbt build --select tag:phase2` quand elle est activée;
+3. le flow Prefect peut aussi déclencher les syncs Airbyte par noms de connexions explicites;
 4. ce job couvre uniquement la partie scraping Allocine.
 
 ## Limites importantes

@@ -2,12 +2,16 @@ version: 2
 
 models:
   - name: stg_films
+    config:
+      tags: ["phase1"]
     description: "Table de staging issue du gsheet Cinéstats 50/50, qui regroupe toutes les données issues des rapports annuels du CNC."
     columns:
       - name: movie_id
         description: "Identifiant technique interne du film (généré via ROW_NUMBER)."
       - name: cnc_visa
         description: "Visa d’exploitation CNC du film."
+        tests:
+          - not_null
       - name: cnc_name
         description: "Titre du film selon le CNC."
       - name: genre
@@ -172,7 +176,7 @@ models:
       - name: airbyte_meta
         description: "Métadonnées techniques Airbyte."
 
-  - name: stg_fix_award_nominations
+  - name: stg_fix_award_nomination
     description: "Table de staging issue du gsheet Cinéstats 50/50, permettant de corriger les nominations et récompenses des films (fnl_award_nominations)."
     columns:
       - name: id
@@ -306,7 +310,7 @@ models:
       - name: airbyte_meta
         description: "Métadonnées techniques Airbyte."
 
-  - name: stg_fix_festival
+  - name: stg_fix_festivals
     description: "Table de staging issue du gsheet Cinéstats 50/50, permettant de corriger les informations des festivals de cinéma (fnl_festival)."
     columns:
       - name: id

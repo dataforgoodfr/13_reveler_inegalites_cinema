@@ -4,7 +4,7 @@
 
 **Responsable:** Joel Teixeira
 
-**Dernière révision:** 2026-05-08
+**Dernière révision:** 2026-05-26
 
 **Statut:** actif
 
@@ -13,6 +13,7 @@
 | #   | Date       | Auteur        | Observations           |
 | --- | ---------- | ------------- | ---------------------- |
 | 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
+| 2   | 2026-05-26 | Joel Teixeira | Alignement avec les manifests `src_gsheet_*` actuels et l'usage partagé avec Prefect |
 
 Ce dossier contient les manifests versionnés et les utilitaires Python pour créer, mettre à jour et piloter les ressources Airbyte via API.
 
@@ -123,8 +124,6 @@ Exemple:
   }
 }
 ```
-
-Le fichier versionné [sources/google-sheets.json](/root/explore/13_reveler_inegalites_cinema/ingestion/airbyte/sources/google-sheets.json:1) est un point de départ. Remplacer `REPLACE_WITH_GOOGLE_SHEET_URL` avant `apply`, ou dupliquer ce fichier pour créer plusieurs sources.
 
 Les manifests `src_gsheet_*.json` déjà fournis dans `sources/` ont volontairement `spreadsheet_id: ""` tant que les URLs réelles ne sont pas encore connues. Ils ne sont donc pas prêts à être appliqués tant que ce champ reste vide.
 

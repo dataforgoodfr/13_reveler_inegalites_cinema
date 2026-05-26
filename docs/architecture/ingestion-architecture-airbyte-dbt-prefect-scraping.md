@@ -4,15 +4,16 @@
 
 **Responsable:** Joel Teixeira
 
-**Dernière révision:** 2026-05-08
+**Dernière révision:** 2026-05-26
 
-**Statut:** brouillon
+**Statut:** actif
 
 ### Historique du document
 
 | #   | Date       | Auteur        | Observations           |
 | --- | ---------- | ------------- | ---------------------- |
 | 1   | 2026-05-07 | Joel Teixeira | Initial implementation |
+| 2   | 2026-05-26 | Joel Teixeira | Alignement avec l'orchestration Prefect actuelle, le poller Metabase et le statut Airbyte/dbt phase 2 |
 
 ## Statut de référence
 
@@ -365,20 +366,21 @@ flowchart LR
 
 1. `Airbyte` pour Google Sheets est documenté, mais la configuration réelle des connexions reste encore externe au repo.
 2. `Prefect` est déjà dockerisé dans `ingestion/docker-compose.yml` en mode léger: serveur, worker, et database distante dédiée `prefect`.
-3. Le flow versionné Prefect exposé à l'utilisateur est désormais un flow principal unique, avec les étapes `airbyte sync`, `dbt phase 1`, `scraping Allociné` et `dbt phase 2` exposées comme sous-flows enfants.
+3. Le flow versionné Prefect exposé à l'utilisateur est désormais un flow principal unique; les étapes `airbyte sync`, `dbt phase 1`, `scraping Allociné` et `dbt phase 2` sont exécutées en séquence dans le même flow run.
 4. `dbt phase 1` et `scraping Allociné` sont opérationnels.
 5. `dbt phase 1` et le runtime du scraping Allociné s'exécutent désormais directement dans `prefect-worker`.
-6. `airbyte sync` et `dbt phase 2` existent déjà comme sous-flows préparatoires, mais restent non implémentés fonctionnellement.
+6. `airbyte sync` est fonctionnel quand des noms de connexions Airbyte explicites sont fournis; `dbt phase 2` est exécutable mais désactivé par défaut dans le flow principal.
 7. Le flow principal chaîne déjà les quatre étapes dans l'ordre cible.
 8. Le job standalone Allociné existe dans `ingestion/scraping/allocine/` et suit déjà la logique `id_matching -> allocine_data`.
 9. Les modèles `stg_films`, `stg_allocine_data`, `int_films_latest_by_visa` et `int_allocine_data_latest_by_source_record` existent.
-10. Les tables finales `fnl_*` du schéma cible restent largement à construire.
-11. Le flux historique CSV/seeders existe encore en parallèle pour une partie du périmètre.
+10. Le schéma `ops` contient la file `ops.ingestion_run_requests` et la vue dbt `ops.v_allocine_pipeline_status` pour le déclenchement Metabase et le suivi Allociné.
+11. Le poller Prefect `Traiter les demandes d'ingestion` claim une ligne `pending`, déclenche le deployment principal, puis le flow principal écrit `success` ou `failed`.
+12. Les tables finales `fnl_*` du schéma cible restent largement à construire.
+13. Le flux historique CSV/seeders existe encore en parallèle pour une partie du périmètre.
 
 ## Roadmap de convergence
 
 1. Stabiliser `id_matching` comme unique entrée canonique du scraping.
-2. Implémenter fonctionnellement `airbyte sync` via API et `dbt phase 2`, déjà présents comme sous-flows préparatoires dans le flow principal Prefect.
-3. Construire les tables `fnl_*` prévues dans `fnl` à partir de `raw`, `staging`, `intermediate` et des sorties de scraping.
-4. Réduire progressivement les handoffs CSV historiques au profit des tables raw dédiées.
-5. Basculer ensuite backend et BI sur la couche finale publiée.
+2. Construire les tables `fnl_*` prévues dans `fnl` à partir de `raw`, `staging`, `intermediate` et des sorties de scraping.
+3. Réduire progressivement les handoffs CSV historiques au profit des tables raw dédiées.
+4. Basculer ensuite backend et BI sur la couche finale publiée.
