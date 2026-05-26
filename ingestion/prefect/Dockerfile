@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y cron \
     && rm -rf /var/lib/apt/lists/*
 
 COPY . /app
-COPY cleanup_crontab /etc/cron.d/cleanup_crontab
+COPY ingestion/prefect/cleanup_crontab /etc/cron.d/cleanup_crontab
 RUN chmod 0644 /etc/cron.d/cleanup_crontab && crontab /etc/cron.d/cleanup_crontab
 
 ENV PYTHONPATH=/app

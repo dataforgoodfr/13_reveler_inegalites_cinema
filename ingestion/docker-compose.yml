@@ -16,7 +16,7 @@ services:
       PREFECT_SERVER_API_HOST: 0.0.0.0
       PREFECT_SERVER_UI_API_URL: http://localhost:${PREFECT_PORT:-4222}/api
       PREFECT_SERVER_API_AUTH_STRING: ${PREFECT_AUTH_STRING:-}
-    command: server start --host 0.0.0.0
+    command: bash -c "service cron start && prefect server start --host 0.0.0.0"
     ports:
       - "${PREFECT_PORT:-4222}:4200"
     healthcheck:
