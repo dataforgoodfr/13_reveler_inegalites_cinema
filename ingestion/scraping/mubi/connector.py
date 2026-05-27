@@ -643,6 +643,9 @@ class MubiAirbyteSource:
         all_film_links = [row[0] for row in rows]
         pending_links = [link for link in all_film_links if link not in processed_film_links]
 
+        if config.scrape_limit is not None:
+            pending_links = pending_links[: config.scrape_limit]
+
         if not pending_links:
             print("Mubi film awards: nothing pending.")
             return []
