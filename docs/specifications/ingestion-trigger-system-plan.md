@@ -12,8 +12,7 @@
 
 | # | Date | Auteur | Observations |
 | --- | --- | --- | --- |
-| 1 | 2026-05-26 | Joel Teixeira | Alignement avec l'implémentation actuelle: poller porté par Prefect, suppression de `requested_extraction_date`, `request_id` généré par PostgreSQL |
-| 2 | 2026-05-26 | OpenAI Codex | Clarification des statuts runtime, grants `dbt_user`/`prefect_user`/Metabase et requêtes dashboard |
+| 1 | 2026-05-26 | Joel Teixeira | Alignement avec l'implémentation actuelle: poller porté par Prefect, suppression de `requested_extraction_date`, `request_id` généré par PostgreSQL. Clarification des statuts runtime, grants `dbt_user`/`prefect_user`/Metabase et requêtes dashboard |
 
 ## Summary
 

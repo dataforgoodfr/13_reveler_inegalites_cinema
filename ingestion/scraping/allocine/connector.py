@@ -406,7 +406,7 @@ def _normalize_visa_for_compare(value: Any) -> str | None:
     if raw in {"-", "--", "n/a", "na", "none", "null"}:
         return None
 
-    digits_only = re.sub(r"\D", "", raw)
+    digits_only = re.sub(r"\D", "", raw).lstrip("0")
     return digits_only or None
 
 
