@@ -36,6 +36,10 @@ ALLOCINE_CONFIG_PATH = (
     REPO_ROOT / "ingestion" / "scraping" / "allocine" / "config.json"
 )
 ALLOCINE_MAIN_PATH = REPO_ROOT / "ingestion" / "scraping" / "allocine" / "main.py"
+MUBI_CONFIG_PATH = (
+    REPO_ROOT / "ingestion" / "scraping" / "mubi" / "config.json"
+)
+MUBI_MAIN_PATH = REPO_ROOT / "ingestion" / "scraping" / "mubi" / "main.py"
 DEFAULT_AIRBYTE_SYNC_TIMEOUT_SECONDS = int(
     os.getenv("AIRBYTE_SYNC_TIMEOUT_SECONDS", "3600")
 )
@@ -589,6 +593,31 @@ def _run_allocine_scraping_step(config_path: str = str(ALLOCINE_CONFIG_PATH)) ->
 )
 def run_allocine_scraping(config_path: str = str(ALLOCINE_CONFIG_PATH)) -> None:
     _run_allocine_scraping_step(config_path=config_path)
+
+
+def _run_mubi_scraping_step(config_path: str = str(MUBI_CONFIG_PATH)) -> None:
+    logger = get_run_logger()
+    logger.info("Task parameters: config_path=%s", config_path)
+    _run(
+        [
+            "python3",
+            "-u",
+            str(MUBI_MAIN_PATH),
+            "sync",
+            "--config",
+            config_path,
+        ],
+        step_name="Recuperer les donnees Mubi",
+        cwd=REPO_ROOT,
+    )
+
+
+@flow(
+    name="Recuperer les donnees Mubi",
+    description="Lance le scraping Mubi (festivals et palmares) avec la configuration fournie.",
+)
+def run_mubi_scraping(config_path: str = str(MUBI_CONFIG_PATH)) -> None:
+    _run_mubi_scraping_step(config_path=config_path)
 
 
 def _run_dbt_phase_2_step(enabled: bool = False) -> None:

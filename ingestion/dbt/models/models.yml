@@ -32,3 +32,37 @@ models:
         tests:
           - not_null
           - unique
+
+  - name: stg_mubi_festival_films
+    config:
+      tags: [mubi]
+    description: Staging des films en selection dans les festivals Mubi (scrape_status=success uniquement).
+    columns:
+      - name: film_link
+        tests:
+          - not_null
+      - name: extracted_at
+        tests:
+          - not_null
+
+  - name: stg_mubi_film_awards
+    config:
+      tags: [mubi]
+    description: Staging des palmares Mubi par film, incluant le mubi_id extrait du HTML (Next.js __NEXT_DATA__).
+    columns:
+      - name: film_link
+        tests:
+          - not_null
+      - name: extracted_at
+        tests:
+          - not_null
+
+  - name: int_mubi_festival_films
+    config:
+      tags: [mubi]
+    description: Films en selection festival Mubi, enrichis du cnc_visa et allocine_id via jointure sur mubi_id.
+
+  - name: int_mubi_film_awards
+    config:
+      tags: [mubi]
+    description: Palmares Mubi par film, enrichis du cnc_visa et allocine_id via jointure sur mubi_id.
