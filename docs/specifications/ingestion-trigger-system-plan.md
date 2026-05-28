@@ -236,18 +236,48 @@ Notes:
 
 ### Permissions
 
-Use existing users when already created. Grants expected by implementation:
+
+#### Metabase users and permissions
+
+**User creation (run as superuser or admin):**
+
+```sql
+-- Create Metabase reporting user (read-only, fnl only)
+CREATE USER metabase_user WITH PASSWORD '<choose_strong_password>';
+
+-- Create Metabase operational user (full ops access)
+CREATE USER metabase_ops_user WITH PASSWORD '<choose_strong_password>';
+```
+
+
+There are now two Metabase users:
+
+- `metabase_user`: can only query the `fnl` schema (final reporting layer). No access to other schemas.
+- `metabase_ops_user`: can query all schemas and has full permissions on the `ops` schema (for dashboards, action buttons, and operational monitoring).
+
+**Grants expected by implementation:**
 
 ```sql
 -- dbt builds ops.v_allocine_pipeline_status
 GRANT USAGE, CREATE ON SCHEMA ops TO dbt_user;
 GRANT SELECT ON ALL TABLES IN SCHEMA staging TO dbt_user;
 
--- Metabase reads dashboard and inserts trigger requests
-GRANT USAGE ON SCHEMA ops TO metabase_user;
-GRANT SELECT ON ops.v_allocine_pipeline_status TO metabase_user;
-GRANT INSERT ON ops.ingestion_run_requests TO metabase_user;
-GRANT SELECT ON ops.ingestion_run_requests TO metabase_user;
+-- metabase_user: reporting only, final layer
+GRANT USAGE ON SCHEMA fnl TO metabase_user;
+GRANT SELECT ON ALL TABLES IN SCHEMA fnl TO metabase_user;
+
+-- metabase_ops_user: full operational access
+GRANT USAGE ON SCHEMA ops TO metabase_ops_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA ops TO metabase_ops_user;
+GRANT SELECT ON ALL TABLES IN SCHEMA staging TO metabase_ops_user;
+GRANT USAGE ON SCHEMA staging TO metabase_ops_user;
+GRANT USAGE ON SCHEMA fnl TO metabase_ops_user;
+GRANT SELECT ON ALL TABLES IN SCHEMA fnl TO metabase_ops_user;
+GRANT SELECT ON ALL TABLES IN SCHEMA intermediate TO metabase_ops_user;
+GRANT USAGE ON SCHEMA intermediate TO metabase_ops_user;
+GRANT SELECT ON ALL TABLES IN SCHEMA raw TO metabase_ops_user;
+GRANT USAGE ON SCHEMA raw TO metabase_ops_user;
+
 
 -- Prefect dispatcher and main flow claim/update lifecycle
 GRANT USAGE ON SCHEMA ops TO prefect_user;
