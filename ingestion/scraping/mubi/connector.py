@@ -371,7 +371,20 @@ class MubiAirbyteSource:
         return {"festival_films": len(festival_records), "film_awards": len(award_records)}
 
     async def _discover_festivals(self, config: ConnectorConfig) -> list[dict[str, Any]]:
-        """Paginate through the festivals listing until an empty page is returned."""
+        """
+        Paginate through the festivals listing until an empty page is returned.
+        En mode debug (verbose), sauvegarde/charge la liste dans un CSV local.
+        """
+        import csv
+        import os
+        csv_path = "mubi_festivals_debug.csv"
+        if getattr(config, "verbose", False) and os.path.exists(csv_path):
+            with open(csv_path, newline="", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                festivals = [dict(row) for row in reader]
+            print(f"[DEBUG] Festivals loaded from {csv_path}: {len(festivals)} entries.")
+            return festivals
+
         from ingestion.scraping.mubi.mubi_scraper import MubiPageScraper
         from ingestion.scraping.browser import AsyncBrowserSession
 
@@ -435,6 +448,14 @@ class MubiAirbyteSource:
                 f"had no link extracted. The 'festival_link' CSS selector in "
                 f"mubi_scraper.py may be stale and need updating."
             )
+
+        # Sauvegarde CSV si debug
+        if getattr(config, "verbose", False) and unique:
+            with open(csv_path, "w", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=unique[0].keys())
+                writer.writeheader()
+                writer.writerows(unique)
+            print(f"[DEBUG] Festivals saved to {csv_path} ({len(unique)} entries)")
 
         return unique
 

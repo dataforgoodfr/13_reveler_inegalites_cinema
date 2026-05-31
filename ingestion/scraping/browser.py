@@ -86,6 +86,20 @@ class AsyncBrowserSession:
     Context manager for interacting with a Playwright-controlled browser
     in a realistic, human-like way.
     """
+    async def _accept_mubi_cookies_if_present(self, url: str) -> bool:
+        """Clique sur le bouton de consentement cookies Mubi si présent."""
+        if "mubi.com" not in url:
+            return False
+        try:
+            button = self.page.locator("button.cky-btn-accept").first
+            await button.wait_for(state="visible", timeout=2000)
+            await button.click()
+            if self.verbose:
+                print("  [browser] Mubi cookie consent accepted.")
+            await self.page.wait_for_timeout(500)
+            return True
+        except Exception:
+            return False
 
     def __init__(
         self,
@@ -315,6 +329,9 @@ class AsyncBrowserSession:
                     print(f"  [browser] Warning: Failed to wait for networkidle: {e}")
             
             await self._debug_pause(f"Page loaded: {url}")
+
+            # Accepte le consentement cookies Mubi si présent
+            await self._accept_mubi_cookies_if_present(url)
 
             if self.verbose:
                 print("  [browser] Initial delay...")
