@@ -14,7 +14,7 @@
   "festival_or_award": "festival",
   "completed_festival_statuses": ["success", "empty"],
   "completed_award_statuses": ["success", "no_awards"],
-  "scrape_limit": 3,
+  "scrape_limit": 10,
   "record_timeout_seconds": 60,
   "headless": false,
   "max_requests_per_session": 6,

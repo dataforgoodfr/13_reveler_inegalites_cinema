@@ -14,12 +14,12 @@
   "festival_or_award": "festival",
   "completed_festival_statuses": ["success", "empty"],
   "completed_award_statuses": ["success", "no_awards"],
-  "scrape_limit": null,
+  "scrape_limit": 10,
   "record_timeout_seconds": 60,
   "playwright_ws_endpoint": "${PLAYWRIGHT_WS_ENDPOINT:-ws://browserless:3000}",
   "headless": true,
   "max_requests_per_session": 6,
-  "inter_request_delay_min_seconds": 2.0,
-  "inter_request_delay_max_seconds": 5.0,
-  "verbose": false
+  "inter_request_delay_min_seconds": 1.0,
+  "inter_request_delay_max_seconds": 3.0,
+  "verbose": true
 }
