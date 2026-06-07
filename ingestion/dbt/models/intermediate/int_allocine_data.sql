@@ -10,4 +10,4 @@ SELECT
         WHEN LOWER(allocine.genres) IN ('épouvante-horreur', 'expérimental', 'fantastique', 'science fiction') THEN 'Fantastique'
         ELSE 'Autre'
     END AS genre_category,
-FROM {{ ref('stg_allocine_data') }}
+FROM {{ ref('stg_allocine_films') }}

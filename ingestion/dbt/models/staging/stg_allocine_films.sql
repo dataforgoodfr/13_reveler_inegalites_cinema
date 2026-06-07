@@ -19,9 +19,15 @@ SELECT
 	allocine_url AS allocine_url, 
 	trailer_url AS trailer_url, 
 	--
-	genres, 
-	direction, 
-	casting, 
+	ARRAY(
+        SELECT jsonb_array_elements_text("genres")
+    ) AS genres,
+    ARRAY(
+        SELECT jsonb_array_elements_text("direction")
+    ) AS direction,
+    ARRAY(
+        SELECT jsonb_array_elements_text("casting")
+    ) AS casting,
 	screenwriters, 
 	production, 
 	technical_team, 
@@ -36,4 +42,4 @@ SELECT
 	scrape_status AS scrapping_status, 
 	error_hash AS record_hash
 FROM {{ source('raw', 'allocine_data') }}
-WHERE source_record_id IS NOT NULL
+WHERE scrape_status IN ('success')

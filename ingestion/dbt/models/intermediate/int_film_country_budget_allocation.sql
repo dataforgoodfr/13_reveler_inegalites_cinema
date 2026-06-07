@@ -105,7 +105,7 @@ WITH base AS (
             ELSE INITCAP(UNACCENT(TRIM(elem->>'country')))
         END AS country_name,
         CAST(elem->>'budget_allocation' AS INTEGER) AS budget_allocation
-    FROM {{ ref('stg_films') }},
+    FROM {{ ref('stg_cnc_films') }},
     UNNEST(country_budget_allocation) AS elem
 )
 , base_country_id AS (
