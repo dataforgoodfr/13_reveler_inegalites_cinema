@@ -1,10 +1,12 @@
 FROM python:3.12-slim
 
+ARG PREFECT_VERSION=3.4.24
+
 WORKDIR /app
 
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir \
-        "prefect==3.4.24" \
+        "prefect==${PREFECT_VERSION}" \
         "dbt-core==1.11.7" \
         "dbt-postgres==1.10.0" \
         "sqlalchemy>=2.0" \

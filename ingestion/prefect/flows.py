@@ -114,7 +114,6 @@ def _wait_for_airbyte_job(
 @flow(
     name="Synchroniser les sources",
     description="Declenche les synchronisations Airbyte lorsqu'elles sont activees pour ce run.",
-    flow_run_name="synchroniser-les-sources",
 )
 def run_airbyte_sync(
     enabled: bool = False,
@@ -190,7 +189,6 @@ def run_airbyte_sync(
 @flow(
     name="Preparer les donnees",
     description="Execute la preparation dbt avant le scraping Allocine.",
-    flow_run_name="preparer-les-donnees",
 )
 def run_dbt_phase_1() -> None:
     _run(
@@ -212,13 +210,12 @@ def run_dbt_phase_1() -> None:
 @flow(
     name="Recuperer les donnees Allocine",
     description="Lance le scraping Allocine avec la configuration fournie.",
-    flow_run_name="recuperer-les-donnees-allocine",
 )
 def run_allocine_scraping(config_path: str = str(ALLOCINE_CONFIG_PATH)) -> None:
     logger = get_run_logger()
     logger.info("Task parameters: config_path=%s", config_path)
     _run(
-        ["python3", str(ALLOCINE_MAIN_PATH), "sync", "--config", config_path],
+        ["python3", "-u", str(ALLOCINE_MAIN_PATH), "sync", "--config", config_path],
         step_name="Recuperer les donnees Allocine",
         cwd=REPO_ROOT,
     )
@@ -227,7 +224,6 @@ def run_allocine_scraping(config_path: str = str(ALLOCINE_CONFIG_PATH)) -> None:
 @flow(
     name="Finaliser les donnees",
     description="Execute la phase dbt finale lorsque cette etape est activee.",
-    flow_run_name="finaliser-les-donnees",
 )
 def run_dbt_phase_2(enabled: bool = False) -> None:
     logger = get_run_logger()

@@ -1,6 +1,11 @@
 services:
   prefect-server:
-    image: prefecthq/prefect:3-latest
+    image: ric-prefect:${PREFECT_VERSION:-3.4.24}
+    build:
+      context: ..
+      dockerfile: ingestion/prefect/Dockerfile
+      args:
+        PREFECT_VERSION: ${PREFECT_VERSION:-3.4.24}
     cpus: ${PREFECT_SERVER_CPUS:-0.50}
     mem_limit: ${PREFECT_SERVER_MEM_LIMIT:-512m}
     mem_reservation: ${PREFECT_SERVER_MEM_RESERVATION:-256m}
@@ -10,7 +15,7 @@ services:
     environment:
       PREFECT_SERVER_API_HOST: 0.0.0.0
       PREFECT_SERVER_UI_API_URL: http://localhost:${PREFECT_PORT:-4222}/api
-    command: prefect server start --no-services --host 0.0.0.0
+    command: server start --host 0.0.0.0
     ports:
       - "${PREFECT_PORT:-4222}:4200"
     healthcheck:
@@ -27,9 +32,12 @@ services:
       start_period: 60s
 
   prefect-worker:
+    image: ric-prefect:${PREFECT_VERSION:-3.4.24}
     build:
       context: ..
       dockerfile: ingestion/prefect/Dockerfile
+      args:
+        PREFECT_VERSION: ${PREFECT_VERSION:-3.4.24}
     cpus: ${PREFECT_WORKER_CPUS:-1.50}
     mem_limit: ${PREFECT_WORKER_MEM_LIMIT:-2g}
     mem_reservation: ${PREFECT_WORKER_MEM_RESERVATION:-768m}
@@ -51,11 +59,11 @@ services:
 
   browserless:
     image: browserless/chrome:latest
-    cpus: ${BROWSERLESS_CPUS:-1.00}
-    mem_limit: ${BROWSERLESS_MEM_LIMIT:-1g}
-    mem_reservation: ${BROWSERLESS_MEM_RESERVATION:-512m}
-    pids_limit: ${BROWSERLESS_PIDS_LIMIT:-512}
-    shm_size: ${BROWSERLESS_SHM_SIZE:-512m}
+    cpus: ${BROWSERLESS_CPUS:-4.00}
+    mem_limit: ${BROWSERLESS_MEM_LIMIT:-4g}
+    mem_reservation: ${BROWSERLESS_MEM_RESERVATION:-2g}
+    pids_limit: ${BROWSERLESS_PIDS_LIMIT:-1024}
+    shm_size: ${BROWSERLESS_SHM_SIZE:-2g}
     ports:
       - "${BROWSERLESS_PORT:-3000}:3000"
     environment:

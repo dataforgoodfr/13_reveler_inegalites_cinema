@@ -36,12 +36,9 @@ Important: les données brutes sont conservées. Les corrections sont appliquée
 ### User Story A (fichier CNC annuel)
 
 1. Bob reçoit le fichier `agreement CNC 2026.csv`.
-2. Bob copie les données dans le Google Sheet `AGREEMENT CNC`, dans l'onglet unique du fichier, en ajoutant les nouvelles lignes en bas du tableau.
-3. Prefect déclenche le sync Airbyte via API.
-4. Airbyte synchronise cet onglet unique vers la base (zone raw).
-5. Prefect déclenche ensuite `dbt`.
-6. dbt applique les règles de consolidation avec les données existantes (clé de jointure: `visa_number`).
-7. Les nouveaux titres corrigés sont visibles dans Metabase et dans l'application web.
+2. Bob copie les données dans le Google Sheet `<>` feuille `FILMS` en ajoutant les nouvelles lignes en bas du tableau.
+3. Prefect déclenche la pipeline d'ingestion avec la synchro Airbyte via API. Les transformations DBT sont déclenchées ensuite automatiquement. Le scraping Allociné est déclenché pour les nouveaux titres. 
+4. Les nouvelles données sont disponibles dans Metabase et sur le site web.
 
 ### User Story B (correction ponctuelle sur une entité)
 
@@ -63,7 +60,7 @@ Important: les données brutes sont conservées. Les corrections sont appliquée
 
 ```mermaid
 flowchart LR
-    GSCNC[Google Sheets - AGREEMENT CNC\nonglet unique] --> AB
+    GSCNC[Google Sheets - FILMS\nonglet unique] --> AB
     GSMOD[Google Sheets - Modification data\n1 onglet par entite] --> AB
     PREFECT[Prefect orchestrator] -->|API sync trigger| AB[Airbyte]
     PREFECT -->|run dbt| DBT[dbt Transformations]
