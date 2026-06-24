@@ -46,7 +46,7 @@ prefect deploy "${FLOWS_FILE}:run_mubi_scraping" \
 	--name "lancer-scraping-mubi" \
 	--description "Execution du scraping Mubi: decouverte dynamique des festivals, films en competition et palmares." \
 	--concurrency-limit 1 \
-	--interval 420 \
+	--interval 600 \
 	--pool "${POOL_NAME}" >/tmp/prefect-deploy-mubi.log 2>&1 || {
 	cat /tmp/prefect-deploy-mubi.log
 	exit 1
