@@ -498,6 +498,12 @@ class MubiAirbyteSource:
         session_cm = None
         session = None
 
+        # Editions (slug, year) whose film pages have run out. `pending` is ordered
+        # by page within each edition, so once a page comes back empty every
+        # higher-numbered page for that edition is also empty — skip them instead
+        # of issuing wasted requests up to max_pages_per_edition.
+        exhausted_editions: set[tuple] = set()
+
         async def open_session():
             nonlocal session_cm, session
             session_cm = AsyncBrowserSession(
@@ -519,6 +525,9 @@ class MubiAirbyteSource:
         await open_session()
         try:
             for i, (slug, name, year, page) in enumerate(pending):
+                if (slug, year) in exhausted_editions:
+                    continue
+
                 if i > 0:
                     delay = random.uniform(
                         config.inter_request_delay_min_seconds,
@@ -560,7 +569,8 @@ class MubiAirbyteSource:
                         }
                         record["record_hash"] = _hash_record(record)
                         records.append(record)
-                        print(f"[films] {slug} {year} p{page}: empty")
+                        exhausted_editions.add((slug, year))
+                        print(f"[films] {slug} {year} p{page}: empty — skipping remaining pages")
                     else:
                         for film in films:
                             record = {

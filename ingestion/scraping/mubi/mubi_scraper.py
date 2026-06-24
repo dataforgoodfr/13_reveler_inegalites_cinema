@@ -20,7 +20,9 @@ class MubiPageScraper:
     FESTIVAL_EDITION_ALL_FILMS_SELECTORS = {
         "movie": "li.css-l31k08",
         "nominations": "div.css-gyp8mm",
-        "title": "h3.css-1hr6q83",
+        # title is the only <h3> inside a movie <li>; matching the tag rather than
+        # a hashed css-* class avoids breaking when Mubi rotates the class names.
+        "title": "h3",
         "director": "span.css-1vg6q84",
         "country": "span.css-ahepiu",
         "link": "a.css-122y91a",
@@ -60,9 +62,28 @@ class MubiPageScraper:
                 "director": director.get_text(strip=True) if director else None,
                 "country": country.get_text(strip=True) if country else None,
                 "nominations": nominations.get_text(strip=True) if nominations else None,
-                "link": link["href"] if link else None,
+                "link": self._normalize_film_link(link["href"]) if link else None,
             })
         return movies
+
+    @staticmethod
+    def _normalize_film_link(href: Optional[str]) -> Optional[str]:
+        """Strip the locale prefix from a film link, keeping '/films/{slug}'.
+
+        Mubi serves the same film under varying locale segments
+        (e.g. '/fr/fr/films/echo-1999' vs '/fr/us/films/echo-1999'), which
+        creates spurious distinct links for one film. We store the canonical
+        '/films/{slug}' form. Mubi redirects this path to its localized URL, so
+        it still resolves correctly for FILM_ALL_AWARDS_URL. Links without a
+        '/films/' segment are returned unchanged.
+        """
+        if not href:
+            return href
+        marker = "/films/"
+        idx = href.find(marker)
+        if idx == -1:
+            return href
+        return href[idx:]
 
     def extract_film_all_awards(self, html: str) -> List[Dict[str, Optional[str]]]:
         soup = BeautifulSoup(html, "html.parser")
