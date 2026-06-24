@@ -16,6 +16,8 @@
   "completed_award_statuses": ["success", "no_awards"],
   "scrape_limit": 10,
   "record_timeout_seconds": 60,
+  "fetch_max_attempts": 2,
+  "fetch_retry_base_delay_seconds": 2.0,
   "headless": false,
   "max_requests_per_session": 6,
   "inter_request_delay_min_seconds": 1.0,

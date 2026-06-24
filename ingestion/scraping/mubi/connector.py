@@ -28,6 +28,8 @@ DEFAULT_MAX_PAGES_PER_EDITION = 10
 DEFAULT_FESTIVAL_OR_AWARD = "festival"
 DEFAULT_MAX_REQUESTS_PER_SESSION = 6
 DEFAULT_RECORD_TIMEOUT_SECONDS = 60.0
+DEFAULT_FETCH_MAX_ATTEMPTS = 3
+DEFAULT_FETCH_RETRY_BASE_DELAY_SECONDS = 3.0
 DEFAULT_COMPLETED_FESTIVAL_STATUSES = ["success", "empty"]
 DEFAULT_COMPLETED_AWARD_STATUSES = ["success", "no_awards"]
 IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
@@ -120,6 +122,20 @@ CONNECTION_SPECIFICATION = {
             "default": DEFAULT_RECORD_TIMEOUT_SECONDS,
             "minimum": 0,
         },
+        "fetch_max_attempts": {
+            "type": "integer",
+            "title": "Attempts per page fetch before recording an error",
+            "default": DEFAULT_FETCH_MAX_ATTEMPTS,
+            "minimum": 1,
+            "description": "Transient fetch failures (e.g. navigation timeouts) are retried up to this many times with backoff.",
+        },
+        "fetch_retry_base_delay_seconds": {
+            "type": "number",
+            "title": "Base backoff delay between fetch retries",
+            "default": DEFAULT_FETCH_RETRY_BASE_DELAY_SECONDS,
+            "minimum": 0,
+            "description": "Delay before retry N is base * N (linear backoff).",
+        },
         "playwright_ws_endpoint": {
             "type": "string",
             "title": "Playwright websocket endpoint",
@@ -171,6 +187,8 @@ class ConnectorConfig:
     completed_award_statuses: list[str]
     scrape_limit: int | None
     record_timeout_seconds: float
+    fetch_max_attempts: int
+    fetch_retry_base_delay_seconds: float
     playwright_ws_endpoint: str | None
     headless: bool
     max_requests_per_session: int
@@ -205,6 +223,8 @@ class ConnectorConfig:
             ],
             "scrape_limit": _normalize_positive_int(raw_config.get("scrape_limit")),
             "record_timeout_seconds": max(0.0, float(raw_config.get("record_timeout_seconds", DEFAULT_RECORD_TIMEOUT_SECONDS))),
+            "fetch_max_attempts": max(1, int(raw_config.get("fetch_max_attempts", DEFAULT_FETCH_MAX_ATTEMPTS))),
+            "fetch_retry_base_delay_seconds": max(0.0, float(raw_config.get("fetch_retry_base_delay_seconds", DEFAULT_FETCH_RETRY_BASE_DELAY_SECONDS))),
             "playwright_ws_endpoint": raw_config.get("playwright_ws_endpoint") or os.getenv("PLAYWRIGHT_WS_ENDPOINT"),
             "headless": bool(raw_config.get("headless", True)),
             "max_requests_per_session": max(1, int(raw_config.get("max_requests_per_session", DEFAULT_MAX_REQUESTS_PER_SESSION))),
@@ -324,6 +344,7 @@ class MubiAirbyteSource:
                 _ensure_festival_films_table(conn, config)
                 _ensure_film_awards_table(conn, config)
                 processed_page_combos = _fetch_processed_page_combos(conn, config)
+                edition_empty_boundaries = _fetch_edition_empty_boundaries(conn, config)
                 processed_film_links = _fetch_processed_film_links(conn, config)
         finally:
             engine.dispose()
@@ -336,7 +357,9 @@ class MubiAirbyteSource:
         print(f"Mubi: discovered {len(festivals)} festivals.")
 
         festival_records = asyncio.run(
-            self._scrape_festival_films(config, festivals, processed_page_combos)
+            self._scrape_festival_films(
+                config, festivals, processed_page_combos, edition_empty_boundaries
+            )
         )
 
         if festival_records:
@@ -464,6 +487,7 @@ class MubiAirbyteSource:
         config: ConnectorConfig,
         festivals: list[dict[str, Any]],
         processed_page_combos: set[tuple],
+        edition_empty_boundaries: dict[tuple, int],
     ) -> list[dict[str, Any]]:
         from ingestion.scraping.mubi.mubi_scraper import MubiPageScraper
         from ingestion.scraping.browser import AsyncBrowserSession
@@ -480,7 +504,13 @@ class MubiAirbyteSource:
             slug = _festival_slug_from_link(link)
             name = fest.get("festival_name") or slug
             for year in range(config.start_year, config.end_year + 1):
-                for page in range(1, config.max_pages_per_edition + 1):
+                # If a prior run found an empty page for this edition, every page
+                # at or beyond that boundary is also empty — don't queue them.
+                empty_from = edition_empty_boundaries.get((slug, year))
+                last_page = config.max_pages_per_edition
+                if empty_from is not None:
+                    last_page = min(last_page, empty_from - 1)
+                for page in range(1, last_page + 1):
                     if (slug, year, page) not in processed_page_combos:
                         pending.append((slug, name, year, page))
 
@@ -551,12 +581,45 @@ class MubiAirbyteSource:
                     "page_num": page,
                 }
 
+                # Transient failures (navigation timeouts, flaky responses) are
+                # retried with linear backoff before we give up and record an
+                # "error" row. WebsiteBlockedError is not transient — we stop
+                # retrying immediately and re-raise it below so the handler can
+                # restart the session.
+                html = None
+                last_error: Exception | None = None
+                for attempt in range(1, config.fetch_max_attempts + 1):
+                    try:
+                        task = session.fetch_html(url)
+                        if config.record_timeout_seconds > 0:
+                            html = await asyncio.wait_for(task, timeout=config.record_timeout_seconds)
+                        else:
+                            html = await task
+                        last_error = None
+                        break
+                    except WebsiteBlockedError as exc:
+                        last_error = exc
+                        break
+                    except asyncio.TimeoutError:
+                        last_error = asyncio.TimeoutError(
+                            f"Timeout after {config.record_timeout_seconds:.0f}s"
+                        )
+                    except Exception as exc:
+                        last_error = exc
+
+                    if attempt < config.fetch_max_attempts:
+                        backoff = config.fetch_retry_base_delay_seconds * attempt
+                        print(
+                            f"[films] {slug} {year} p{page}: attempt {attempt}/"
+                            f"{config.fetch_max_attempts} failed ({last_error}); "
+                            f"retrying in {backoff:.0f}s"
+                        )
+                        if backoff > 0:
+                            await asyncio.sleep(backoff)
+
                 try:
-                    task = session.fetch_html(url)
-                    if config.record_timeout_seconds > 0:
-                        html = await asyncio.wait_for(task, timeout=config.record_timeout_seconds)
-                    else:
-                        html = await task
+                    if last_error is not None:
+                        raise last_error
 
                     films = scraper.extract_festival_edition_all_films(html)
 
@@ -587,17 +650,17 @@ class MubiAirbyteSource:
                             records.append(record)
                         print(f"[films] {slug} {year} p{page}: {len(films)} films")
 
-                except asyncio.TimeoutError:
+                except asyncio.TimeoutError as exc:
                     record = {
                         **base,
                         "title": None, "director": None, "country": None,
                         "nominations": None, "film_link": None,
                         "scrape_status": "error",
-                        "error_message": f"Timeout after {config.record_timeout_seconds:.0f}s",
+                        "error_message": str(exc) or f"Timeout after {config.record_timeout_seconds:.0f}s",
                     }
                     record["record_hash"] = _hash_record(record)
                     records.append(record)
-                    print(f"[films] {slug} {year} p{page}: timeout")
+                    print(f"[films] {slug} {year} p{page}: timeout after {config.fetch_max_attempts} attempts")
 
                 except WebsiteBlockedError as exc:
                     record = {
@@ -721,12 +784,43 @@ class MubiAirbyteSource:
                 if config.verbose:
                     print(f"[awards] {film_link}: {url}")
 
+                # Same retry-with-backoff policy as the festival films loop:
+                # transient fetch failures are retried, WebsiteBlockedError stops
+                # retrying and is re-raised below to restart the session.
+                html = None
+                last_error: Exception | None = None
+                for attempt in range(1, config.fetch_max_attempts + 1):
+                    try:
+                        task = session.fetch_html(url)
+                        if config.record_timeout_seconds > 0:
+                            html = await asyncio.wait_for(task, timeout=config.record_timeout_seconds)
+                        else:
+                            html = await task
+                        last_error = None
+                        break
+                    except WebsiteBlockedError as exc:
+                        last_error = exc
+                        break
+                    except asyncio.TimeoutError:
+                        last_error = asyncio.TimeoutError(
+                            f"Timeout after {config.record_timeout_seconds:.0f}s"
+                        )
+                    except Exception as exc:
+                        last_error = exc
+
+                    if attempt < config.fetch_max_attempts:
+                        backoff = config.fetch_retry_base_delay_seconds * attempt
+                        print(
+                            f"[awards] {film_link}: attempt {attempt}/"
+                            f"{config.fetch_max_attempts} failed ({last_error}); "
+                            f"retrying in {backoff:.0f}s"
+                        )
+                        if backoff > 0:
+                            await asyncio.sleep(backoff)
+
                 try:
-                    task = session.fetch_html(url)
-                    if config.record_timeout_seconds > 0:
-                        html = await asyncio.wait_for(task, timeout=config.record_timeout_seconds)
-                    else:
-                        html = await task
+                    if last_error is not None:
+                        raise last_error
 
                     awards = scraper.extract_film_all_awards(html)
 
@@ -764,17 +858,17 @@ class MubiAirbyteSource:
                             records.append(record)
                         print(f"[awards] {film_link}: {len(awards)} awards (mubi_id={mubi_id})")
 
-                except asyncio.TimeoutError:
+                except asyncio.TimeoutError as exc:
                     record = {
                         "run_id": run_id, "extracted_at": extracted_at, "film_link": film_link,
                         "mubi_id": None, "festival": None, "year": None,
                         "distinction": None, "award": None,
                         "scrape_status": "error",
-                        "error_message": f"Timeout after {config.record_timeout_seconds:.0f}s",
+                        "error_message": str(exc) or f"Timeout after {config.record_timeout_seconds:.0f}s",
                     }
                     record["record_hash"] = _hash_record(record)
                     records.append(record)
-                    print(f"[awards] {film_link}: timeout")
+                    print(f"[awards] {film_link}: timeout after {config.fetch_max_attempts} attempts")
 
                 except WebsiteBlockedError as exc:
                     record = {
@@ -906,6 +1000,24 @@ def _fetch_processed_page_combos(conn, config: ConnectorConfig) -> set[tuple]:
         f"where lower(coalesce(scrape_status, '')) = any(:statuses)"
     ), {"statuses": config.completed_festival_statuses}).fetchall()
     return {(row[0], row[1], row[2]) for row in rows}
+
+
+def _fetch_edition_empty_boundaries(conn, config: ConnectorConfig) -> dict[tuple, int]:
+    """Lowest page_num marked 'empty' per (festival_slug, year) edition.
+
+    Pages are scraped in ascending order and an empty page means the edition has
+    no further films, so every page at or beyond this boundary can be skipped on
+    later runs. Returns {(slug, year): min_empty_page}.
+    """
+    if not _table_exists(conn, config.output_schema, config.festival_films_table):
+        return {}
+    rows = conn.execute(text(
+        f"select festival_slug, year, min(page_num) "
+        f"from {_relation(config.output_schema, config.festival_films_table)} "
+        f"where lower(coalesce(scrape_status, '')) = 'empty' "
+        f"group by festival_slug, year"
+    )).fetchall()
+    return {(row[0], row[1]): row[2] for row in rows if row[2] is not None}
 
 
 def _fetch_processed_film_links(conn, config: ConnectorConfig) -> set[str]:

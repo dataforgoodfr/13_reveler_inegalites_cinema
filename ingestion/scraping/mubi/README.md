@@ -28,7 +28,7 @@ Pagine dynamiquement `mubi.com/fr/awards-and-festivals?type=festival&page=N` jus
 
 **Phase 2 — Films en sélection**
 
-Pour chaque festival découvert, pour chaque année dans la plage `[start_year, end_year]`, et pour chaque page jusqu'à `max_pages_per_edition`, scrape les films en compétition. Chaque combinaison `(festival_slug, year, page_num)` déjà présente dans `raw.mubi_festival_films` avec un statut complété est ignorée (skip incrémental). Écrit un enregistrement par film dans `raw.mubi_festival_films`.
+Pour chaque festival découvert, pour chaque année dans la plage `[start_year, end_year]`, et pour chaque page jusqu'à `max_pages_per_edition`, scrape les films en compétition. Dès qu'une page d'une édition `(festival, année)` ne renvoie aucun film, les pages suivantes de cette même édition sont ignorées (`max_pages_per_edition` ne sert plus que de garde-fou). Chaque combinaison `(festival_slug, year, page_num)` déjà présente dans `raw.mubi_festival_films` avec un statut complété est ignorée (skip incrémental). Les échecs transitoires de chargement (timeouts de navigation, réponses instables) sont réessayés jusqu'à `fetch_max_attempts` fois avec un backoff linéaire avant d'enregistrer un statut `error` ; un statut `error` n'étant pas « complété », la combinaison sera retentée au prochain run. Écrit un enregistrement par film dans `raw.mubi_festival_films`.
 
 **Phase 3 — Palmarès par film**
 
@@ -109,6 +109,8 @@ Fichier de référence : `ingestion/scraping/mubi/config.json`.
   "completed_award_statuses": ["success", "no_awards"],
   "scrape_limit": null,
   "record_timeout_seconds": 60,
+  "fetch_max_attempts": 3,
+  "fetch_retry_base_delay_seconds": 3.0,
   "playwright_ws_endpoint": "${PLAYWRIGHT_WS_ENDPOINT:-ws://browserless:3000}",
   "headless": true,
   "max_requests_per_session": 6,
@@ -125,6 +127,8 @@ Si `database_url` est fourni, il remplace l'ensemble des champs Postgres individ
 `scrape_limit` borne le nombre de combinaisons `(festival, année, page)` traitées lors d'un run. Utile pour les tests. Laisser à `null` en production.
 
 `end_year` à `null` utilise l'année courante au moment de l'exécution.
+
+`fetch_max_attempts` borne le nombre de tentatives par page avant d'enregistrer un statut `error` (1 = aucun réessai). `fetch_retry_base_delay_seconds` est le délai de base du backoff linéaire : la tentative *N* attend `base * N` secondes. Les erreurs `blocked` (site bloquant) ne sont pas réessayées — elles déclenchent un redémarrage de session.
 
 ## Initialisation des tables de sortie
 
