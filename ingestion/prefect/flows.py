@@ -40,6 +40,10 @@ MUBI_CONFIG_PATH = (
     REPO_ROOT / "ingestion" / "scraping" / "mubi" / "config.json"
 )
 MUBI_MAIN_PATH = REPO_ROOT / "ingestion" / "scraping" / "mubi" / "main.py"
+MUBI_CNC_CONFIG_PATH = (
+    REPO_ROOT / "ingestion" / "scraping" / "mubi_cnc" / "config.json"
+)
+MUBI_CNC_MAIN_PATH = REPO_ROOT / "ingestion" / "scraping" / "mubi_cnc" / "main.py"
 DEFAULT_AIRBYTE_SYNC_TIMEOUT_SECONDS = int(
     os.getenv("AIRBYTE_SYNC_TIMEOUT_SECONDS", "3600")
 )
@@ -618,6 +622,31 @@ def _run_mubi_scraping_step(config_path: str = str(MUBI_CONFIG_PATH)) -> None:
 )
 def run_mubi_scraping(config_path: str = str(MUBI_CONFIG_PATH)) -> None:
     _run_mubi_scraping_step(config_path=config_path)
+
+
+def _run_mubi_cnc_scraping_step(config_path: str = str(MUBI_CNC_CONFIG_PATH)) -> None:
+    logger = get_run_logger()
+    logger.info("Task parameters: config_path=%s", config_path)
+    _run(
+        [
+            "python3",
+            "-u",
+            str(MUBI_CNC_MAIN_PATH),
+            "sync",
+            "--config",
+            config_path,
+        ],
+        step_name="Recuperer les donnees Mubi (CNC)",
+        cwd=REPO_ROOT,
+    )
+
+
+@flow(
+    name="Recuperer les donnees Mubi (CNC)",
+    description="Lance le scraping Mubi restreint aux films du referentiel CNC (palmares puis editions de festivals concernees).",
+)
+def run_mubi_cnc_scraping(config_path: str = str(MUBI_CNC_CONFIG_PATH)) -> None:
+    _run_mubi_cnc_scraping_step(config_path=config_path)
 
 
 def _run_dbt_phase_2_step(enabled: bool = False) -> None:

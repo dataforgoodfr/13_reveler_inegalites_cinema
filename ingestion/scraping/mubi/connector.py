@@ -20,9 +20,11 @@ print = partial(builtins.print, flush=True)
 
 FESTIVAL_FILMS_STREAM = "mubi_festival_films"
 FILM_AWARDS_STREAM = "mubi_film_awards"
+FESTIVALS_STREAM = "mubi_festivals_data"
 DEFAULT_OUTPUT_SCHEMA = "raw"
 DEFAULT_FESTIVAL_FILMS_TABLE = FESTIVAL_FILMS_STREAM
 DEFAULT_FILM_AWARDS_TABLE = FILM_AWARDS_STREAM
+DEFAULT_FESTIVALS_TABLE = FESTIVALS_STREAM
 DEFAULT_START_YEAR = 2000
 DEFAULT_MAX_PAGES_PER_EDITION = 10
 DEFAULT_FESTIVAL_OR_AWARD = "festival"
@@ -76,6 +78,18 @@ CONNECTION_SPECIFICATION = {
             "type": "string",
             "title": "Film awards output table",
             "default": DEFAULT_FILM_AWARDS_TABLE,
+        },
+        "festivals_table": {
+            "type": "string",
+            "title": "Festivals listing cache table",
+            "default": DEFAULT_FESTIVALS_TABLE,
+            "description": "Postgres table caching the discovered festivals listing. Reused across runs unless rescrape_festivals is set.",
+        },
+        "rescrape_festivals": {
+            "type": "boolean",
+            "title": "Force re-scrape of the festivals listing",
+            "default": False,
+            "description": "When true, ignore the cached festivals table and re-scrape the full festivals listing, replacing the cache.",
         },
         "start_year": {
             "type": "integer",
@@ -179,6 +193,8 @@ class ConnectorConfig:
     output_schema: str
     festival_films_table: str
     film_awards_table: str
+    festivals_table: str
+    rescrape_festivals: bool
     start_year: int
     end_year: int
     max_pages_per_edition: int
@@ -211,6 +227,8 @@ class ConnectorConfig:
             "output_schema": raw_config.get("output_schema", DEFAULT_OUTPUT_SCHEMA),
             "festival_films_table": raw_config.get("festival_films_table", DEFAULT_FESTIVAL_FILMS_TABLE),
             "film_awards_table": raw_config.get("film_awards_table", DEFAULT_FILM_AWARDS_TABLE),
+            "festivals_table": raw_config.get("festivals_table", DEFAULT_FESTIVALS_TABLE),
+            "rescrape_festivals": bool(raw_config.get("rescrape_festivals", False)),
             "start_year": int(raw_config.get("start_year", DEFAULT_START_YEAR)),
             "end_year": int(end_year),
             "max_pages_per_edition": max(1, int(raw_config.get("max_pages_per_edition", DEFAULT_MAX_PAGES_PER_EDITION))),
@@ -341,6 +359,7 @@ class MubiAirbyteSource:
         try:
             with engine.begin() as conn:
                 _ensure_schema(conn, config.output_schema)
+                _ensure_festivals_table(conn, config)
                 _ensure_festival_films_table(conn, config)
                 _ensure_film_awards_table(conn, config)
                 processed_page_combos = _fetch_processed_page_combos(conn, config)
@@ -395,18 +414,19 @@ class MubiAirbyteSource:
 
     async def _discover_festivals(self, config: ConnectorConfig) -> list[dict[str, Any]]:
         """
-        Paginate through the festivals listing until an empty page is returned.
-        En mode debug (verbose), sauvegarde/charge la liste dans un CSV local.
+        Return the festivals listing, using the cached raw.mubi_festivals_data
+        table when available. The listing is re-scraped (and the cache replaced)
+        only when the cache is empty or config.rescrape_festivals is set.
         """
-        import csv
-        import os
-        csv_path = "mubi_festivals_debug.csv"
-        if getattr(config, "verbose", False) and os.path.exists(csv_path):
-            with open(csv_path, newline="", encoding="utf-8") as f:
-                reader = csv.DictReader(f)
-                festivals = [dict(row) for row in reader]
-            print(f"[DEBUG] Festivals loaded from {csv_path}: {len(festivals)} entries.")
-            return festivals
+        if not config.rescrape_festivals:
+            cached = _fetch_cached_festivals(config)
+            if cached:
+                print(f"Mubi: loaded {len(cached)} festivals from cache table "
+                      f"{config.output_schema}.{config.festivals_table}.")
+                return cached
+            print("Mubi: festivals cache empty — scraping the festivals listing.")
+        else:
+            print("Mubi: rescrape_festivals set — re-scraping the festivals listing.")
 
         from ingestion.scraping.mubi.mubi_scraper import MubiPageScraper
         from ingestion.scraping.browser import AsyncBrowserSession
@@ -472,13 +492,12 @@ class MubiAirbyteSource:
                 f"mubi_scraper.py may be stale and need updating."
             )
 
-        # Sauvegarde CSV si debug
-        if getattr(config, "verbose", False) and unique:
-            with open(csv_path, "w", newline="", encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=unique[0].keys())
-                writer.writeheader()
-                writer.writerows(unique)
-            print(f"[DEBUG] Festivals saved to {csv_path} ({len(unique)} entries)")
+        # Persist the freshly scraped listing to the cache table, replacing any
+        # previous contents so subsequent runs reuse it without re-scraping.
+        if unique:
+            _replace_cached_festivals(config, unique)
+            print(f"Mubi: cached {len(unique)} festivals to "
+                  f"{config.output_schema}.{config.festivals_table}.")
 
         return unique
 
@@ -504,13 +523,16 @@ class MubiAirbyteSource:
             slug = _festival_slug_from_link(link)
             name = fest.get("festival_name") or slug
             for year in range(config.start_year, config.end_year + 1):
-                # If a prior run found an empty page for this edition, every page
-                # at or beyond that boundary is also empty — don't queue them.
-                empty_from = edition_empty_boundaries.get((slug, year))
-                last_page = config.max_pages_per_edition
-                if empty_from is not None:
-                    last_page = min(last_page, empty_from - 1)
-                for page in range(1, last_page + 1):
+                # A prior run that reached an empty page for this edition has
+                # already seen its full extent (pages are scraped in ascending
+                # order and an empty page means no further films). Such an
+                # edition is complete — skip it entirely rather than re-checking
+                # its pages on every run. Editions with no empty sentinel yet are
+                # still considered in-progress and keep getting their remaining
+                # (not-yet-processed) pages.
+                if (slug, year) in edition_empty_boundaries:
+                    continue
+                for page in range(1, config.max_pages_per_edition + 1):
                     if (slug, year, page) not in processed_page_combos:
                         pending.append((slug, name, year, page))
 
@@ -935,6 +957,68 @@ def _table_exists(conn, schema_name: str, table_name: str) -> bool:
         "select 1 from information_schema.tables "
         "where table_schema = :s and table_name = :t"
     ), {"s": schema_name, "t": table_name}).scalar() == 1
+
+
+def _ensure_festivals_table(conn, config: ConnectorConfig) -> None:
+    rel = _relation(config.output_schema, config.festivals_table)
+    if _table_exists(conn, config.output_schema, config.festivals_table):
+        return
+    conn.execute(text(f"""
+        create table if not exists {rel} (
+            festival_link text,
+            festival_name text,
+            extracted_at timestamptz
+        )
+    """))
+    t = config.festivals_table
+    conn.execute(text(f"create index if not exists idx_{t}_festival_link on {rel} (festival_link)"))
+
+
+def _fetch_cached_festivals(config: ConnectorConfig) -> list[dict[str, Any]]:
+    """Load the cached festivals listing from the festivals table.
+
+    Returns an empty list when the table is missing or holds no rows.
+    """
+    engine = create_engine(config.database_url)
+    try:
+        with engine.connect() as conn:
+            if not _table_exists(conn, config.output_schema, config.festivals_table):
+                return []
+            rows = conn.execute(text(
+                f"select festival_link, festival_name "
+                f"from {_relation(config.output_schema, config.festivals_table)} "
+                f"where festival_link is not null"
+            )).fetchall()
+    finally:
+        engine.dispose()
+    return [{"festival_link": row[0], "festival_name": row[1]} for row in rows]
+
+
+def _replace_cached_festivals(config: ConnectorConfig, festivals: list[dict[str, Any]]) -> None:
+    """Atomically replace the cached festivals listing with `festivals`."""
+    if not festivals:
+        return
+    extracted_at = _now_iso()
+    records = [
+        {
+            "festival_link": f.get("festival_link"),
+            "festival_name": f.get("festival_name"),
+            "extracted_at": extracted_at,
+        }
+        for f in festivals
+    ]
+    rel = _relation(config.output_schema, config.festivals_table)
+    engine = create_engine(config.database_url)
+    try:
+        with engine.begin() as conn:
+            _ensure_festivals_table(conn, config)
+            conn.execute(text(f"truncate table {rel}"))
+            conn.execute(text(f"""
+                insert into {rel} (festival_link, festival_name, extracted_at)
+                values (:festival_link, :festival_name, :extracted_at)
+            """), records)
+    finally:
+        engine.dispose()
 
 
 def _ensure_festival_films_table(conn, config: ConnectorConfig) -> None:

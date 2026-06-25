@@ -24,7 +24,7 @@ Le scraping Mubi se déroule en trois phases séquentielles à chaque exécution
 
 **Phase 1 — Découverte des festivals**
 
-Pagine dynamiquement `mubi.com/fr/awards-and-festivals?type=festival&page=N` jusqu'à retourner une page vide. Produit la liste complète des festivals disponibles avec leur slug d'URL (ex. `cesars`, `cannes`). Aucune écriture en base à cette étape.
+Pagine dynamiquement `mubi.com/fr/awards-and-festivals?type=festival&page=N` jusqu'à retourner une page vide. Produit la liste complète des festivals disponibles avec leur slug d'URL (ex. `cesars`, `cannes`). La liste est mise en cache dans la table `raw.mubi_festivals_data` et réutilisée par les runs suivants sans re-scraper. Le re-scraping de la liste (et le remplacement du cache) n'a lieu que si le cache est vide, si `rescrape_festivals: true` est présent dans la config, ou si le flag CLI `--rescrape-festivals` est passé.
 
 **Phase 2 — Films en sélection**
 
@@ -101,6 +101,8 @@ Fichier de référence : `ingestion/scraping/mubi/config.json`.
   "output_schema": "raw",
   "festival_films_table": "mubi_festival_films",
   "film_awards_table": "mubi_film_awards",
+  "festivals_table": "mubi_festivals_data",
+  "rescrape_festivals": false,
   "start_year": 2000,
   "end_year": null,
   "max_pages_per_edition": 10,

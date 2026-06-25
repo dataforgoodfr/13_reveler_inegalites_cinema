@@ -20,6 +20,7 @@ delete_deployment_if_exists "Recuperer les donnees Allocine/recuperer-les-donnee
 delete_deployment_if_exists "Finaliser les donnees/finaliser-les-donnees"
 delete_deployment_if_exists "Recuperer les donnees Allocine/lancer-scraping-allocine"
 delete_deployment_if_exists "Recuperer les donnees Mubi/lancer-scraping-mubi"
+delete_deployment_if_exists "Recuperer les donnees Mubi (CNC)/lancer-scraping-mubi-cnc"
 delete_deployment_if_exists "Traiter les demandes d'ingestion/traiter-les-demandes-d-ingestion"
 delete_deployment_if_exists "Traiter les demandes d'ingestion/traiter-les-demandes-ingestion"
 delete_deployment_if_exists "Requeue les demandes d'ingestion stale/requeue-les-demandes-d-ingestion-stale"
@@ -42,13 +43,29 @@ prefect deploy "${FLOWS_FILE}:main_ingestion_flow" \
 #	exit 1
 #}
 
-prefect deploy "${FLOWS_FILE}:run_mubi_scraping" \
-	--name "lancer-scraping-mubi" \
-	--description "Execution du scraping Mubi: decouverte dynamique des festivals, films en competition et palmares." \
+# Auto-run du scraping Mubi par decouverte desactive: ce flux crawle tous les
+# festivals Mubi (volume eleve, au-dela de l'accord CNC). Remplace par le flux
+# Mubi CNC ci-dessous, restreint aux films du referentiel CNC. La ligne
+# delete_deployment_if_exists plus haut supprime au demarrage tout deploiement
+# planifie precedemment enregistre. Le flux reste deployable manuellement en
+# decommentant ce bloc.
+#prefect deploy "${FLOWS_FILE}:run_mubi_scraping" \
+#	--name "lancer-scraping-mubi" \
+#	--description "Execution du scraping Mubi: decouverte dynamique des festivals, films en competition et palmares." \
+#	--concurrency-limit 1 \
+#	--interval 600 \
+#	--pool "${POOL_NAME}" >/tmp/prefect-deploy-mubi.log 2>&1 || {
+#	cat /tmp/prefect-deploy-mubi.log
+#	exit 1
+#}
+
+prefect deploy "${FLOWS_FILE}:run_mubi_cnc_scraping" \
+	--name "lancer-scraping-mubi-cnc" \
+	--description "Execution du scraping Mubi restreint aux films du referentiel CNC: palmares par film puis editions de festivals concernees." \
 	--concurrency-limit 1 \
 	--interval 600 \
-	--pool "${POOL_NAME}" >/tmp/prefect-deploy-mubi.log 2>&1 || {
-	cat /tmp/prefect-deploy-mubi.log
+	--pool "${POOL_NAME}" >/tmp/prefect-deploy-mubi-cnc.log 2>&1 || {
+	cat /tmp/prefect-deploy-mubi-cnc.log
 	exit 1
 }
 

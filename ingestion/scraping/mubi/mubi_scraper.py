@@ -8,6 +8,12 @@ class MubiPageScraper:
     ALL_FESTIVALS_URL = f"{BASE_URL}/fr/awards-and-festivals?type={{festival_or_award}}&page={{page_num}}"
     FESTIVAL_EDITION_ALL_FILMS_URL = f"{BASE_URL}/fr/awards-and-festivals/{{festival}}?page={{page_num}}&year={{year}}"
     FILM_ALL_AWARDS_URL = f"{BASE_URL}{{film_link}}/awards"
+    # Awards page addressed by the numeric Mubi film id. Mubi redirects this to
+    # the localized slug URL, so it resolves even though we only know the id
+    # (e.g. from the CNC id_matching sheet). Kept on the /fr/ locale so the
+    # awards' full_display_text matches the French distinctions parsed by
+    # _parse_reward (Lauréat / Nommé / ...).
+    FILM_ALL_AWARDS_BY_ID_URL = f"{BASE_URL}/fr/films/{{mubi_id}}/awards"
 
     # Warning: hashed CSS class selectors (css-*) are rotated by Mubi and may need updating.
     # festival_link uses a structural href pattern instead of a class to be more resilient.
@@ -105,22 +111,85 @@ class MubiPageScraper:
 
     def extract_film_mubi_id(self, html: str) -> Optional[int]:
         """Extract numeric Mubi film ID from the page's Next.js __NEXT_DATA__ payload."""
+        film = self._next_page_props(html).get("film") or {}
+        film_id = film.get("id")
+        try:
+            return int(film_id) if film_id is not None else None
+        except (ValueError, TypeError):
+            return None
+
+    @staticmethod
+    def _next_page_props(html: str) -> Dict:
+        """Return props.pageProps from the embedded Next.js __NEXT_DATA__ payload.
+
+        Returns an empty dict when the payload is absent or unparseable, so
+        callers can treat a missing payload the same as missing fields.
+        """
         soup = BeautifulSoup(html, "html.parser")
         script = soup.select_one("script#__NEXT_DATA__")
-        if script and script.string:
-            try:
-                data = json.loads(script.string)
-                film_id = (
-                    data.get("props", {})
-                        .get("pageProps", {})
-                        .get("film", {})
-                        .get("id")
-                )
-                if film_id is not None:
-                    return int(film_id)
-            except (json.JSONDecodeError, ValueError, TypeError):
-                pass
-        return None
+        if not (script and script.string):
+            return {}
+        try:
+            data = json.loads(script.string)
+        except (json.JSONDecodeError, TypeError):
+            return {}
+        page_props = data.get("props", {}).get("pageProps", {})
+        return page_props if isinstance(page_props, dict) else {}
+
+    def extract_film_identity(self, html: str) -> Dict[str, Optional[object]]:
+        """Canonical (mubi_id, film_link, mubi_slug) for the film page.
+
+        film_link is the locale-stripped '/films/{slug}' form (same convention
+        as _normalize_film_link) derived from film.web_url, so awards rows join
+        cleanly with festival-film rows downstream.
+        """
+        film = self._next_page_props(html).get("film") or {}
+        mubi_id = film.get("id")
+        try:
+            mubi_id = int(mubi_id) if mubi_id is not None else None
+        except (ValueError, TypeError):
+            mubi_id = None
+        web_url = film.get("web_url")
+        film_link = self._normalize_film_link(web_url) if web_url else None
+        slug = film.get("slug")
+        if not slug and film_link:
+            slug = film_link.rstrip("/").split("/")[-1]
+        return {"mubi_id": mubi_id, "film_link": film_link, "mubi_slug": slug}
+
+    def extract_film_awards_structured(self, html: str) -> List[Dict[str, Optional[str]]]:
+        """Awards from the structured pageProps.awards array of a film page.
+
+        Each entry carries the industry event's name, slug and type, plus a
+        localized 'full_display_text' (e.g. '2024 | Lauréat : Prix du scénario')
+        which we parse with the same _parse_reward used for the HTML scrape, so
+        the (year, distinction, award) fields stay identical to the prior
+        festival-crawl output. event_slug / event_type are extra fields the CNC
+        flow uses to drive the festival-edition scrape; they are ignored by the
+        film-awards output mapping.
+        """
+        awards_raw = self._next_page_props(html).get("awards")
+        if not isinstance(awards_raw, list):
+            return []
+        awards = []
+        for entry in awards_raw:
+            if not isinstance(entry, dict):
+                continue
+            event = entry.get("industry_event") or {}
+            year, distinction, award_name = self._parse_reward(entry.get("full_display_text"))
+            # Fall back to the structured fields when full_display_text is absent.
+            if year is None and entry.get("year") is not None:
+                year = str(entry.get("year"))
+            if award_name is None:
+                award_name = entry.get("display_text")
+            awards.append({
+                "festival": event.get("name"),
+                "year": year,
+                "distinction": distinction,
+                "award": award_name,
+                "event_slug": event.get("slug"),
+                "event_type": event.get("type"),
+            })
+        return awards
 
     def _parse_reward(self, reward: str):
         """Parse reward text like '2023 | Lauréat : Prix d'interprétation masculine'."""
