@@ -3,9 +3,9 @@
 }}
 
 SELECT
-    TRIM("ID") AS id,
-    CAST("FILM_ID" AS INTEGER) AS film_id,
-    CAST("GENRE_ID" AS INTEGER) AS genre_id,
+    TRIM("ID")::UUID AS film_genre_id,
+    CAST("FILM_ID" AS TEXT)::UUID AS film_id,
+    CAST("GENRE_ID" AS TEXT)::UUID AS genre_id,
     -- METADATA
     TO_DATE("UPDATED_DATE", 'DD/MM/YYYY') AS updated_date,
     TRIM("UPDATED_BY") AS updated_by,

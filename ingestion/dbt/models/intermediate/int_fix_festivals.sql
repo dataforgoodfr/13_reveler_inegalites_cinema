@@ -3,7 +3,7 @@ WITH dedup AS (
     SELECT
         *,
         ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_date DESC) AS rn
-    FROM {{ ref('stg_fix_festivals') }}
+    FROM {{ ref('stg_fix_festival') }}
 )
 SELECT
     id,

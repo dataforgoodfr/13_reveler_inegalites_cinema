@@ -1,8 +1,8 @@
 version: 2
 
 models:
-  - name: int_films
-    description: "Table intermédiaire issue de stg_films. Applique les transformations métier sur les diffuseurs (fusion paid/free, normalisation FranceTV) et sur le rang de filmographie des réalisateurs."
+  - name: int_cnc_films
+    description: "Table intermédiaire issue de stg_cnc_films. Applique les transformations métier sur les diffuseurs (fusion paid/free, normalisation FranceTV) et sur le rang de filmographie des réalisateurs."
     columns:
       - name: movie_id
         description: "Identifiant technique interne du film (généré via ROW_NUMBER)."

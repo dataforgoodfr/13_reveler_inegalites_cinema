@@ -32,8 +32,8 @@ SELECT
     films.has_regional_funding,
     films.filmography_rank,
     films.has_asr,
-FROM {{ ref('int_films') }} AS films
-LEFT JOIN {{ ref('int_allocine_data') }} AS allocine
+FROM {{ ref('int_cnc_films') }} AS films
+LEFT JOIN {{ ref('int_allocine_films') }} AS allocine
     ON films.allocine_id = allocine.allocine_id
 LEFT JOIN french_financed
     ON films.movie_id = french_financed.movie_id

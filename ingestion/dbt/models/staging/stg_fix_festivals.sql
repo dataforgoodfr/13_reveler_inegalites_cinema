@@ -3,11 +3,11 @@
 }}
 
 SELECT
-    CAST("ID" AS INTEGER) AS id,
+    CAST("ID" AS TEXT)::UUID AS id,
     TRIM("NAME") AS name,
     TRIM("DESCRIPTION") AS description,
     TRIM("IMAGEBASE64") AS imagebase64,
-    CAST("COUNTRY_ID" AS INTEGER) AS country_id,
+    CAST("COUNTRY_ID" AS TEXT)::UUID AS country_id,
     -- METADATA
     TO_DATE("UPDATED_DATE", 'DD/MM/YYYY') AS updated_date,
     TRIM("UPDATED_BY") AS updated_by,
