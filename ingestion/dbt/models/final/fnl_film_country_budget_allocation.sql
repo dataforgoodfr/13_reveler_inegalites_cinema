@@ -1,6 +1,6 @@
 SELECT
-    COALESCE(fix.id, original.id) AS id,
-    COALESCE(fix.movie_id, original.movie_id) AS movie_id,
+    original.id,
+    COALESCE(fix.film_id, original.film_id) AS film_id,
     COALESCE(fix.cnc_visa, original.cnc_visa) AS cnc_visa,
     COALESCE(fix.country_id, original.country_id) AS country_id,
     COALESCE(fix.country_name, original.country_name) AS country_name,
