@@ -21,7 +21,9 @@ class MubiPageScraper:
     FESTIVAL_EDITION_ALL_FILMS_SELECTORS = {
         "movie": "li.css-l31k08",
         "nominations": "div.css-gyp8mm",
-        "title": "h3.css-1hr6q83",
+        # title is the only <h3> inside a movie <li>; matching the tag rather than
+        # a hashed css-* class avoids breaking when Mubi rotates the class names.
+        "title": "h3",
         "director": "span.css-1vg6q84",
         "country": "span.css-ahepiu",
         "link": "a.css-122y91a"

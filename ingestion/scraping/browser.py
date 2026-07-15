@@ -44,13 +44,18 @@ AD_BLOCKED_DOMAINS = [
     "google-analytics.com",
     "hotjar.com",
 ]
+# Specific block/challenge-page phrases only. Single generic words like
+# "forbidden" or "captcha" are NOT used here because they legitimately appear in
+# normal Allocine pages (e.g. a recommended film titled "Forbidden Hollywood",
+# or the site's reCaptchaSiteKey embedded in page JS), causing false positives.
+# Actual blocks are primarily detected via HTTP status (BLOCKED_STATUS_CODES).
 BLOCKED_PAGE_MARKERS = [
-    "captcha",
     "access denied",
-    "forbidden",
     "too many requests",
     "verify you are human",
     "bot detection",
+    "please complete the security check",
+    "enable javascript and cookies to continue",
 ]
 
 

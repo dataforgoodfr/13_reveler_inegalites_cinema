@@ -65,38 +65,23 @@ def _emit(message: dict[str, Any]) -> None:
     print(json.dumps(message, ensure_ascii=False))
 
 
-def _epoch_millis(iso_value: str) -> int:
-    return int(datetime.fromisoformat(iso_value).timestamp() * 1000)
-
-
 def main() -> int:
-    from ingestion.scraping.mubi.connector import MubiAirbyteSource
+    from ingestion.scraping.mubi_cnc.connector import MubiCncAirbyteSource
 
     _load_dotenv(DEFAULT_ENV_PATH)
 
-    parser = argparse.ArgumentParser(description="Mubi Airbyte custom source")
+    parser = argparse.ArgumentParser(description="Mubi CNC-driven custom source")
     parser.add_argument("command", choices=["spec", "check", "discover", "sync"])
     parser.add_argument("--config", dest="config_path")
-    parser.add_argument(
-        "--rescrape-festivals",
-        dest="rescrape_festivals",
-        action="store_true",
-        help="Force a re-scrape of the festivals listing, replacing the cached table.",
-    )
     args = parser.parse_args()
 
-    source = MubiAirbyteSource()
+    source = MubiCncAirbyteSource()
 
     if args.command == "spec":
         _emit({"type": "SPEC", "spec": source.spec()})
         return 0
 
     config = _load_json(args.config_path) or {}
-
-    # CLI flag overrides the config so the festivals listing can be re-scraped
-    # on demand without editing config.json.
-    if args.rescrape_festivals:
-        config["rescrape_festivals"] = True
 
     if args.command == "check":
         ok, message = source.check(config)
@@ -116,8 +101,8 @@ def main() -> int:
     if args.command == "sync":
         counts = source.sync_to_postgres(config)
         print(
-            f"Inserted {counts.get('festival_films', 0)} festival film records "
-            f"and {counts.get('film_awards', 0)} film award records."
+            f"Inserted {counts.get('film_awards', 0)} film award records "
+            f"and {counts.get('festival_films', 0)} festival film records."
         )
         return 0
 

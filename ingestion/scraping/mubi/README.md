@@ -24,11 +24,11 @@ Le scraping Mubi se déroule en trois phases séquentielles à chaque exécution
 
 **Phase 1 — Découverte des festivals**
 
-Pagine dynamiquement `mubi.com/fr/awards-and-festivals?type=festival&page=N` jusqu'à retourner une page vide. Produit la liste complète des festivals disponibles avec leur slug d'URL (ex. `cesars`, `cannes`). Aucune écriture en base à cette étape.
+Pagine dynamiquement `mubi.com/fr/awards-and-festivals?type=festival&page=N` jusqu'à retourner une page vide. Produit la liste complète des festivals disponibles avec leur slug d'URL (ex. `cesars`, `cannes`). La liste est mise en cache dans la table `raw.mubi_festivals_data` et réutilisée par les runs suivants sans re-scraper. Le re-scraping de la liste (et le remplacement du cache) n'a lieu que si le cache est vide, si `rescrape_festivals: true` est présent dans la config, ou si le flag CLI `--rescrape-festivals` est passé.
 
 **Phase 2 — Films en sélection**
 
-Pour chaque festival découvert, pour chaque année dans la plage `[start_year, end_year]`, et pour chaque page jusqu'à `max_pages_per_edition`, scrape les films en compétition. Chaque combinaison `(festival_slug, year, page_num)` déjà présente dans `raw.mubi_festival_films` avec un statut complété est ignorée (skip incrémental). Écrit un enregistrement par film dans `raw.mubi_festival_films`.
+Pour chaque festival découvert, pour chaque année dans la plage `[start_year, end_year]`, et pour chaque page jusqu'à `max_pages_per_edition`, scrape les films en compétition. Dès qu'une page d'une édition `(festival, année)` ne renvoie aucun film, les pages suivantes de cette même édition sont ignorées (`max_pages_per_edition` ne sert plus que de garde-fou). Chaque combinaison `(festival_slug, year, page_num)` déjà présente dans `raw.mubi_festival_films` avec un statut complété est ignorée (skip incrémental). Les échecs transitoires de chargement (timeouts de navigation, réponses instables) sont réessayés jusqu'à `fetch_max_attempts` fois avec un backoff linéaire avant d'enregistrer un statut `error` ; un statut `error` n'étant pas « complété », la combinaison sera retentée au prochain run. Écrit un enregistrement par film dans `raw.mubi_festival_films`.
 
 **Phase 3 — Palmarès par film**
 
@@ -101,6 +101,8 @@ Fichier de référence : `ingestion/scraping/mubi/config.json`.
   "output_schema": "raw",
   "festival_films_table": "mubi_festival_films",
   "film_awards_table": "mubi_film_awards",
+  "festivals_table": "mubi_festivals_data",
+  "rescrape_festivals": false,
   "start_year": 2000,
   "end_year": null,
   "max_pages_per_edition": 10,
@@ -109,6 +111,8 @@ Fichier de référence : `ingestion/scraping/mubi/config.json`.
   "completed_award_statuses": ["success", "no_awards"],
   "scrape_limit": null,
   "record_timeout_seconds": 60,
+  "fetch_max_attempts": 3,
+  "fetch_retry_base_delay_seconds": 3.0,
   "playwright_ws_endpoint": "${PLAYWRIGHT_WS_ENDPOINT:-ws://browserless:3000}",
   "headless": true,
   "max_requests_per_session": 6,
@@ -125,6 +129,8 @@ Si `database_url` est fourni, il remplace l'ensemble des champs Postgres individ
 `scrape_limit` borne le nombre de combinaisons `(festival, année, page)` traitées lors d'un run. Utile pour les tests. Laisser à `null` en production.
 
 `end_year` à `null` utilise l'année courante au moment de l'exécution.
+
+`fetch_max_attempts` borne le nombre de tentatives par page avant d'enregistrer un statut `error` (1 = aucun réessai). `fetch_retry_base_delay_seconds` est le délai de base du backoff linéaire : la tentative *N* attend `base * N` secondes. Les erreurs `blocked` (site bloquant) ne sont pas réessayées — elles déclenchent un redémarrage de session.
 
 ## Initialisation des tables de sortie
 
