@@ -3,8 +3,8 @@
 }}
 
 SELECT
-    CAST("ID" AS INTEGER) AS id,
-    CAST("FESTIVAL_ID" AS INTEGER) AS festival_id,
+    CAST("ID" AS TEXT)::UUID AS id,
+    CAST("FESTIVAL_ID" AS TEXT)::UUID AS festival_id,
     TRIM("MUBI_LABEL") AS mubi_label,
     TRIM("ENGLISH_LABEL") AS english_label,
     TRIM("FRENCH_LABEL") AS french_label,

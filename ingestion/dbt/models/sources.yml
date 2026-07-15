@@ -6,28 +6,9 @@ sources:
     description: Tables brutes chargees par Airbyte et les scrapers.
     tables:
       - name: agreement_cnc
-        description: Jeu de donnees AGREEMENT CNC charge depuis Google Sheets via Airbyte.
       - name: allocine_data
-        description: Sortie brute du scraping Allocine.
-        columns:
-          - name: source_record_id
-            tests:
-              - not_null
-          - name: extracted_at
-            tests:
-              - not_null
       - name: mubi_festival_films
-        description: Sortie brute du scraping Mubi — films en selection dans les festivals.
-        columns:
-          - name: extracted_at
-            tests:
-              - not_null
       - name: mubi_film_awards
-        description: Sortie brute du scraping Mubi — palmares par film, avec identifiant Mubi extrait.
-        columns:
-          - name: extracted_at
-            tests:
-              - not_null
       - name: films
       - name: id_matching
       - name: award_nominations

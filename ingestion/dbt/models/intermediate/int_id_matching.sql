@@ -1,4 +1,5 @@
 SELECT
+    film_id,
     cnc_visa,
     cnc_name,
     allocine_id,

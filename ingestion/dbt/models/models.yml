@@ -1,6 +1,15 @@
 version: 2
 
 models:
+  - name: stg_agreement_cnc
+    config:
+      tags: ["phase1"]
+    description: Typed and normalized staging model for the Airbyte-loaded Agreement CNC sheet.
+    columns:
+      - name: visa_number
+        tests:
+          - not_null
+
   - name: stg_allocine_data
     config:
       tags: ["phase2"]

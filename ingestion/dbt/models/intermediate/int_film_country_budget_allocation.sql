@@ -1,8 +1,7 @@
 WITH base AS (
     SELECT
-        movie_id,
         cnc_visa,
-        (elem->>'country') AS country_name_raw,
+        (elem->>'country') AS country_raw,
         CASE INITCAP(UNACCENT(TRIM(elem->>'country')))
             -- France
             WHEN 'Fr' THEN 'France'
@@ -105,23 +104,25 @@ WITH base AS (
             ELSE INITCAP(UNACCENT(TRIM(elem->>'country')))
         END AS country_name,
         CAST(elem->>'budget_allocation' AS INTEGER) AS budget_allocation
-    FROM {{ ref('stg_films') }},
-    UNNEST(country_budget_allocation) AS elem
-)
-, base_country_id AS (
+    FROM {{ ref('stg_cnc_films') }},
+    UNNEST(country_funder) AS elem
+),
+with_country_id AS (
     SELECT
-        movie_id,
-        cnc_visa,
-        DENSE_RANK() OVER (ORDER BY country_name) AS country_id,
-        country_name,
-        budget_allocation
+        matching.film_id,
+        base.cnc_visa,
+        MD5(CAST(base.country_name AS TEXT))::UUID AS country_id,
+        base.country_name,
+        base.budget_allocation
     FROM base
+    LEFT JOIN {{ ref('stg_id_matching') }} AS matching
+        ON base.cnc_visa = matching.cnc_visa
 )
 SELECT
-    CONCAT(movie_id, '-', country_id) AS id,
-    movie_id,
+    MD5(CAST(CONCAT(film_id, '-', country_id) AS TEXT))::UUID as film_country_budget_allocation_id,
+    film_id,
     cnc_visa,
     country_id,
     country_name,
     budget_allocation
-FROM base_country_id
+FROM with_country_id

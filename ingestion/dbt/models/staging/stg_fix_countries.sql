@@ -3,7 +3,7 @@
 }}
 
 SELECT
-    CAST("ID" AS INTEGER) AS id,
+    CAST("ID" AS TEXT)::UUID AS id,
     TRIM("NAME") AS name,
     -- METADATA
     TO_DATE("UPDATED_DATE", 'DD/MM/YYYY') AS updated_date,

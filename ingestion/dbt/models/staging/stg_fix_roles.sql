@@ -3,7 +3,7 @@
 }}
 
 SELECT
-    CAST("ID" AS INTEGER) AS id,
+    CAST("ID" AS TEXT)::UUID AS id,
     TRIM("NAME") AS name,
     CAST("IS_KEY_ROLE" AS BOOLEAN) AS is_key_role,
     TRIM("ALLOCINE_NAME") AS allocine_name,

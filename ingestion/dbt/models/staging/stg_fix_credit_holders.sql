@@ -3,7 +3,7 @@
 }}
 
 SELECT
-    CAST("ID" AS INTEGER) AS id,
+    CAST("ID" AS TEXT)::UUID AS id,
     TRIM("TYPE") AS type,
     TRIM("FIRST_NAME") AS first_name,
     TRIM("LAST_NAME") AS last_name,

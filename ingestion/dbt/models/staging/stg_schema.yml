@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: stg_films
+  - name: stg_cnc_films
     config:
       tags: ["phase1"]
     description: "Table de staging issue du gsheet Cinéstats 50/50, qui regroupe toutes les données issues des rapports annuels du CNC."
