@@ -6,8 +6,8 @@ SELECT
     MD5(CAST("VISA" AS TEXT))::UUID AS film_id,
     CAST("VISA" AS INTEGER) AS cnc_visa,
     TRIM("TITRE") AS cnc_name,
-    CAST("ID_ALLOCINE" AS TEXT) AS allocine_id,
-    CAST("ID_MUBI" AS TEXT) AS mubi_id,
+    CAST("ID_ALLOCINE" AS INTEGER) AS allocine_id,
+    CAST("ID_MUBI" AS INTEGER) AS mubi_id,
     CAST("ID_TMDB" AS TEXT) AS tmdb_id,
     -- METADATA
     TO_DATE("UPDATED_DATE", 'DD/MM/YYYY') AS updated_date,
