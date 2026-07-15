@@ -186,3 +186,4 @@ certbot/logs/*
 .github/copilot-instructions.md
 .codex
 database/data/allocine/*.csv
+mubi_festivals_debug.csv
