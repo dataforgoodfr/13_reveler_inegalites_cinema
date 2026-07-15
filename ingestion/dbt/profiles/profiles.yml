@@ -8,6 +8,6 @@ ric:
       user: dbt_user
       password: "{{ env_var('DBT_USER_POSTGRES_PASSWORD') }}"
       dbname: "{{ env_var('POSTGRES_DB') }}"
-      schema: fnl
+      schema: final
       threads: "{{ env_var('DBT_THREADS', '4') | int }}"
       sslmode: "{{ env_var('POSTGRES_SSLMODE', 'disable') }}"

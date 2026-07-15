@@ -10,7 +10,7 @@ models:
         tests:
           - not_null
 
-  - name: stg_allocine_data
+  - name: stg_allocine_films
     config:
       tags: ["phase2"]
     description: Typed staging projection of raw Allocine scraping output loaded through the custom Airbyte source.

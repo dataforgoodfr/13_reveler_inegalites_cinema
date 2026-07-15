@@ -3,7 +3,7 @@ version: 2
 models:
   - name: v_allocine_pipeline_status
     config:
-      tags: ["phase2"]
+      tags: [phase2]
     description: >
       Vue de monitoring des tentatives de scraping Allocine,
       exposée dans le schéma `ops` pour Metabase.

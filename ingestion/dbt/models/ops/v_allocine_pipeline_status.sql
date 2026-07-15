@@ -16,4 +16,4 @@ SELECT
     record_hash,
     error_message,
     rank() over (partition by cnc_visa order by extracted_ts desc) as desc_process_order
-FROM {{ ref('stg_allocine_data') }}
+FROM {{ ref('stg_allocine_films') }}
