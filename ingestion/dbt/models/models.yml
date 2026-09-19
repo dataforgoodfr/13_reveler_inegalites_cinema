@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: stg_agreement_cnc
+  - name: stg_cnc_films
     config:
       tags: ["phase1"]
     description: Typed and normalized staging model for the Airbyte-loaded Agreement CNC sheet.
@@ -10,7 +10,7 @@ models:
         tests:
           - not_null
 
-  - name: stg_allocine_data
+  - name: stg_allocine_films
     config:
       tags: ["phase2"]
     description: Typed staging projection of raw Allocine scraping output loaded through the custom Airbyte source.

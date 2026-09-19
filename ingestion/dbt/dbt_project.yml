@@ -21,9 +21,9 @@ models:
     intermediate:
       +materialized: view
       +schema: intermediate
-    fnl:
+    final:
       +materialized: table
-      +schema: fnl
+      +schema: final
     ops:
       +materialized: view
       +schema: ops

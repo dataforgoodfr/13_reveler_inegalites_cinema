@@ -14,6 +14,7 @@ sources:
       - name: award_nominations
       - name: countries
       - name: credit_holders
+      - name: credit_holders_genre
       - name: festival_awards
       - name: festivals
       - name: film_country_budget_allocation
