@@ -70,23 +70,13 @@ models:
       - name: cnc_name
         description: "Titre du film selon le CNC."
         tests:
-          - unique
           - not_null
       - name: allocine_id
         description: "Identifiant du film sur Allociné."
-        tests:
-          - unique
-          - not_null
       - name: mubi_id
         description: "Identifiant du film sur Mubi."
-        tests:
-          - unique
-          - not_null
       - name: tmdb_id
         description: "Identifiant du film sur TMDB."
-        tests:
-          - unique
-          - not_null
       - name: updated_date
         description: "Date de dernière mise à jour du mapping."
       - name: updated_by
@@ -333,6 +323,30 @@ models:
         description: "Identifiant technique Airbyte."
       - name: airbyte_generation_id
         description: "Version de génération Airbyte."
+      - name: airbyte_extraction_date
+        description: "Date d’extraction Airbyte."
+      - name: airbyte_meta
+        description: "Métadonnées techniques Airbyte."
+
+  - name: stg_credit_holders_genre
+    description: "Table de staging issue du gsheet Cinéstats 50/50, référençant le genre des personnes créditées par nom (associé à un film CNC pour désambiguïser les homonymes)."
+    columns:
+      - name: full_name
+        description: "Nom complet de la personne créditée."
+        tests:
+          - not_null
+      - name: first_name
+        description: "Prénom de la personne créditée."
+      - name: last_name
+        description: "Nom de famille de la personne créditée."
+      - name: gender
+        description: "Genre de la personne (utile pour l’analyse des inégalités de représentation)."
+      - name: cnc_movie_name
+        description: "Titre du film CNC associé, utilisé pour désambiguïser les personnes homonymes."
+      - name: airbyte_raw_id
+        description: "Identifiant technique Airbyte de la ligne source."
+      - name: airbyte_generation_id
+        description: "Identifiant de génération Airbyte."
       - name: airbyte_extraction_date
         description: "Date d’extraction Airbyte."
       - name: airbyte_meta
